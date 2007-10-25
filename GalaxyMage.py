@@ -2,7 +2,7 @@
 
 # LICENSE:
 #
-# Copyright (c) 2007 A. Joseph Hager and GalaxyMage Redux contributors.
+# Copyright (c) 2007 Brandon Barnes and GalaxyMage Redux contributors.
 #
 # GalaxyMage Redux is free software; you can redistribute it and/or 
 # modify it under the terms of version 2 of the GNU General Public 
