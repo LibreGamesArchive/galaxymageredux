@@ -122,15 +122,13 @@ class Camera(object):
 
         glPushMatrix()
 
-        glTranslatef(-self.distance[0], -self.distance[1], -self.distance[2]) ##
-        #glTranslatef(self.position[0], 0, self.position[1])
+        glTranslatef(-self.distance[0], -self.distance[1], -self.distance[2])
 
         glRotatef(self.angle[0], 1, 0, 0)
         glRotatef(self.angle[1], 0, 1, 0)
         glRotatef(self.angle[2], 0, 0, 1)
 
-        glTranslatef(*self.position) ##
-        #glTranslatef(self.position[0], self.position[1], -15)
+        glTranslatef(*self.position)
 
         self.dirty = True
 
@@ -279,7 +277,7 @@ class FlatImage(object):
         glPushMatrix()
         glTranslatef(posx, posy, posz)
         if self.camera:
-            glRotatef(-self.camera.angle[2], 0, 0, 1) ##
+            glRotatef(-self.camera.angle[2], 0, 0, 1)
             glRotatef(-self.camera.angle[0], 1, 0, 0)
 #        glScale(sx, sy, 1) ##
 
