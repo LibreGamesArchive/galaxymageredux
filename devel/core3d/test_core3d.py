@@ -6,7 +6,7 @@ def main():
     core3d.init()
 
     camera = core3d.Camera(position=(-10, 0, 0),
-                           angle=(-45, 0, 45),
+                           angle=(-45, 0, 135),
                            distance=(0, 0, 15))
     l1 = core3d.Light()
 

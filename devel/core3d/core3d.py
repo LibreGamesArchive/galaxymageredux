@@ -279,9 +279,8 @@ class FlatImage(object):
         glPushMatrix()
         glTranslatef(posx, posy, posz)
         if self.camera:
-            glRotatef(-self.camera.angle[0], 1, 0, -1)
-            glRotatef(-self.camera.angle[1], 0, 1, 0) ##
             glRotatef(-self.camera.angle[2], 0, 0, 1) ##
+            glRotatef(-self.camera.angle[0], 1, 0, 0)
 #        glScale(sx, sy, 1) ##
 
         glBegin(GL_QUADS)
