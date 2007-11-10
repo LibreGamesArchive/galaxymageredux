@@ -2,7 +2,7 @@ GalaxyMage Redux: an open-source tactical RPG.
 http://galaxymage.brandonbarnes.us/
 
 Copyright (c) 2007 Brandon Barnes <freelance.brandon@yahoo.com> and 
-contributors. See CREDITS for more information.
+contributors. See CREDITS.txt for more information.
 
 INSTALLATION
 
@@ -47,4 +47,4 @@ You should have received a copy of the GNU General Public License
 along with GalaxyMage Redux; if not, write to the Free Software 
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-See COPYRIGHT for more information.
+See COPYRIGHT.txt for more information.
