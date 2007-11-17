@@ -18,6 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+#This module is used for rendering the game screen, and switching to gui rendering mode and back.
+
 from OpenGL.GL import *
 from OpenGL.GLU import *
 import pygame
@@ -50,16 +52,26 @@ def init():
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
 
     glClearColor(1,1,1,1)
+    return None
 
+def set_3d():
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluPerspective(45, 1.0*ScreenSize[0]/ScreenSize[1],
                    0.1, 100.0)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-
     return None
 
+def set_2d():
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glOrtho(0, ScreenSize[0],
+            0, ScreenSize[1],
+            -1000, 1000)
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+    return None
 
 def clear_screen():
     glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT)
