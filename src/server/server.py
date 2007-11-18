@@ -19,38 +19,68 @@
 from zope.interface import implements
 
 from twisted.spread import pb
-from twisted.cred import checkers, portal
-from twisted.internet import reactor
+from twisted.cred import checkers, portal, credentials
+from twisted.internet import reactor, defer
 
-class Server:
+class Server(object):
     def __init__(self):
-        self.games = {}
-    def joinGame(self, gamename, player):
-        if not self.games.has_key(gamename):
-            self.games[gamename] = Game(gamename)
-        self.games[gamename].addPlayer(player)
-        return self.games[gamename]
+        self.players = []
+
+    def join(self, player):
+        self.remoteAll("serverMessage", "%s joined the server" % player.name)
+        self.players.append(player)
+
+    def leave(self, player):
+        self.players.remove(player)
+        self.remoteAll("serverMessage", "%s left the server" % player.name)
+
+    def remote(self, player, action, *args):
+        df = player.client.callRemote(action, *args)
+        return df
+
+    def remoteAll(self, action, *args):
+        dfs = []
+        for player in self.players:
+            dfs.append(self.remote(player, action, *args))
+        return dfs
 
 class Player(pb.Avatar):
     def __init__(self, name, server, clientRef):
         self.name = name
         self.server = server
-        self.remote = clientRef
-    def detached(self, clientRef):
-        self.remote = None
-    def perspective_joinGame(self, gamename):
-        return self.server.joinGame(gamename, self)
-    def send(self, message):
-        self.remote.callRemote("print", message)
+        self.client = clientRef
 
-class Realm:
+    def attached(self):
+        self.server.join(self)
+
+    def detached(self):
+        self.server.leave(self)
+        self.server = None
+        self.client = None
+
+class UsernameChecker(object):
+    implements(checkers.ICredentialsChecker)
+    credentialInterfaces = (credentials.IUsernamePassword,
+                            credentials.IUsernameHashedPassword)
+
+    def __init__(self):
+        self.usernames = []
+
+    def requestAvatarId(self, cred):
+        username = cred.username
+        while username in self.usernames:
+            username = username + "_"
+        self.usernames.append(username)
+        return defer.succeed(username)
+
+class Realm(object):
     implements(portal.IRealm)
     def __init__(self, port):
         self.port = port
         self.server = Server()
 
     def start(self):
-        c = checkers.InMemoryUsernamePasswordDatabaseDontUse(ajhager="ajhager",markus="markus")
+        c = UsernameChecker()
         p = portal.Portal(self)
         p.registerChecker(c)
         reactor.listenTCP(self.port, pb.PBServerFactory(p))
@@ -59,18 +89,7 @@ class Realm:
     def requestAvatar(self, name, clientRef, *interfaces):
         assert pb.IPerspective in interfaces
         avatar = Player(name, self.server, clientRef)
-        return pb.IPerspective, avatar, lambda a=avatar:a.detached(clientRef)
-
-class Game(pb.Viewable):
-    def __init__(self, gamename):
-        self.name = gamename
-        self.players = []
-    def addPlayer(self, player):
-        self.players.append(player)
-    def view_send(self, from_player, message):
-        for player in self.players:
-            print player.name
-            player.send("<%s>: %s" % (from_player.name, message))
-        return self
+        avatar.attached()
+        return pb.IPerspective, avatar, lambda a=avatar:a.detached()
 
 Realm(44444).start()

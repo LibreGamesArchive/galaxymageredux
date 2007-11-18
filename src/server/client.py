@@ -3,33 +3,29 @@ from twisted.internet import reactor
 from twisted.cred import credentials
 
 class Client(pb.Referenceable):
-    def remote_print(self, message):
-        print message
+    def __init__(self, hostname, port, username):
+        self.hostname = hostname
+        self.port = port
+        self.username = username
+        self.avatar = None
 
     def connect(self):
         f = pb.PBClientFactory()
-        reactor.connectTCP("localhost", 44444, f)
-        user = raw_input("Username: ")
-        d = f.login(credentials.UsernamePassword(user, user), client=self)
+        reactor.connectTCP(self.hostname, self.port, f)
+        cred = credentials.UsernamePassword(self.username, self.username)
+        d = f.login(cred, self)
         d.addCallback(self.connected)
+        d.addErrback(self.shutdown)
         reactor.run()
         
-    def connected(self, perspective):
+    def connected(self, avatar):
         print "connected..."
-        gamename = raw_input("Game: ")
-        print "joining game " + gamename
-        d = perspective.callRemote("joinGame", gamename)
-        d.addCallback(self.gotGame)
-   
-    def gotGame(self, game):
-        message = raw_input("Message: ")
-        d = game.callRemote("send", message)
-        if message == "q":
-            d.addCallback(self.shutdown)
-        else:
-            d.addCallback(self.gotGame)
+        self.avatar = avatar
 
     def shutdown(self, result):
         reactor.stop()
 
-Client().connect()
+    def remote_serverMessage(self, message):
+        print message
+
+Client("localhost", 44444, "ajhager").connect()
