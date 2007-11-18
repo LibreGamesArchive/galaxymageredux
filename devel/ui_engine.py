@@ -199,8 +199,8 @@ class Light(object):
     def compile(self):
         """This method compiles the light to a GL_LIGHT(n),
            using the parameters stored here."""
-        exec "kind = GL_LIGHT"+str(self.light_num) #yes, I'm using the evil exec, but it saves about
-                                                   #40+ lines of code here.
+        exec "kind = GL_LIGHT" + str(self.light_num) #yes, I'm using the evil exec, but it saves about
+                                                     #40+ lines of code here.
         glEnable(kind)
         glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, self.specular )
         glMaterialfv( GL_FRONT_AND_BACK, GL_AMBIENT, self.ambient )
@@ -217,8 +217,8 @@ class Light(object):
 def fix_image_dimensions(h, w):
     """This function finds the nearest power of 2 that is >= the h/w of an image.
        Usage: to convert image sizes to work with opengl."""
-    nh=16
-    nw=16
+    nh = 16
+    nw = 16
 
     while nh < h:
         nh *= 2
@@ -234,9 +234,9 @@ def create_texture(surface):
     image=glGenTextures(1)
 
     sw, sh = fix_image_dimensions(*surface.get_size())
-    textureSurface=pygame.transform.scale(surface, (sw, sh))
+    textureSurface = pygame.transform.scale(surface, (sw, sh))
 
-    textureData=pygame.image.tostring(textureSurface, "RGBA", 1)
+    textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
 
     glBindTexture(GL_TEXTURE_2D, image)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
@@ -250,6 +250,8 @@ def create_texture(surface):
 
     return image
 
+def load_image(filename):
+    return create_texture(pygame.image.load(filename))
 
 class FlatImage(object):
     def __init__(self, surface,
@@ -262,8 +264,8 @@ class FlatImage(object):
         self.texture = create_texture(self.surface)
 
         self.size = self.surface.get_size()
-        self.fixed_size = (self.size[0] / RegImageSize[0],
-                           self.size[1] / RegImageSize[1])
+        self.fixed_size = (float(self.size[0]) / RegImageSize[0] / 2,
+                           float(self.size[1]) / RegImageSize[1] / 2)
 
         self.camera = camera
 
@@ -279,10 +281,8 @@ class FlatImage(object):
 
         ble_return = glGetBooleanv(GL_BLEND)
         light_return = glGetBooleanv(GL_LIGHTING)
-##        dep_return = glGetBooleanv(GL_DEPTH_TEST)
 
         glDisable(GL_LIGHTING)
-##        glDisable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 
@@ -291,20 +291,18 @@ class FlatImage(object):
         if self.camera:
             glRotatef(-self.camera.angle[2], 0, 0, 1)
             glRotatef(-self.camera.angle[0], 1, 0, 0)
-#        glScale(sx, sy, 1) ##
 
         glBegin(GL_QUADS)
-        glTexCoord2f(0, 1);glVertex3f(-1, 1, 0)
-        glTexCoord2f(1, 1);glVertex3f(1, 1, 0)
-        glTexCoord2f(1, 0);glVertex3f(1, -1, 0)
-        glTexCoord2f(0, 0);glVertex3f(-1, -1, 0)
+        glTexCoord2f(0, 1);glVertex3f(-sx, sy, 0)
+        glTexCoord2f(1, 1);glVertex3f(sx, sy, 0)
+        glTexCoord2f(1, 0);glVertex3f(sx, -sy, 0)
+        glTexCoord2f(0, 0);glVertex3f(-sx, -sy, 0)
         glEnd()
 
         glPopMatrix()
 
         if not ble_return:glDisable(GL_BLEND)
         if light_return:glEnable(GL_LIGHTING)
-##        if dep_return:glEnable(GL_DEPTH_TEST)
 
         return None
 
@@ -315,32 +313,27 @@ class DynamicImage(FlatImage):
                  color=(1, 1, 1, 1)):
         FlatImage.__init__(self, surface, color, camera)
 
-    def render(self, pos):
+    def render(self, pos, rotation):
         posx, posy, posz = pos
 
         posx *= 2
         posy *= 2 #compensate because the squares are + and - 1
 
-        sx, sy = self.fixed_size
-
         glBindTexture(GL_TEXTURE_2D, self.texture)
 
         ble_return = glGetBooleanv(GL_BLEND)
         light_return = glGetBooleanv(GL_LIGHTING)
-##        dep_return = glGetBooleanv(GL_DEPTH_TEST)
 
         glDisable(GL_LIGHTING)
-##        glDisable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 
         glPushMatrix()
         glTranslatef(posx, posy, posz)
-##        if self.camera:
-##            glRotatef(-self.camera.angle[0], 1, 0, 0)
-##            glRotatef(-self.camera.angle[1], 0, 1, 0)
-##            glRotatef(-self.camera.angle[2], 0, 0, 1)
-        glScale(sx, sy, 1)
+
+        glRotatef(rotation[0], 1, 0, 0)
+        glRotatef(rotation[1], 0, 1, 0)
+        glRotatef(rotation[2], 0, 0, 1)
 
         glBegin(GL_QUADS)
         glTexCoord2f(0, 1);glVertex3f(-1, 1, 0)
@@ -353,6 +346,99 @@ class DynamicImage(FlatImage):
 
         if not ble_return:glDisable(GL_BLEND)
         if light_return:glEnable(GL_LIGHTING)
-##        if dep_return:glEnable(GL_DEPTH_TEST)
+
+        return None
+
+
+class Tile(object):
+    def __init__(self, image_top, image_cliff_west,
+                 image_cliff_east, image_cliff_north,
+                 image_cliff_south,
+                 pos, corners=(0, 0, 0, 0),
+                 color=(1,1,1,1)):
+
+        self.image_top = image_top
+        self.image_cliff_east = image_cliff_east
+        self.image_cliff_west = image_cliff_west
+        self.image_cliff_north = image_cliff_north
+        self.image_cliff_south = image_cliff_south
+
+        self.corners = corners #[topleft, topright, bottomright, bottomleft]
+
+        self.pos = pos
+
+        self.color = color
+
+    def __render_edge(self, coords, tex):
+        glBindTexture(GL_TEXTURE_2D, tex)
+        glColor4f(*self.color)
+        glBegin(GL_QUADS)
+        glTexCoord2f(0, 1);glVertex3f(coords[0][0], coords[0][1], coords[0][2])
+        glTexCoord2f(1, 1);glVertex3f(coords[1][0], coords[1][1], coords[1][2])
+        glTexCoord2f(1, 0);glVertex3f(coords[2][0], coords[2][1], coords[2][2])
+        glTexCoord2f(0, 0);glVertex3f(coords[3][0], coords[3][1], coords[3][2])
+        glEnd()
+
+        return None
+
+    def render(self):
+        posx, posy, posz = self.pos
+
+        posx *= 2
+        posy *= 2 #compensate because the squares are + and - 1
+
+        ble_return = glGetBooleanv(GL_BLEND)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+
+        glPushMatrix()
+        glTranslatef(posx, posy, 0)
+
+        #top face
+        self.__render_edge(((-1, 1, self.corners[0]),
+                            (1, 1, self.corners[1]),
+                            (1, -1, self.corners[2]),
+                            (-1, -1, self.corners[3])),
+                           self.image_top)
+
+        #bottom face
+        self.__render_edge(((-1, 1, posz),
+                            (1, 1, posz),
+                            (1, -1, posz),
+                            (-1, -1, posz)),
+                           self.image_top)
+
+        #west face
+        self.__render_edge(((-1, 1, posz),
+                            (-1, 1, self.corners[0]),
+                            (-1, -1, self.corners[3]),
+                            (-1, -1, posz)),
+                           self.image_cliff_west)
+
+        #east face
+        self.__render_edge(((1, 1, posz),
+                            (1, 1, self.corners[1]),
+                            (1, -1, self.corners[2]),
+                            (1, -1, posz)),
+                           self.image_cliff_east)
+
+        #north face
+        self.__render_edge(((-1, 1, posz),
+                            (-1, 1, self.corners[0]),
+                            (1, 1, self.corners[1]),
+                            (1, 1, posz)),
+                           self.image_cliff_west)
+
+        #east face
+        self.__render_edge(((-1, -1, posz),
+                            (-1, -1, self.corners[2]),
+                            (1, -1, self.corners[3]),
+                            (1, -1, posz)),
+                           self.image_cliff_east)
+
+        glPopMatrix()
+
+        if not ble_return:glDisable(GL_BLEND)
 
         return None
