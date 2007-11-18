@@ -14,7 +14,11 @@ def main():
     tile = Tile((image, image, image, image, image),
                 (0, 0, 0),
                 (5, 8, 2, 4),
-                (0.75, 1, 0.75, 1))
+                (1, 1, 0, 1))
+    t2 = Tile((image, image, image, image, image),
+                (0, 0, -2),
+                (4, 2, 3, 4),
+                (1, 1, 0, 1))
 
     rotation=0
 
@@ -30,10 +34,18 @@ def main():
                 if event.key==K_RIGHT:
                     rotation-=25
 
+        pick = select_tiles([tile, t2], pygame.mouse.get_pos())
+        if pick:
+            pick.color = (1, 0, 1, 1)
+        
         clear_screen()
         c.update()
         glRotatef(rotation, 0, 1, 0)
         tile.render()
+        t2.render()
         pygame.display.flip()
+        
+        if pick:
+            pick.color = (1, 1, 0, 1)
 
 main()

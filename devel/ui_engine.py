@@ -332,16 +332,69 @@ class Tile(object):
 
         return None
 
-    def render(self):
+    def __render_edge_pick(self, coords):
+        glBegin(GL_QUADS)
+        glVertex3f(coords[0][0], coords[0][1], coords[0][2])
+        glVertex3f(coords[1][0], coords[1][1], coords[1][2])
+        glVertex3f(coords[2][0], coords[2][1], coords[2][2])
+        glVertex3f(coords[3][0], coords[3][1], coords[3][2])
+        glEnd()
+
+        return None
+
+    def render_pick(self):
         posx, posy, posz = self.pos
 
         posx *= 2
         posy *= 2 #compensate because the squares are + and - 1
 
-        ble_return = glGetBooleanv(GL_BLEND)
+        glPushMatrix()
+        glTranslatef(posx, 0, posz)
 
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
+        self.__render_edge_pick(((-1, self.corners[0], 1),
+                            (1, self.corners[1], 1),
+                            (1, self.corners[2], -1),
+                            (-1, self.corners[3], -1)))
+
+        #bottom face
+        self.__render_edge_pick(((-1, posy, 1),
+                            (1, posy, 1),
+                            (1, posy, -1),
+                            (-1, posy, -1)))
+
+        #west face
+        self.__render_edge_pick(((-1, self.corners[0], 1),
+                            (-1, posy, 1),
+                            (-1, posy, -1),
+                            (-1, self.corners[3], -1)))
+
+        #east face
+        self.__render_edge_pick(((1, posy, 1),
+                            (1, self.corners[1], 1),
+                            (1, self.corners[2], -1),
+                            (1, posy, -1)))
+
+        #north face
+        self.__render_edge_pick(((-1, posy, 1),
+                            (1, posy, 1),
+                            (1, self.corners[1], 1),
+                            (-1, self.corners[0], 1)))
+
+        #south face
+        self.__render_edge_pick(((-1, posy, -1),
+                            (1, posy, -1),
+                            (1, self.corners[2], -1),
+                            (-1, self.corners[3], -1)))
+
+        glPopMatrix()
+
+        return None
+
+    def render(self):
+        posx, posy, posz = self.pos
+
+        posx *= 2
+        posy *= 2 #compensate because the squares are + and - 1
 
         glPushMatrix()
         glTranslatef(posx, 0, posz)
@@ -390,6 +443,20 @@ class Tile(object):
 
         glPopMatrix()
 
-        if not ble_return:glDisable(GL_BLEND)
-
         return None
+
+def select_tiles(tiles, mouse_pos):
+    def render():
+        num = 0
+        for i in tiles:
+            glPushName(num)
+            i.render_pick()
+            i.select_name = num
+            glPopName()
+            num += 1
+        return None
+    a = glSelectWithCallback(mouse_pos[0], mouse_pos[1],
+                             render)
+    if a and a[0][2]:
+        return tiles[int(a[0][2][-1])]
+    return None
