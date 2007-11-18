@@ -253,7 +253,7 @@ def create_texture(surface):
 def load_image(filename):
     return create_texture(pygame.image.load(filename))
 
-class FlatImage(object):
+class Sprite(object):
     def __init__(self, surface,
                  camera=None,
                  color=(1, 1, 1, 1)):
@@ -307,61 +307,12 @@ class FlatImage(object):
         return None
 
 
-class DynamicImage(FlatImage):
-    def __init__(self, surface,
-                 camera=None,
-                 color=(1, 1, 1, 1)):
-        FlatImage.__init__(self, surface, color, camera)
-
-    def render(self, pos, rotation):
-        posx, posy, posz = pos
-
-        posx *= 2
-        posy *= 2 #compensate because the squares are + and - 1
-
-        glBindTexture(GL_TEXTURE_2D, self.texture)
-
-        ble_return = glGetBooleanv(GL_BLEND)
-        light_return = glGetBooleanv(GL_LIGHTING)
-
-        glDisable(GL_LIGHTING)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
-
-        glPushMatrix()
-        glTranslatef(posx, posy, posz)
-
-        glRotatef(rotation[0], 1, 0, 0)
-        glRotatef(rotation[1], 0, 1, 0)
-        glRotatef(rotation[2], 0, 0, 1)
-
-        glBegin(GL_QUADS)
-        glTexCoord2f(0, 1);glVertex3f(-1, 1, 0)
-        glTexCoord2f(1, 1);glVertex3f(1, 1, 0)
-        glTexCoord2f(1, 0);glVertex3f(1, -1, 0)
-        glTexCoord2f(0, 0);glVertex3f(-1, -1, 0)
-        glEnd()
-
-        glPopMatrix()
-
-        if not ble_return:glDisable(GL_BLEND)
-        if light_return:glEnable(GL_LIGHTING)
-
-        return None
-
-
 class Tile(object):
-    def __init__(self, image_top, image_cliff_west,
-                 image_cliff_east, image_cliff_north,
-                 image_cliff_south,
+    def __init__(self, images,
                  pos, corners=(0, 0, 0, 0),
                  color=(1,1,1,1)):
 
-        self.image_top = image_top
-        self.image_cliff_east = image_cliff_east
-        self.image_cliff_west = image_cliff_west
-        self.image_cliff_north = image_cliff_north
-        self.image_cliff_south = image_cliff_south
+        self.images = images
 
         self.corners = corners #[topleft, topright, bottomright, bottomleft]
 
@@ -393,49 +344,49 @@ class Tile(object):
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA)
 
         glPushMatrix()
-        glTranslatef(posx, posy, 0)
+        glTranslatef(posx, 0, posz)
 
         #top face
-        self.__render_edge(((-1, 1, self.corners[0]),
-                            (1, 1, self.corners[1]),
-                            (1, -1, self.corners[2]),
-                            (-1, -1, self.corners[3])),
-                           self.image_top)
+        self.__render_edge(((-1, self.corners[0], 1),
+                            (1, self.corners[1], 1),
+                            (1, self.corners[2], -1),
+                            (-1, self.corners[3], -1)),
+                           self.images[0])
 
         #bottom face
-        self.__render_edge(((-1, 1, posz),
-                            (1, 1, posz),
-                            (1, -1, posz),
-                            (-1, -1, posz)),
-                           self.image_top)
+        self.__render_edge(((-1, posy, 1),
+                            (1, posy, 1),
+                            (1, posy, -1),
+                            (-1, posy, -1)),
+                           self.images[0])
 
         #west face
-        self.__render_edge(((-1, 1, posz),
-                            (-1, 1, self.corners[0]),
-                            (-1, -1, self.corners[3]),
-                            (-1, -1, posz)),
-                           self.image_cliff_west)
+        self.__render_edge(((-1, self.corners[0], 1),
+                            (-1, posy, 1),
+                            (-1, posy, -1),
+                            (-1, self.corners[3], -1)),
+                           self.images[1])
 
         #east face
-        self.__render_edge(((1, 1, posz),
-                            (1, 1, self.corners[1]),
-                            (1, -1, self.corners[2]),
-                            (1, -1, posz)),
-                           self.image_cliff_east)
+        self.__render_edge(((1, posy, 1),
+                            (1, self.corners[1], 1),
+                            (1, self.corners[2], -1),
+                            (1, posy, -1)),
+                           self.images[2])
 
         #north face
-        self.__render_edge(((-1, 1, posz),
-                            (-1, 1, self.corners[0]),
-                            (1, 1, self.corners[1]),
-                            (1, 1, posz)),
-                           self.image_cliff_west)
+        self.__render_edge(((-1, posy, 1),
+                            (1, posy, 1),
+                            (1, self.corners[1], 1),
+                            (-1, self.corners[0], 1)),
+                           self.images[3])
 
-        #east face
-        self.__render_edge(((-1, -1, posz),
-                            (-1, -1, self.corners[2]),
-                            (1, -1, self.corners[3]),
-                            (1, -1, posz)),
-                           self.image_cliff_east)
+        #south face
+        self.__render_edge(((-1, posy, -1),
+                            (1, posy, -1),
+                            (1, self.corners[2], -1),
+                            (-1, self.corners[3], -1)),
+                           self.images[4])
 
         glPopMatrix()
 
