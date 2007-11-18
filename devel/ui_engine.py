@@ -134,7 +134,7 @@ class Camera(object):
 
         glPushMatrix()
 
-        glTranslatef(-self.distance[0], -self.distance[1], -self.distance[2])
+        glTranslatef(0, 0, -self.distance)
 
         glRotatef(self.angle[0], 1, 0, 0)
         glRotatef(self.angle[1], 0, 1, 0)

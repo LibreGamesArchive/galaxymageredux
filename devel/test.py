@@ -23,6 +23,7 @@ def main():
                 return
 
         clear_screen()
+        c.update()
         tile.render()
         pygame.display.flip()
 
