@@ -342,7 +342,7 @@ class Tile(object):
 
         return None
 
-    def render_pick(self):
+    def render_pick(self, color=(1, 1, 1)):
         posx, posy, posz = self.pos
 
         posx *= 2
@@ -350,6 +350,8 @@ class Tile(object):
 
         glPushMatrix()
         glTranslatef(posx, 0, posz)
+
+        glColor3f(*color)
 
         self.__render_edge_pick(((-1, self.corners[0], 1),
                             (1, self.corners[1], 1),
@@ -446,17 +448,27 @@ class Tile(object):
         return None
 
 def select_tiles(tiles, mouse_pos):
-    def render():
-        num = 0
-        for i in tiles:
-            glPushName(num)
-            i.render_pick()
-            i.select_name = num
-            glPopName()
-            num += 1
-        return None
-    a = glSelectWithCallback(mouse_pos[0], mouse_pos[1],
-                             render)
-    if a and a[0][2]:
-        return tiles[int(a[0][2][-1])]
-    return None
+    clear_screen()
+    mx, my = mouse_pos
+    my = ScreenSize[1] - my
+    cur_color = 0.5
+    last_color = None
+    correct = None
+    for i in tiles:
+        i.render_pick((cur_color, 0, 0))
+        result = glReadPixelsf(mx, my, 1, 1, GL_RGB)
+        if not last_color:
+            last_color = result
+            cur_color = 1
+            if not last_color[0][0][0] == 1.0:
+                correct = i
+        else:
+            if not last_color == result:
+                last_color = result
+                correct = i
+                if cur_color == 0.5:
+                    cur_color = 1
+                else:
+                    cur_color = 0.5
+    clear_screen()
+    return correct
