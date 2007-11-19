@@ -460,10 +460,10 @@ def select_tiles(tiles, mouse_pos):
         if not last_color:
             last_color = result
             cur_color = 1
-            if not last_color[0][0][0] == 1.0:
+            if last_color[0] != 1.0:
                 correct = i
         else:
-            if not last_color == result:
+            if last_color != result:
                 last_color = result
                 correct = i
                 if cur_color == 0.5:
