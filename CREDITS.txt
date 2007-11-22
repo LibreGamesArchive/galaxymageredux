@@ -5,6 +5,7 @@ would not be a reality.
 Programming
 -----------
 A. Joseph Hager <ajhager@gmail.com>
+Matthew Roe (RB[0]) <roebros@gmail.com>
 
 Art
 ---
