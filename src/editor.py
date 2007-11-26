@@ -16,30 +16,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from OpenGL.GL import *
+#from network.basic import Client
 
-# These are useful and I am not sure where to put them exactly just yet.
+from gui.display import Display
+from gui.scene import Scene
+from gui.director import Director
 
-def glEnable2d():
-    [x, y, width, height] = glGetIntegerv(GL_VIEWPORT)
 
-    glMatrixMode(GL_PROJECTION)
-    glPushMatrix()
-    glLoadIdentity()
-
-    gluOrtho2D(x, x + width, y, y + height)
-
-    glMatrixMode(GL_MODELVIEW)
-    glPushMatrix()
-    glLoadIdentity()
-
-    glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_LIGHTING_BIT)
-    glDisable(GL_DEPTH_TEST)
-    glDisable(GL_LIGHTING)
-    
-def glDisable2d():
-    glPopAttrib()
-    glMatrixMode(GL_PROJECTION)
-    glPopMatrix()
-    glMatrixMode(GL_MODELVIEW)
-    glPopMatrix()
+if __name__ == '__main__':
+    display = Display(800, 600)
+    scene = Scene()
+    director = Director(display, scene)
+    while director.action():
+        pass

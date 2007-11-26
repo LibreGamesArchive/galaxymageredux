@@ -20,22 +20,27 @@ import pygame
 from pygame.locals import *
 
 
-class Display(object):
-    def __init__(self, width, height, isFullscreen=False):
-        self.isFullscreen = isFullscreen
-        pygame.init()
-        self.resize(width, height)
-        self.update()
-    
-    def resize(self, width, height):
-        if height < 1:
-            height = 1
+class Director(object):
+    def __init__(self, display, scene):
+        self.display = display
+        self.scene = scene
+        self.clock = pygame.time.Clock()
+        
+    def resizeDisplay(self, width, height):
+        self.display.resize(width, height)
+        self.scene.rebuild()
 
-        flags = OPENGL | DOUBLEBUF | HWSURFACE
-        if self.isFullscreen:
-            flags |= FULLSCREEN
+    def action(self):
+        self.scene.film()
+        self.clock.tick()
+        self.display.update()
 
-        pygame.display.set_mode((width, height), flags)
-
-    def update(self):
-        pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type is KEYDOWN:
+                print self.clock.get_fps()
+                if event.key == 27:
+                    pygame.quit()
+                    return False
+            elif event.type is MOUSEBUTTONDOWN:
+                self.scene.pick(event.pos)
+        return True
