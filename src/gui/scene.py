@@ -39,7 +39,7 @@ class Scene(object):
         self.foreground.add(node)
         self.build()
 
-    def addBackground(self, entity):
+    def addBackground(self, node):
         self.background.add(node)
         self.build()
 

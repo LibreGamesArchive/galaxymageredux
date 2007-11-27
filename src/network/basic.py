@@ -29,12 +29,12 @@ class Server(object):
         self.avatars = []
 
     def join(self, avatar):
-        #self.remoteAll("serverMessage", "%s joined the server" % avatar.name)
+        self.remoteAll("serverMessage", "%s joined the server" % avatar.name)
         self.avatars.append(avatar)
 
     def leave(self, avatar):
         self.avatars.remove(avatar)
-        #self.remoteAll("serverMessage", "%s left the server" % avatar.name)
+        self.remoteAll("serverMessage", "%s left the server" % avatar.name)
 
     def remote(self, avatar, action, *args):
         df = avatar.client.callRemote(action, *args)
@@ -45,6 +45,7 @@ class Server(object):
         for avatar in self.avatars:
             dfs.append(self.remote(avatar, action, *args))
         return dfs
+
 
 class CreatorAvatar(pb.Avatar):
     def __init__(self, name, server, clientRef):

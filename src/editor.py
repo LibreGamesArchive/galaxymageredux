@@ -26,6 +26,7 @@ from gui.scene import Scene
 
 from network.basic import Client
 
+import qgl
 
 class OpenGLClient(Client):
     def __init__(self, host, port, user):
@@ -33,6 +34,10 @@ class OpenGLClient(Client):
         self.display = Display(800, 600)
         self.scene = Scene()
         self.clock = pygame.time.Clock()
+        self.text = qgl.scene.state.Text("", "mono.ttf")
+        self.group = qgl.scene.Group(self.text)
+        self.group.translate = (-10, 0, -30)
+        self.scene.addBackground(self.group)
 
     def resizeDisplay(self, width, height):
         self.display.resize(width, height)
@@ -54,6 +59,10 @@ class OpenGLClient(Client):
                 self.scene.pick(event.pos)
         
         reactor.callLater(0, self.update)
+
+    # Methods callable by the server
+    def remote_serverMessage(self, message):
+        self.text.set_text(message)
 
         
 user = raw_input("What is your name? ")
