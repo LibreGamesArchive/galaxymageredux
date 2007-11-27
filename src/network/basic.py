@@ -29,12 +29,12 @@ class Server(object):
         self.avatars = []
 
     def join(self, avatar):
-        self.remoteAll("serverMessage", "%s joined the server" % avatar.name)
+        #self.remoteAll("serverMessage", "%s joined the server" % avatar.name)
         self.avatars.append(avatar)
 
     def leave(self, avatar):
         self.avatars.remove(avatar)
-        self.remoteAll("serverMessage", "%s left the server" % avatar.name)
+        #self.remoteAll("serverMessage", "%s left the server" % avatar.name)
 
     def remote(self, avatar, action, *args):
         df = avatar.client.callRemote(action, *args)
@@ -107,9 +107,10 @@ class Client(pb.Referenceable):
     def connected(self, avatar):
         print "connected..."
         self.avatar = avatar
+        self.update()
+
+    def update(self):
+        pass
 
     def shutdown(self, result):
         reactor.stop()
-
-    def remote_serverMessage(self, message):
-        print message

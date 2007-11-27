@@ -16,34 +16,46 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-from network.basic import Client
+from twisted.internet import reactor
+
+import pygame
+from pygame.locals import *
 
 from gui.display import Display
 from gui.scene import Scene
-from gui.director import Director
 
-from twisted.internet import reactor
+from network.basic import Client
 
 
 class OpenGLClient(Client):
-    def __init__(self, host, port, user, director):
+    def __init__(self, host, port, user):
         Client.__init__(self, host, port, user)
-        self.director = director
-        
-    def remote_turnQuad():
-        pass
-    
-    def connected(self, avatar):
-        print "yo yo"
-        self.avatar = avatar
-        self.update()
+        self.display = Display(800, 600)
+        self.scene = Scene()
+        self.clock = pygame.time.Clock()
+
+    def resizeDisplay(self, width, height):
+        self.display.resize(width, height)
+        self.scene.rebuild()
 
     def update(self):
-        if self.director.action():
-            reactor.callLater(0, self.update)
-        else:
-            reactor.stop()
+        self.scene.film()
+        self.clock.tick()
+        self.display.update()
+
+        for event in pygame.event.get():
+            if event.type is KEYDOWN:
+                print self.clock.get_fps()
+                if event.key == 27:
+                    pygame.quit()
+                    reactor.stop()
+                    return
+            elif event.type is MOUSEBUTTONDOWN:
+                self.scene.pick(event.pos)
+        
+        reactor.callLater(0, self.update)
+
         
 user = raw_input("What is your name? ")
-director = Director(Display(800, 600), Scene())
-client = OpenGLClient("localhost", 44444, user, director).connect()
+client = OpenGLClient("localhost", 44444, user)
+client.connect()
