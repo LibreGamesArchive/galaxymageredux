@@ -43,4 +43,5 @@ class Director(object):
                     return False
             elif event.type is MOUSEBUTTONDOWN:
                 self.scene.pick(event.pos)
+
         return True

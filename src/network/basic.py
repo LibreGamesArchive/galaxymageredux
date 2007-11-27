@@ -20,6 +20,7 @@ from twisted.spread import pb
 from twisted.internet import reactor
 from twisted.cred import credentials
 
+
 class Server(object):
     def __init__(self):
         self.avatarTypes = {"creator" : CreatorAvatar,
