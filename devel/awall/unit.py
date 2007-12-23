@@ -48,7 +48,7 @@ class Entity:
             
     def add_to_map(self, map_, x_position, y_position, layer):
         self.current_position = (x_position, y_position, layer)
-        map_.map_panels[x][y][layer].entity = self
+        map_.map_panels[x_position][y_position][layer].entity = self
 
 class Unit(Entity):
     """Class Representing a Unit"""

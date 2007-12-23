@@ -12,6 +12,5 @@ b.clocktick += bob.update
 
 
 
-m = Map(5, 5, 1)
-
-alice.add_to_map(m, 0, 0, 0)
+#m = Map(5, 5, 1)
+#alice.add_to_map(m, 0, 0, 0)
