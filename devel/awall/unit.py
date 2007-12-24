@@ -7,7 +7,7 @@ unit_turn_ct_base_cost = 60
 class Gender:
     MALE, FEMALE, NEUTER = range(3)
     
-class Statistic(property):
+class Statistic(object):
     """
     Class representing one of a unit's Statistics (Attack, Speed, MaxHP, etc.)
     """
@@ -18,7 +18,7 @@ class Statistic(property):
     SPEED, \
     PHYSICAL_ATTACK, \
     MAGIC_ATTACK, \
-    MOVEMENT_RANGE, \
+    MOVE_RANGE, \
     JUMP_RANGE = range(7)
     
     def __init__(self):
@@ -36,11 +36,12 @@ class Statistic(property):
         return result
 
 
-class Entity:
+class Entity(object):
     """Docstring"""
     
     
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         # Current position stores x, y, layer.
         # layer is used for overlapping terrain; it is usually 0, but
         # can be higher if the unit is on a bridge or something
@@ -49,20 +50,20 @@ class Entity:
     def add_to_map(self, map_, x_position, y_position, layer):
         self.current_position = (x_position, y_position, layer)
         map_.map_panels[x_position][y_position][layer].entity = self
-
+        
 class Unit(Entity):
     """Class Representing a Unit"""
    
-    def __init__(self, _name, _gender):
-        self.name = _name
-        self.gender = _gender
+    def __init__(self, name, gender):
+        super(Unit, self).__init__(name)
+        self.gender = gender
         self.statistics = { 
             Statistic.PHYSICAL_ATTACK : Statistic(),
             Statistic.MAGIC_ATTACK    : Statistic(),
             Statistic.SPEED           : Statistic(),
             Statistic.MAX_HP          : Statistic(),
             Statistic.MAX_MP          : Statistic(),
-            Statistic.MOVEMENT_RANGE  : Statistic(),
+            Statistic.MOVE_RANGE      : Statistic(),
             Statistic.JUMP_RANGE      : Statistic() }
         self.current_HP = \
             self.statistics[Statistic.MAX_HP].get_effective_value()

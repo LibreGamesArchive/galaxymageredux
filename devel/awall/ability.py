@@ -1,2 +1,2 @@
-class Ability:
+class Ability(object):
     pass
