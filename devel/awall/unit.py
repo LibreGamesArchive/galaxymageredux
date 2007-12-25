@@ -97,4 +97,4 @@ class Unit(Entity):
         """
         Handle a turn
         """
-        print self.name,"'s turn is beginning"
+        print "%s's turn is beginning" % self.name
