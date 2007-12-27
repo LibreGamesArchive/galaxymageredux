@@ -53,7 +53,10 @@ class Realm(object):
     def requestAvatar(self, name, clientRef, *interfaces):
         assert pb.IPerspective in interfaces
 
-        if self.server.avatars == []:
+        # TODO: Make a proper way to hand out the right avatar
+        if self.server.type == 'game':
+            avatarType = self.server.avatarTypes["player"]
+        elif self.server.avatars == []:
             avatarType = self.server.avatarTypes["creator"]
         else:
             avatarType = self.server.avatarTypes["collaborator"]

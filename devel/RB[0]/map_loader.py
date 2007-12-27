@@ -3,7 +3,7 @@ import os
 import ui_engine
 
 
-global all_images, all_terrains, all_tiles_list
+global all_images, all_terrains, all_tiles_list, datadir
 all_images = {}
 all_terrains = {}
 all_tiles_list = []
@@ -31,8 +31,8 @@ class Terrain(object):
         all_terrains[self.name] = self
 
 def image(name=None, filename="None.png"):
-    global all_images
-    filename = os.path.join(*filename.split("/"))
+    global all_images, datadir
+    filename = os.path.join(datadir, *filename.split("/"))
     all_images[name] = ui_engine.load_image(filename)
     return None
 
@@ -67,6 +67,8 @@ def map_tile(x=0, y=0, bottom=0, height=5,
     return None
 
 def load_map(filename):
+    global datadir
+    datadir = os.path.dirname(filename)
     a = open(filename, 'rU').read()
     exec a
 

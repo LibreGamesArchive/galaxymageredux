@@ -25,8 +25,10 @@ class Server(object):
     def __init__(self):
         self.avatarTypes = {"creator" : CreatorAvatar,
                             "collaborator" : CollaboratorAvatar,
-                            "observer" : ObserverAvatar}
+                            "observer" : ObserverAvatar,
+                            "player" : PlayerAvatar}
         self.avatars = []
+        self.type = ''
 
     def join(self, avatar):
         self.remoteAll("serverMessage", "%s joined the server" % avatar.name)
@@ -89,6 +91,28 @@ class ObserverAvatar(pb.Avatar):
         self.server = None
         self.client = None
 
+class PlayerAvatar(pb.Avatar):
+    """This class defines what a player's client can and cannot do on the 
+    server. Any method prefixed with 'perspective_' may be invoked by the 
+    client. This is only security level and the results of any call are dealt
+    with by the game engine itself."""
+    def __init__(self, name, server, clientRef):
+        self.name = name
+        self.server = server
+        self.client = clientRef
+
+    def attached(self):
+        self.server.join(self)
+
+    def detached(self):
+        self.server.leave(self)
+        self.server = None
+        self.client = None
+
+    def perspective_requestMove(self, unit_id, position):
+        # forward request to game engine with 'self' to ID the origin of the call
+        self.server.requestMove(self, unit_id, position)
+
 class Client(pb.Referenceable):
     def __init__(self, hostname, port, username):
         self.hostname = hostname
@@ -114,4 +138,5 @@ class Client(pb.Referenceable):
         pass
 
     def shutdown(self, result):
+        print result
         reactor.stop()
