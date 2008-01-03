@@ -16,46 +16,41 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
+import os
+
 from twisted.internet import reactor
 
 import pygame
 from pygame.locals import *
 
-import os
-import sys  # ugly, but necessary for now..
-rbpath = '../devel/RB[0]'
-sys.path.append(rbpath)
-
-import ui_engine
-from ui_engine import *
-import map_loader
-
-from network.basic import Client
+import modules
+from modules import gfx, map_loader, network
+from modules.network.basic import Client
 
 class OpenGLClient(Client):
     def __init__(self, host, port, user):
         Client.__init__(self, host, port, user) # base connects to server
-        init()
-        set_3d()
+        gfx.init()
+        gfx.set_3d()
         self.clock = pygame.time.Clock()
 
-        c = Camera()
+        c = gfx.Camera()
         c.move((0, 0, 0))
         c.distance = 15
         c.rotate((45, 45, 0))
         self.cam = c
 
-        l = Light((0,0,-15),
+        l = gfx.Light((0,0,-15),
                   (1,1,1,1),
                   (1,1,1,1),
                   (1,1,1,1))
 
         self.images, self.terrains, self.tiles = map_loader.load_map(
-                os.path.join(rbpath, "test_map.py"))
+                os.path.join("..", "data", "maps", "test_map.py"))
 
         self.units = [] # store all units by position here
-        self.myunit = ui_engine.Sprite(pygame.image.load(
-                os.path.join(rbpath, "unit_example.png")), c)
+        self.myunit = gfx.Sprite(pygame.image.load(
+                os.path.join("..", "data", "images", "unit_example.png")), c)
 
     def update(self):
         """Called once the client has connected and provides the main loop for
@@ -79,7 +74,7 @@ class OpenGLClient(Client):
             if event.type == MOUSEBUTTONDOWN:
                 click = True
 
-        pick = select_tiles(self.tiles, pygame.mouse.get_pos())
+        pick = gfx.select_tiles(self.tiles, pygame.mouse.get_pos())
         if pick:
             pick.old_color = pick.color
             pick.set_color((1, 0, 1, 1))
