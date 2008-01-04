@@ -17,30 +17,30 @@
 # 02110-1301, USA.
 
 import os
-
 from twisted.internet import reactor
 
 import pygame
 from pygame.locals import *
 
-import modules
-from modules import gfx, map_loader, network
-from modules.network.basic import Client
+from rbgfx import map_loader
+from rbgfx.gfx import *
+
+from network.basic import Client
 
 class OpenGLClient(Client):
     def __init__(self, host, port, user):
         Client.__init__(self, host, port, user) # base connects to server
-        gfx.init()
-        gfx.set_3d()
+        init()
+        set_3d()
         self.clock = pygame.time.Clock()
 
-        c = gfx.Camera()
+        c = Camera()
         c.move((0, 0, 0))
         c.distance = 15
         c.rotate((45, 45, 0))
         self.cam = c
 
-        l = gfx.Light((0,0,-15),
+        l = Light((0,0,-15),
                   (1,1,1,1),
                   (1,1,1,1),
                   (1,1,1,1))
@@ -49,7 +49,7 @@ class OpenGLClient(Client):
                 os.path.join("..", "data", "maps", "test_map.py"))
 
         self.units = [] # store all units by position here
-        self.myunit = gfx.Sprite(pygame.image.load(
+        self.myunit = Sprite(pygame.image.load(
                 os.path.join("..", "data", "images", "unit_example.png")), c)
 
     def update(self):
@@ -74,7 +74,7 @@ class OpenGLClient(Client):
             if event.type == MOUSEBUTTONDOWN:
                 click = True
 
-        pick = gfx.select_tiles(self.tiles, pygame.mouse.get_pos())
+        pick = select_tiles(self.tiles, pygame.mouse.get_pos())
         if pick:
             pick.old_color = pick.color
             pick.set_color((1, 0, 1, 1))

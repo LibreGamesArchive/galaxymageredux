@@ -18,10 +18,10 @@
 
 from twisted.spread import pb
 from twisted.internet import reactor
-from modules.network.basic import Server
-from modules.network import realm
+from network.basic import Server
+from network import realm
 
-class GameServer(Server, pb.Referenceable):
+class GameServer(Server):
     def __init__(self):
         Server.__init__(self)
         self.type = 'game'
