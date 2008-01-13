@@ -45,19 +45,31 @@ def load_animation_file(file_name):
         if not values:
             continue
 
+        if values[0] == "ver":
+            version = values[1]
+            if not version == VERSION:
+                class BadVersionError(Exception):
+                    def __init__(self, value):
+                        self.value = value
+                    def __str__(self):
+                        return repr(self.value)
+                raise BadVersionError("requires version %s, got %s"%(VERSION, version))
+
         if values[0] == "ani":
             animations[values[1]] = []
             cur_ani = values[1]
 
         if values[0] == "ar":
-            animations[values[1]].append(["ROTATE",
-                                         map(int, values[2:3]),
-                                         map(float, values[4:6])])
+            animations[cur_ani].append(["ROTATE",
+                                        values[1],
+                                        map(int, values[2:4]),
+                                        map(float, values[4:7])])
 
         if values[0] == "at":
-            animations[values[1]].append(["TRANSLATE",
-                                          map(int, values[2:3]),
-                                          map(float, values[4:6])])
+            animations[cur_ani].append(["TRANSLATE",
+                                        values[1],
+                                        map(int, values[2:4]),
+                                        map(float, values[4:7])])
 
         if values[0] == "lani":
             animations.update(load_animation_file(os.path.join(path, values[1])))
@@ -198,7 +210,7 @@ class AnimationAction(object):
     def get_num_frames(self):
         cur = 0
         for i in self.actions:
-            end = i[2]
+            end = i[2][1]
             if end > cur:
                 cur = end
         return cur
@@ -209,6 +221,7 @@ class AnimationAction(object):
                 (L[2] / (end - start)) * (self.current_frame - start))
 
     def get_current_frame(self, object_name):
+        print object_name, self.comp_ani
         if object_name in self.comp_ani:
             cur = []
             for i in self.comp_ani[object_name]:
@@ -218,6 +231,7 @@ class AnimationAction(object):
                     else:
                         cur.append(["TRANSLATE", self.make_value(i[2][0], i[2][1], i[3])])
             return cur
+        return []
 
     def update(self):
         self.current_frame += 1
@@ -276,9 +290,24 @@ class Mesh(object):
 
         self.animations = self.build_animations(animations)
 
+        self.action = None
+
         self.limbs = self.build_limbs()
 
         self.build_connections()
+
+    def update(self):
+        if self.action:
+            self.animations[self.action].update()
+
+            for i in self.limbs:
+                a = self.animations[self.action].get_current_frame(i)
+                for x in a:
+                    if x[0] == "ROTATE":
+                        i.rotation_dif = x[1]
+                    if x[0] == "TRANSLATE":
+                        i.position_dif = x[1]
+                print a
 
     def build_animations(self, animations):
         new = {}
@@ -350,10 +379,16 @@ def main():
               (1,1,1,1),
               (1,1,1,1))
 
-    core.clear_screen()
-    c.update()
+    clock = pygame.time.Clock()
 
-    a = Mesh(*parse_file("test.gmm"))
-    a.render((0, 0, 25))
-    pygame.display.flip()
+    for i in xrange(25):
+        clock.tick(15)
+        core.clear_screen()
+        c.update()
+
+        a = Mesh(*parse_file("test.gmm"))
+        a.action = "rotate"
+        a.render((0, 0, 25))
+        a.update()
+        pygame.display.flip()
 main()
