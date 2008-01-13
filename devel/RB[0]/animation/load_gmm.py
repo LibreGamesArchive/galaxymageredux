@@ -189,55 +189,6 @@ def parse_file(file_name):
 
     return objects, faces, verts, norms, mtls, texcs, bones, bone_connections, animations
 
-class AnimationAction(object):
-    def __init__(self, actions):
-        self.actions = actions
-
-        self.num_frames = self.get_num_frames()
-
-        self.comp_ani = self.get_comp_ani()
-
-        self.current_frame = 0
-
-    def get_comp_ani(self):
-        comp = {}
-        for i in self.actions:
-            if not i[1] in comp:
-                comp[i[1]] = []
-            comp[i[1]].append([i[0], i[2], i[3]])
-        return comp
-
-    def get_num_frames(self):
-        cur = 0
-        for i in self.actions:
-            end = i[2][1]
-            if end > cur:
-                cur = end
-        return cur
-
-    def make_value(self, start, end, L):
-        return ((L[0] / (end - start)) * (self.current_frame - start),
-                (L[1] / (end - start)) * (self.current_frame - start),
-                (L[2] / (end - start)) * (self.current_frame - start))
-
-    def get_current_frame(self, object_name):
-        if object_name in self.comp_ani:
-            cur = []
-            for i in self.comp_ani[object_name]:
-                if i[2][0] <= self.current_frame <= i[2][1]:
-                    if i[0] == "ROTATE":
-                        cur.append(["ROTATE", self.make_value(i[1][0], i[1][1], i[2])])
-                    else:
-                        cur.append(["TRANSLATE", self.make_value(i[1][0], i[1][1], i[2])])
-            return cur
-        return []
-
-    def update(self):
-        self.current_frame += 1
-        if self.current_frame > self.num_frames:
-            self.current_frame = 0
-
-
 class Limb(object):
     def __init__(self, name, gl_list, bone):
         self.name = name
@@ -287,31 +238,9 @@ class Mesh(object):
 
         self.swapyz = swapyz
 
-        self.animations = self.build_animations(animations)
-
-        self.action = None
-
         self.limbs = self.build_limbs()
 
         self.build_connections()
-
-    def update(self):
-        if self.action:
-            self.animations[self.action].update()
-
-            for i in self.limbs:
-                a = self.animations[self.action].get_current_frame(i)
-                for x in a:
-                    if x[0] == "ROTATE":
-                        self.limbs[i].rotation_dif = x[1]
-                    if x[0] == "TRANSLATE":
-                        self.limbs[i].position_dif = x[1]
-
-    def build_animations(self, animations):
-        new = {}
-        for i in animations:
-            new[i] = AnimationAction(animations[i])
-        return new
 
     def build_limbs(self):
         limbs = {}
@@ -386,8 +315,6 @@ def main():
         core.clear_screen()
         c.update()
 
-        a.action = "rotate"
         a.render((0, 0, 25))
-        a.update()
         pygame.display.flip()
 main()
