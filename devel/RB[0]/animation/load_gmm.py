@@ -221,15 +221,14 @@ class AnimationAction(object):
                 (L[2] / (end - start)) * (self.current_frame - start))
 
     def get_current_frame(self, object_name):
-        print object_name, self.comp_ani
         if object_name in self.comp_ani:
             cur = []
             for i in self.comp_ani[object_name]:
                 if i[2][0] <= self.current_frame <= i[2][1]:
                     if i[0] == "ROTATE":
-                        cur.append(["ROTATE", self.make_value(i[2][0], i[2][1], i[3])])
+                        cur.append(["ROTATE", self.make_value(i[1][0], i[1][1], i[2])])
                     else:
-                        cur.append(["TRANSLATE", self.make_value(i[2][0], i[2][1], i[3])])
+                        cur.append(["TRANSLATE", self.make_value(i[1][0], i[1][1], i[2])])
             return cur
         return []
 
@@ -304,10 +303,9 @@ class Mesh(object):
                 a = self.animations[self.action].get_current_frame(i)
                 for x in a:
                     if x[0] == "ROTATE":
-                        i.rotation_dif = x[1]
+                        self.limbs[i].rotation_dif = x[1]
                     if x[0] == "TRANSLATE":
-                        i.position_dif = x[1]
-                print a
+                        self.limbs[i].position_dif = x[1]
 
     def build_animations(self, animations):
         new = {}
@@ -379,6 +377,8 @@ def main():
               (1,1,1,1),
               (1,1,1,1))
 
+    a = Mesh(*parse_file("test.gmm"))
+
     clock = pygame.time.Clock()
 
     for i in xrange(25):
@@ -386,7 +386,6 @@ def main():
         core.clear_screen()
         c.update()
 
-        a = Mesh(*parse_file("test.gmm"))
         a.action = "rotate"
         a.render((0, 0, 25))
         a.update()
