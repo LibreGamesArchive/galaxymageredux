@@ -12,11 +12,11 @@ class Delegate:
     def __init__(self):
         self.__delegates = []
 
-    def __iadd__(self, callback):
+    def add_callback(self, callback):
         self.__delegates.append(callback)
         return self
 
-    def __isub__(self, callback):
+    def remove_callback(self, callback):
         # If callback is a class instance,
         # remove all callbacks for that instance
         self.__delegates = [ cb

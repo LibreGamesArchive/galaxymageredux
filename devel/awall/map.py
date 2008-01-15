@@ -92,7 +92,7 @@ class Map(object):
     def can_unit_move_in_single_step(self, unit_, from_position, to_position):
         """Return true iff a unit can move from from_position to to_position.
         
-        from_position -- (x,y,layer) to begin at
+        from_position -- MapPosition to begin at
         to_position -- (x,y,layer) to end at
         
         This method is only intended to be called if from_position and
@@ -198,3 +198,76 @@ class Map(object):
                 # add it to the queue
                 movement_costs[dest_x][dest_y][dest_layer] = next_step_cost
                 bfs_queue.append(next_pos)
+                
+    def _warp_unit(self, unit_, dest_position):
+        """
+        Warp a unit from one position to another.
+        All this method does is pick up the unit from its old position and
+        drop it in the new position.  It doesn't look at terrain, etc.
+        """
+        from_x, from_y, from_layer = unit_.current_position
+        to_x, to_y, to_layer = dest_position
+        self.map_panels[from_x][from_y][from_layer].entity = None
+        self.map_panels[to_x][to_y][to_layer].entity = unit_
+        unit_.current_position = dest_position
+                
+    def move_unit(self, unit_, dest_position, movement_costs=None):
+        """
+        Moves a unit from its current location to dest_position.
+        Returns a list of positions that the unit moved through on its way.
+        """
+        # If movement_costs is specified, it should be the structure returned
+        # by calculate_movement_costs_for_unit; this is so that we don't have
+        # to calculate it again if we already did so.
+        if movement_costs == None:
+            movement_costs = self.calculate_movement_costs_for_unit(unit_)
+        # Starting and ending positions
+        from_x, from_y, from_layer = unit_.current_position
+        to_x, to_y, to_layer = dest_position
+        # Start from the end and work backwards
+        steps_left = movement_costs[to_x][to_y][to_layer]
+        if steps_left > unit_.statistics[unit.Statistic.MOVE_RANGE]:
+            return false
+        path = []
+        while (to_x, to_y, to_layer) != (from_x, from_y, from_layer):
+            # Initialize the result list. We will build it backwards, by
+            # starting at the destination and working back to the source.
+            # We'll reverse the list when we're done.
+            path.append((to_x, to_y, to_layer))
+            prev_x, prev_y, prev_layer = to_x, to_y, to_layer
+            # Find the position the unit will be in immediately before it
+            # moves into to_x,to_y,to_layer
+            for layer in range(self.get_number_of_layers()):
+                # Is the previous position one space to the left?
+                if to_x != 0 and \
+                    movement_costs[to_x - 1][to_y][to_layer] == steps_left - 1:
+                    prev_x = to_x - 1
+                    prev_layer = layer
+                    break
+                # Is it one space to the right?
+                elif to_x != self.get_width() - 1 and \
+                    movement_costs[to_x + 1][to_y][to_layer] == steps_left - 1:
+                    prev_x = to_x + 1
+                    prev_layer = layer
+                    break
+                # Is it one space down?
+                elif to_y != 0 and \
+                    movement_costs[to_x][to_y - 1][to_layer] == steps_left - 1:
+                    prev_y = to_y - 1
+                    prev_layer = layer
+                    break
+                # Is it one space up?
+                elif to_y != self.get_height() - 1 and \
+                    movement_costs[to_x][to_y + 1][to_layer] == steps_left - 1:
+                    prev_y = to_y + 1
+                    prev_layer = layer
+                    break
+            if (prev_x, prev_y, prev_layer) == (to_x, to_y, to_layer):
+                # Should never get here
+                assert(False)
+            to_x, to_y, to_layer = prev_x, prev_y, prev_layer
+            steps_left = steps_left - 1
+        path.reverse()
+        self._warp_unit(unit_, dest_position)
+        return path
+

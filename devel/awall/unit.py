@@ -80,9 +80,6 @@ class Unit(Entity):
         }
         self.abilities = []
         self.statuses = []
-   
-    def _calculate_move_costs(self, map_):
-        print "Not implemented"
     
     def update(self, battle):
         """
@@ -98,3 +95,4 @@ class Unit(Entity):
         Handle a turn
         """
         print "%s's turn is beginning" % self.name
+

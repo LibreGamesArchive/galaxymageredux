@@ -64,13 +64,14 @@ class MapTestCase(unittest.TestCase):
         assert(not self.map_.can_unit_move_in_single_step\
             (self.unit_, (1, 1, 0), (1, 2, 0)))
 
-class CalculateMovementTestCase(unittest.TestCase):
+class MovementTestCase(unittest.TestCase):
     def setUp(self):
         self.quadratic_slope_map = map.Map(5, 5, 1)
         # Set the map elevations to column^2
         for r in range(self.quadratic_slope_map.get_width()):
             for c in range(self.quadratic_slope_map.get_height()):
                 self.quadratic_slope_map.map_panels[r][c][0].elevation = c * c
+        
         self.spiral_stairs_map = map.Map(3, 3, 1)
         self.spiral_stairs_map.map_panels[0][0][0].elevation = 0
         self.spiral_stairs_map.map_panels[0][1][0].elevation = 2
@@ -81,6 +82,18 @@ class CalculateMovementTestCase(unittest.TestCase):
         self.spiral_stairs_map.map_panels[1][1][0].elevation = 12
         self.spiral_stairs_map.map_panels[1][0][0].elevation = 14
         self.spiral_stairs_map.map_panels[2][0][0].elevation = 16
+        
+        self.pillar_map = map.Map(3, 3, 1)
+        self.pillar_map.map_panels[0][0][0].elevation = 0
+        self.pillar_map.map_panels[0][1][0].elevation = 0
+        self.pillar_map.map_panels[0][2][0].elevation = 0
+        self.pillar_map.map_panels[1][0][0].elevation = 0
+        self.pillar_map.map_panels[1][1][0].elevation = 10
+        self.pillar_map.map_panels[1][2][0].elevation = 0
+        self.pillar_map.map_panels[2][0][0].elevation = 0
+        self.pillar_map.map_panels[2][1][0].elevation = 0
+        self.pillar_map.map_panels[2][2][0].elevation = 0
+        
         self.unit_ = unit.Unit("Unit", unit.Gender.NEUTER)
     
     ###
@@ -100,11 +113,16 @@ class CalculateMovementTestCase(unittest.TestCase):
             calculate_movement_costs_for_unit(self.unit_)
         x = map.Map.out_of_movement_range
         self.assertEqual(movement_costs,[\
-        [[0], [1], [2], [x], [x]],
-        [[1], [2], [3], [x], [x]],
-        [[2], [3], [x], [x], [x]],
-        [[3], [x], [x], [x], [x]],
-        [[x], [x], [x], [x], [x]]])
+            [[0], [1], [2], [x], [x]],
+            [[1], [2], [3], [x], [x]],
+            [[2], [3], [x], [x], [x]],
+            [[3], [x], [x], [x], [x]],
+            [[x], [x], [x], [x], [x]]])
+        path = self.quadratic_slope_map.move_unit(self.unit_, (2, 1, 0))
+        assert( 
+            path == (0, 1, 0), (1, 1, 0), (2, 1, 0) or \
+            path == (1, 0, 0), (1, 1, 0), (2, 1, 0) or \
+            path == (1, 0, 0), (2, 0, 0), (2, 1, 0))
     def testWindingPath(self):
         """Verify that movement costs correctly take into account
         roundabout paths"""
@@ -114,9 +132,37 @@ class CalculateMovementTestCase(unittest.TestCase):
         movement_costs = self.spiral_stairs_map.\
             calculate_movement_costs_for_unit(self.unit_)
         self.assertEqual(movement_costs,[\
-        [[0], [1], [2]],
-        [[7], [6], [3]],
-        [[8], [5], [4]]])
+            [[0], [1], [2]],
+            [[7], [6], [3]],
+            [[8], [5], [4]]])
+        path = self.spiral_stairs_map.move_unit(self.unit_, (2, 0, 0))
+        self.assertEqual(path, [
+            (0, 1, 0),
+            (0, 2, 0),
+            (1, 2, 0),
+            (2, 2, 0),
+            (2, 1, 0),
+            (1, 1, 0),
+            (1, 0, 0),
+            (2, 0, 0)])
+    def testPillarPath(self):
+        """Verify that units will take the shortest path to their destination.
+        """
+        self.unit_.statistics[unit.Statistic.JUMP_RANGE].base = 2
+        self.unit_.statistics[unit.Statistic.MOVE_RANGE].base = 8
+        self.pillar_map.add_entity_at_position(self.unit_, 0, 0, 0)
+        movement_costs = self.pillar_map.\
+            calculate_movement_costs_for_unit(self.unit_)
+        x = map.Map.out_of_movement_range
+        self.assertEqual(movement_costs,[\
+            [[0], [1], [2]],
+            [[1], [x], [3]],
+            [[2], [3], [4]]])
+        path = self.pillar_map.move_unit(self.unit_, (1, 2, 0))
+        self.assertEqual(path, [
+            (0, 1, 0),
+            (0, 2, 0),
+            (1, 2, 0)])
     
 if __name__ == '__main__':
     unittest.main()

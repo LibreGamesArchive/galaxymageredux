@@ -16,6 +16,7 @@ class Battle:
         """
         self.num_elapsed_clockticks = 0
         self.units_ready_to_act = []
+        self.map_ = None
     
     def do_clocktick(self):
         """
@@ -37,6 +38,7 @@ class Battle:
         assert(unit_.current_CT >= unit.unit_turn_ct_threshold)
         self.unit_turn_begin(unit_)
         unit_.begin_turn()
+        #todo: call end of turn callbacks
         unit_.current_CT -= unit.unit_turn_ct_base_cost
         return None
             
