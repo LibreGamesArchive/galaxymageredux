@@ -9,6 +9,11 @@ from OpenGL.GLU import *
 
 VERSION = "0.1rc1"
 
+def safe_div(x, y):
+    if x and y:
+        return x / y
+    return 0
+
 def load_texture(file_name):
     tex = glGenTextures(1)
     image = pygame.image.load(file_name)
@@ -207,6 +212,18 @@ class Limb(object):
         other.attach_point = point
         self.children.append(other)
 
+    def update(self, frame):
+        name = frame[0]
+        data = frame[1::]
+        if "~!~" in name:
+            name = name.split("~!~")
+            for i in xrange(len(name)):
+                n = data[i*3:(i*3)+3]
+                self.update([name[i]] + n)
+
+        else:
+            #here we need to move/rotate the limb, but also do the same to our children...
+
     def render(self):
         glPushMatrix()
         glTranslatef(*self.position_dif)
@@ -215,6 +232,39 @@ class Limb(object):
         glRotatef(1, 0, 0, self.rotation_dif[2])
         glCallList(self.gl_list)
         glPopMatrix()
+
+class Animation(object):
+    def __init__(self, name="", data=[]):
+        self.name = name
+        self.data = data
+
+        self.frames = self.build_data()
+
+    def __get_amount(self, frames, amount):
+        return [(float(i) / (frames[1] - frames[0])) for i in amount]
+
+    def build_data(self):
+        i = self.data
+        new = {}
+
+        mx = max([x[2][1] for x in i])
+
+        for x in i:
+            type, name, frames, amount = x
+
+            if not name in new:
+                new[name] = [["None"]] * mx
+
+            for i in range(frames[0], frames[1], 1):
+                if new[name][i][0] == "None":
+                    new[name][i] = [type] + self.__get_amount(frames, amount)
+                else:
+                    new[name][i][0] += "~!~" + type
+                    new[name][i].extend(self.__get_amount(frames, amount))
+        for i in new:
+            new[i].append(["RESET"])
+
+        return new            
 
 class Mesh(object):
     def __init__(self, objects, faces,
@@ -241,6 +291,25 @@ class Mesh(object):
         self.limbs = self.build_limbs()
 
         self.build_connections()
+
+        self.animations = self.build_animations(animations)
+
+        self.animation_action = None
+
+        self.frame = 10
+
+    def build_animations(self, animations):
+        new = {}
+        for i in animations:
+            name = i
+            values = animations[i]
+            new[name] = Animation(name, values)
+        return new
+
+    def update(self):
+        for i in self.limbs:
+            i = self.limbs[i]
+            i.update(self.animations[self.animation_action].frames[i.name][self.frame])
 
     def build_limbs(self):
         limbs = {}
@@ -307,6 +376,7 @@ def main():
               (1,1,1,1))
 
     a = Mesh(*parse_file("test.gmm"))
+    a.animation_action = "test"
 
     clock = pygame.time.Clock()
 
@@ -316,5 +386,6 @@ def main():
         c.update()
 
         a.render((0, 0, 25))
+        a.update()
         pygame.display.flip()
 main()
