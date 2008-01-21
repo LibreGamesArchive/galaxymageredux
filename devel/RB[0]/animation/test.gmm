@@ -51,9 +51,9 @@ ani move
 at square 0 9 9 0 0
 
 ani test
-at square2 0 15 5 6 7
-at square 10 19 5 5 5
-ar square 10 15 5 0 0
-ar square2 10 19 5 5 5
+#at square2 0 15 5 6 7
+#at square 0 15 5 5 5
+ar square 0 15 5 0 0
+#ar square2 10 19 5 5 5
 
 #lani other_ani.gmma

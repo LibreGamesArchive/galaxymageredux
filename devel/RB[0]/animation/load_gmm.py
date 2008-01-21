@@ -1,4 +1,5 @@
 import os
+import math
 
 import pygame
 from pygame.locals import *
@@ -167,8 +168,8 @@ def parse_file(file_name):
             material = values[1]
 
         if values[0] == "b":
-            bones[values[1]] = (map(float, values[2:4]),
-                                map(float, values[5:7]))
+            bones[values[1]] = (map(float, values[2:5]),
+                                map(float, values[5:8]))
 
         if values[0] == "cb":
             bone_connections.append([values[1], values[2], int(values[3])])
@@ -198,19 +199,26 @@ class Limb(object):
     def __init__(self, name, gl_list, bone):
         self.name = name
         self.gl_list = gl_list
-        self.bone = bone
+        self.bone = Bone(bone[0], bone[1])
 
         self.parent = None
         self.attach_point = 0
         self.children = []
 
-        self.position_dif = (0, 0, 0)
-        self.rotation_dif = (0, 0, 0)
-
     def attach(self, other, point):
         other.parent = self
         other.attach_point = point
         self.children.append(other)
+
+    def rotate(self, data):
+        val = self.bone.rotate(data[0], data[1], data[2], self.attach_point)
+        for i in self.children:
+            i.move(val)
+
+    def move(self, data):
+        val = self.bone.move(*data)
+        for i in self.children:
+            i.move(val)
 
     def update(self, frame):
         name = frame[0]
@@ -223,13 +231,17 @@ class Limb(object):
 
         else:
             #here we need to move/rotate the limb, but also do the same to our children...
+            if name == "ROTATE":
+                self.rotate(data)
+            if name == "TRANSLATE":
+                self.move(data)
 
     def render(self):
         glPushMatrix()
-        glTranslatef(*self.position_dif)
-        glRotatef(1, self.rotation_dif[0], 0, 0)
-        glRotatef(1, 0, self.rotation_dif[1], 0)
-        glRotatef(1, 0, 0, self.rotation_dif[2])
+        glTranslatef(*self.bone.movement)
+        glRotatef(1, self.bone.rotation[0], 0, 0)
+        glRotatef(1, 0, self.bone.rotation[1], 0)
+        glRotatef(1, 0, 0, self.bone.rotation[2])
         glCallList(self.gl_list)
         glPopMatrix()
 
@@ -264,7 +276,91 @@ class Animation(object):
         for i in new:
             new[i].append(["RESET"])
 
-        return new            
+        return new
+
+class Bone(object):
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+        self._base_values = (tuple(start), tuple(end))
+
+        self.rotation = [0,0,0]
+        self.movement = [0,0,0]
+
+    def reset(self):
+        self.start, self.end = self._base_values
+        self.rotation = [0,0,0]
+        self.movement = [0,0,0]
+
+    def __get_dif(self, b1, b2):
+        return (b1[0] - b2[0],
+                b1[1] - b2[1],
+                b1[2] - b2[2])
+
+    def rotate(self, x, y, z, attach_point=0):
+        self.rotation[0] += x
+        self.rotation[1] += y
+        self.rotation[2] += z
+
+        if attach_point == 0:
+            root = self.start
+            tail = self.end
+        else:
+            root = self.end
+            tail = self.start
+
+        sx, sy, sz = root
+        sx -= tail[0]
+        sy -= tail[1]
+        sz -= tail[2]
+
+        if x:
+            radians = math.radians(-x)
+            cos = math.cos(radians)
+            sin = math.sin(radians)
+            ox, oy, oz = float(sx), float(sy), float(sz)
+
+            sy = (cos * oy) - (sin * oz)
+            sz = (sin * oy) + (cos * oz)
+
+        if y:
+            radians = math.radians(-y)
+            cos = math.cos(radians)
+            sin = math.sin(radians)
+            ox, oy, oz = float(sx), float(sy), float(sz)
+
+            sx = (cos * ox) - (sin * oz)
+            sz = (sin * ox) + (cos * oz)
+
+        if z:
+            radians = math.radians(-z)
+            cos = math.cos(radians)
+            sin = math.sin(radians)
+            ox, oy, oz = float(sx), float(sy), float(sz)
+
+            sx = (cos * ox) - (sin * oy)
+            sy = (sin * ox) + (cos * oy)
+
+        sx += tail[0]
+        sy += tail[1]
+        sz += tail[2]
+        if attach_point == 0:
+            dif = self.__get_dif(self.end, (sx, sy, sz))
+            self.end = (sx, sy, sz)
+        else:
+            dif = self.__get_dif(self.start, (sx, sy, sz))
+            self.start = (sx, sy, sz)
+
+        return dif
+
+    def move(self, x, y, z):
+        self.start = (self.start[0] + x, self.start[1] + y, self.start[2] + z)
+        self.end = (self.end[0] + x, self.end[1] + y, self.end[2] + z)
+        self.movement[0] += x
+        self.movement[1] += y
+        self.movement[2] += z
+        return (x, y, z)
 
 class Mesh(object):
     def __init__(self, objects, faces,
@@ -309,7 +405,9 @@ class Mesh(object):
     def update(self):
         for i in self.limbs:
             i = self.limbs[i]
-            i.update(self.animations[self.animation_action].frames[i.name][self.frame])
+            if not i.name in self.animations[self.animation_action].frames:
+                continue
+            i.update(self.animations[self.animation_action].frames[i.name][self.frame-1])
 
     def build_limbs(self):
         limbs = {}
