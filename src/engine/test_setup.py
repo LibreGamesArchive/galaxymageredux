@@ -3,14 +3,11 @@ import unit
 from map import Map, MapPanel
 
 b = battle.Battle()
-alice = unit.Unit( "Alice", unit.Gender.FEMALE )
+alice = unit.Unit( "Alice", unit.Gender.FEMALE, b )
 alice.statistics[ unit.Statistic.SPEED ].base = 10
 alice.statistics[ unit.Statistic.MOVE_RANGE ].base = 3
-bob = unit.Unit( "Bob", unit.Gender.MALE )
+bob = unit.Unit( "Bob", unit.Gender.MALE, b )
 bob.statistics[ unit.Statistic.SPEED ].base = 7
-b.clocktick.add_callback(alice.update)
-b.clocktick.add_callback(bob.update)
-
 
 
 m = Map(5, 5, 1)

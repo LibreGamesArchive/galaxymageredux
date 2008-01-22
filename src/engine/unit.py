@@ -1,5 +1,5 @@
 """Module representing a Unit"""
-
+import ability
 
 unit_turn_ct_threshold = 100
 unit_turn_ct_base_cost = 60
@@ -12,7 +12,6 @@ class Statistic(object):
     Class representing one of a unit's Statistics (Attack, Speed, MaxHP, etc.)
     """
     
-    
     MAX_HP, \
     MAX_MP, \
     SPEED, \
@@ -21,8 +20,8 @@ class Statistic(object):
     MOVE_RANGE, \
     JUMP_RANGE = range(7)
     
-    def __init__(self):
-        self.base = 0
+    def __init__(self, value=0):
+        self.base = value
         self.battle_modifier = 0
         self.status_modifier = 0
     
@@ -46,6 +45,7 @@ class Entity(object):
         # layer is used for overlapping terrain; it is usually 0, but
         # can be higher if the unit is on a bridge or something
         self.current_position = (-1, -1, -1)
+        self.current_HP = 0
             
     def add_to_map(self, map_, x_position, y_position, layer):
         self.current_position = (x_position, y_position, layer)
@@ -54,7 +54,7 @@ class Entity(object):
 class Unit(Entity):
     """Class Representing a Unit"""
    
-    def __init__(self, name, gender):
+    def __init__(self, name, gender, battle):
         super(Unit, self).__init__(name)
         self.gender = gender
         self.statistics = { 
@@ -80,6 +80,7 @@ class Unit(Entity):
         }
         self.abilities = []
         self.statuses = []
+        battle.clocktick.add_callback(self.update)
     
     def update(self, battle):
         """
@@ -90,9 +91,36 @@ class Unit(Entity):
         if self.current_CT >= unit_turn_ct_threshold:
             battle.queue_unit_turn(self)
     
+    def use_ability(self, ability, target_units):
+        """
+        Use an ability on each of the units in target_units
+        Return True if the ability had an effect on at least one of them,
+        False otherwise.
+        """
+        # We should have made sure that the ability still had uses left already
+        assert(ability.num_uses != 0 )
+        
+        # Decrement the user's mp and ct
+        self.current_MP -= ability.mp_cost
+        self.current_CT -= ability.ct_cost
+        ability.num_uses -= 1
+        
+        # Carry out the ability on each target
+        did_something = False
+        for target in target_units:
+            for effect in ability.effects:
+                result_list = effect.execute(self, target)
+                if result_list.is_successful and len(result_list.results) > 0:
+                    did_something = True
+                    for result in result_list.results:
+                        result.apply()
+
+        return did_something
+    
     def begin_turn(self):
         """
         Handle a turn
         """
+        #todo: This is just temporary
         print "%s's turn is beginning" % self.name
 
