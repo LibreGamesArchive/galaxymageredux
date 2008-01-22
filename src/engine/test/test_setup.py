@@ -1,3 +1,5 @@
+import sys
+sys.path.append("..")
 import battle
 import unit
 from map import Map, MapPanel
