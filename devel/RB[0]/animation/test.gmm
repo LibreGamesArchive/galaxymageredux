@@ -53,7 +53,7 @@ at square 0 9 9 0 0
 ani test
 #at square2 0 15 5 6 7
 #at square 0 15 5 5 5
-ar square 0 15 5 0 0
-#ar square2 10 19 5 5 5
+#ar square 0 15 5 0 0
+ar square 0 25 0 0 180
 
 #lani other_ani.gmma

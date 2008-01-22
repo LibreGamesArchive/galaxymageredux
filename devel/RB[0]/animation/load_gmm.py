@@ -195,55 +195,18 @@ def parse_file(file_name):
 
     return objects, faces, verts, norms, mtls, texcs, bones, bone_connections, animations
 
-class Limb(object):
-    def __init__(self, name, gl_list, bone):
-        self.name = name
-        self.gl_list = gl_list
-        self.bone = Bone(bone[0], bone[1])
-
-        self.parent = None
-        self.attach_point = 0
-        self.children = []
-
-    def attach(self, other, point):
-        other.parent = self
-        other.attach_point = point
-        self.children.append(other)
-
-    def rotate(self, data):
-        val = self.bone.rotate(data[0], data[1], data[2], self.attach_point)
-        for i in self.children:
-            i.move(val)
-
-    def move(self, data):
-        val = self.bone.move(*data)
-        for i in self.children:
-            i.move(val)
-
-    def update(self, frame):
-        name = frame[0]
-        data = frame[1::]
-        if "~!~" in name:
-            name = name.split("~!~")
-            for i in xrange(len(name)):
-                n = data[i*3:(i*3)+3]
-                self.update([name[i]] + n)
-
-        else:
-            #here we need to move/rotate the limb, but also do the same to our children...
-            if name == "ROTATE":
-                self.rotate(data)
-            if name == "TRANSLATE":
-                self.move(data)
-
-    def render(self):
-        glPushMatrix()
-        glTranslatef(*self.bone.movement)
-        glRotatef(1, self.bone.rotation[0], 0, 0)
-        glRotatef(1, 0, self.bone.rotation[1], 0)
-        glRotatef(1, 0, 0, self.bone.rotation[2])
-        glCallList(self.gl_list)
-        glPopMatrix()
+def average_verts(x):
+    new = [0,0,0]
+    tot = 0
+    for i in x:
+        new[0] += i[0]
+        new[1] += i[1]
+        new[2] += i[2]
+        tot += 1
+    new = [safe_div(new[0], tot),
+           safe_div(new[1], tot),
+           safe_div(new[2], tot)]
+    return new
 
 class Animation(object):
     def __init__(self, name="", data=[]):
@@ -273,37 +236,83 @@ class Animation(object):
                 else:
                     new[name][i][0] += "~!~" + type
                     new[name][i].extend(self.__get_amount(frames, amount))
-        for i in new:
-            new[i].append(["RESET"])
 
         return new
 
 class Bone(object):
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
+    def __init__(self, startend, obj_center):
+        self.start, self.end = startend
 
-        self._base_values = (tuple(start), tuple(end))
+        self.center = self.get_center()
 
-        self.rotation = [0,0,0]
+        self.obj_dif = (obj_center[0] - self.center[0],
+                        obj_center[1] - self.center[1],
+                        obj_center[2] - self.center[2])
+
+        self.__base_values = (tuple(self.start), tuple(self.end), self.get_center())
+
         self.movement = [0,0,0]
-
-    def reset(self):
-        self.start, self.end = self._base_values
         self.rotation = [0,0,0]
-        self.movement = [0,0,0]
+
+        self.parent = self
+        self.children = []
+
+        self.attach_parent_point = 0
+
+    def get_pos(self):
+        return (self.center[0] + self.obj_dif[0],
+                self.center[1] + self.obj_dif[1],
+                self.center[2] + self.obj_dif[2])
+
+    def attach(self, other, point=0):
+        other.parent = self
+        other.attach_parent_point = point
+        self.children.append(other)
+
+    def get_center(self):
+        return (safe_div(self.start[0] + self.end[0], 2),
+                safe_div(self.start[1] + self.end[1], 2),
+                safe_div(self.start[2] + self.end[2], 2))
 
     def __get_dif(self, b1, b2):
         return (b1[0] - b2[0],
                 b1[1] - b2[1],
                 b1[2] - b2[2])
 
-    def rotate(self, x, y, z, attach_point=0):
+    def reset(self):
+        self.movement = [0,0,0]
+        self.rotation = [0,0,0]
+
+        self.start, self.end, self.center = self.__base_values
+
+    def move(self, x, y, z):
+        self.movement[0] += x
+        self.movement[1] += y
+        self.movement[2] += z
+
+        px, py, pz = self.start
+        ex, ey, ez = self.end
+
+        px += x
+        ex += x
+        py += y
+        ey += y
+        pz += z
+        ez += z
+
+        self.start = px, py, pz
+        self.end = ex, ey, ez
+
+        self.center = self.get_center()
+
+    def rotate(self, x, y, z):
         self.rotation[0] += x
         self.rotation[1] += y
         self.rotation[2] += z
 
-        if attach_point == 0:
+        x, y, z = self.rotation
+
+        if self.attach_parent_point == 0:
             root = self.start
             tail = self.end
         else:
@@ -345,22 +354,67 @@ class Bone(object):
         sx += tail[0]
         sy += tail[1]
         sz += tail[2]
-        if attach_point == 0:
+
+        if self.attach_parent_point == 0:
             dif = self.__get_dif(self.end, (sx, sy, sz))
             self.end = (sx, sy, sz)
         else:
             dif = self.__get_dif(self.start, (sx, sy, sz))
             self.start = (sx, sy, sz)
 
-        return dif
+        for i in self.children:
+            i.move(*dif)
+            i.rotate(x, y, z)
 
-    def move(self, x, y, z):
-        self.start = (self.start[0] + x, self.start[1] + y, self.start[2] + z)
-        self.end = (self.end[0] + x, self.end[1] + y, self.end[2] + z)
-        self.movement[0] += x
-        self.movement[1] += y
-        self.movement[2] += z
-        return (x, y, z)
+        self.center = self.get_center()
+
+
+class Limb(object):
+    def __init__(self, name, gl_list, bone):
+        self.name = name
+
+        self.gl_list = gl_list
+
+        self.bone = bone
+
+    def attach(self, other, point=0):
+        self.bone.attach(other, point)
+
+    def reset(self):
+        self.bone.reset()
+
+    def rotate(self, data):
+        self.bone.rotate(data[0], data[1], data[2])
+
+    def move(self, data):
+        self.bone.move(*data)
+
+    def update(self, frame):
+        name = frame[0]
+        data = frame[1::]
+        if "~!~" in name:
+            name = name.split("~!~")
+            for i in xrange(len(name)):
+                n = data[i*3:(i*3)+3]
+                self.update([name[i]] + n)
+
+        else:
+            if name == "ROTATE":
+                self.rotate(data)
+            if name == "TRANSLATE":
+                self.move(data)
+            if name == "RESET":
+                self.reset()
+
+    def render(self):
+        glPushMatrix()
+        glTranslatef(*self.bone.get_pos())
+        glRotatef(self.bone.rotation[0], 1, 0, 0)
+        glRotatef(self.bone.rotation[1], 0, 1, 0)
+        glRotatef(self.bone.rotation[2], 0, 0, 1)
+        glCallList(self.gl_list)
+        glPopMatrix()
+            
 
 class Mesh(object):
     def __init__(self, objects, faces,
@@ -379,20 +433,28 @@ class Mesh(object):
         self.materials = mtls
         self.tex_coords = texcs
 
+        self.swapyz = swapyz
+
         self.bones = bones
         self.bone_connections = bone_connections
 
-        self.swapyz = swapyz
-
         self.limbs = self.build_limbs()
 
-        self.build_connections()
-
         self.animations = self.build_animations(animations)
+        self.action = None
+        self.frame = 0
 
-        self.animation_action = None
-
-        self.frame = 10
+    def update(self):
+        self.frame += 1
+        if self.frame >= len(self.animations[self.animation_action].frames):
+            self.frame = 0
+            for i in self.limbs:
+                self.limbs[i].reset()
+        for i in self.limbs:
+            i = self.limbs[i]
+            if not i.name in self.animations[self.animation_action].frames:
+                continue
+            i.update(self.animations[self.animation_action].frames[i.name][self.frame-1])
 
     def build_animations(self, animations):
         new = {}
@@ -401,13 +463,6 @@ class Mesh(object):
             values = animations[i]
             new[name] = Animation(name, values)
         return new
-
-    def update(self):
-        for i in self.limbs:
-            i = self.limbs[i]
-            if not i.name in self.animations[self.animation_action].frames:
-                continue
-            i.update(self.animations[self.animation_action].frames[i.name][self.frame-1])
 
     def build_limbs(self):
         limbs = {}
@@ -418,6 +473,8 @@ class Mesh(object):
             glFrontFace(GL_CCW)
             for face in obj2:
                 vertices, normals, texture_coords, material = face
+
+                center = average_verts([self.vertices[i-1] for i in vertices if i > 0])
      
                 mtl = self.materials[material]
                 if mtl['tex']:
@@ -436,29 +493,28 @@ class Mesh(object):
                     v = self.vertices[vertices[i] - 1]
                     if self.swapyz:
                         v = v[0], v[2], v[1]
+
+                    v = v[0] - center[0], v[1] - center[1], v[2] - center[2]
                     glVertex3fv(v)
                 glEnd()
             glEndList()
 
             if obj in self.bones:
-                limbs[obj] = Limb(obj, gl_list, self.bones[obj])
-            else:
-                limbs[obj] = Limb(obj, gl_list, None)
+                bone = Bone(self.bones[obj], center)
+                limbs[obj] = Limb(obj, gl_list, bone)
+
+        for i in self.bone_connections:
+            limbs[i[0]].attach(limbs[i[1]].bone, i[2])
+
         return limbs
 
-    def build_connections(self):
-        for i in self.bone_connections:
-            for o in self.limbs:
-                o = self.limbs[o]
-                if o.name == i[0]:
-                    o.attach(self.limbs[i[1]], i[2])
-
-    def render(self, pos=(0,0,0)):
+    def render(self, pos):
         glPushMatrix()
         glTranslatef(*pos)
         for i in self.limbs:
             self.limbs[i].render()
         glPopMatrix()
+        return
 
 def main():
     import core
