@@ -172,7 +172,7 @@ def parse_file(file_name):
                                 map(float, values[5:8]))
 
         if values[0] == "cb":
-            bone_connections.append([values[1], values[2], int(values[3])])
+            bone_connections.append([values[1], values[2], int(values[3]), int(values[4])])
 
         if values[0] == "ani":
             animations[values[1]] = []
@@ -236,7 +236,7 @@ class Animation(object):
                 else:
                     new[name][i][0] += "~!~" + type
                     new[name][i].extend(self.__get_amount(frames, amount))
-
+        new["~~TOTAL_FRAMES~~"] = len(new[name])
         return new
 
 class Bone(object):
@@ -251,22 +251,23 @@ class Bone(object):
 
         self.__base_values = (tuple(self.start), tuple(self.end), self.get_center())
 
-        self.movement = [0,0,0]
         self.rotation = [0,0,0]
 
         self.parent = self
         self.children = []
 
         self.attach_parent_point = 0
+        self.start_point = 0
 
     def get_pos(self):
         return (self.center[0] + self.obj_dif[0],
                 self.center[1] + self.obj_dif[1],
                 self.center[2] + self.obj_dif[2])
 
-    def attach(self, other, point=0):
+    def attach(self, other, opoint=0, spoint=0):
         other.parent = self
-        other.attach_parent_point = point
+        other.attach_parent_point = opoint
+        other.start_point = spoint
         self.children.append(other)
 
     def get_center(self):
@@ -274,22 +275,17 @@ class Bone(object):
                 safe_div(self.start[1] + self.end[1], 2),
                 safe_div(self.start[2] + self.end[2], 2))
 
-    def __get_dif(self, b1, b2):
-        return (b1[0] - b2[0],
-                b1[1] - b2[1],
-                b1[2] - b2[2])
+    def get_target(self, point):
+        if point == 0:
+            return self.start
+        return self.end
 
     def reset(self):
-        self.movement = [0,0,0]
         self.rotation = [0,0,0]
 
         self.start, self.end, self.center = self.__base_values
 
     def move(self, x, y, z):
-        self.movement[0] += x
-        self.movement[1] += y
-        self.movement[2] += z
-
         px, py, pz = self.start
         ex, ey, ez = self.end
 
@@ -304,28 +300,28 @@ class Bone(object):
         self.end = ex, ey, ez
 
         self.center = self.get_center()
+        for i in self.children:
+            i.move(x, y, z)
 
     def rotate(self, x, y, z):
         self.rotation[0] += x
         self.rotation[1] += y
         self.rotation[2] += z
 
-        x, y, z = self.rotation
-
-        if self.attach_parent_point == 0:
+        if self.start_point == 0:
             root = self.start
             tail = self.end
         else:
             root = self.end
             tail = self.start
 
-        sx, sy, sz = root
-        sx -= tail[0]
-        sy -= tail[1]
-        sz -= tail[2]
+        sx, sy, sz = tail
+        sx -= root[0]
+        sy -= root[1]
+        sz -= root[2]
 
         if x:
-            radians = math.radians(-x)
+            radians = math.radians(x)
             cos = math.cos(radians)
             sin = math.sin(radians)
             ox, oy, oz = float(sx), float(sy), float(sz)
@@ -334,7 +330,7 @@ class Bone(object):
             sz = (sin * oy) + (cos * oz)
 
         if y:
-            radians = math.radians(-y)
+            radians = math.radians(y)
             cos = math.cos(radians)
             sin = math.sin(radians)
             ox, oy, oz = float(sx), float(sy), float(sz)
@@ -343,7 +339,7 @@ class Bone(object):
             sz = (sin * ox) + (cos * oz)
 
         if z:
-            radians = math.radians(-z)
+            radians = math.radians(z)
             cos = math.cos(radians)
             sin = math.sin(radians)
             ox, oy, oz = float(sx), float(sy), float(sz)
@@ -351,15 +347,17 @@ class Bone(object):
             sx = (cos * ox) - (sin * oy)
             sy = (sin * ox) + (cos * oy)
 
-        sx += tail[0]
-        sy += tail[1]
-        sz += tail[2]
+        sx += root[0]
+        sy += root[1]
+        sz += root[2]
 
-        if self.attach_parent_point == 0:
-            dif = self.__get_dif(self.end, (sx, sy, sz))
+        s = (sx, sy, sz)
+
+        if self.start_point == 0:
+            dif = [s[i] - self.end[i] for i in xrange(3)]
             self.end = (sx, sy, sz)
         else:
-            dif = self.__get_dif(self.start, (sx, sy, sz))
+            dif = [s[i] - self.start[i] for i in xrange(3)]
             self.start = (sx, sy, sz)
 
         for i in self.children:
@@ -377,8 +375,8 @@ class Limb(object):
 
         self.bone = bone
 
-    def attach(self, other, point=0):
-        self.bone.attach(other, point)
+    def attach(self, other, opoint=0, spoint=0):
+        self.bone.attach(other, opoint, spoint)
 
     def reset(self):
         self.bone.reset()
@@ -408,7 +406,7 @@ class Limb(object):
 
     def render(self):
         glPushMatrix()
-        glTranslatef(*self.bone.get_pos())
+        glTranslatef(*self.bone.center)
         glRotatef(self.bone.rotation[0], 1, 0, 0)
         glRotatef(self.bone.rotation[1], 0, 1, 0)
         glRotatef(self.bone.rotation[2], 0, 0, 1)
@@ -444,9 +442,16 @@ class Mesh(object):
         self.action = None
         self.frame = 0
 
+    def reset_animation(self):
+        self.frame = 0
+        for i in self.limbs:
+            self.limbs[i].reset()
+
     def update(self):
+        if not self.animation_action in self.animations:
+            return
         self.frame += 1
-        if self.frame >= len(self.animations[self.animation_action].frames):
+        if self.frame >= self.animations[self.animation_action].frames["~~TOTAL_FRAMES~~"]:
             self.frame = 0
             for i in self.limbs:
                 self.limbs[i].reset()
@@ -504,7 +509,7 @@ class Mesh(object):
                 limbs[obj] = Limb(obj, gl_list, bone)
 
         for i in self.bone_connections:
-            limbs[i[0]].attach(limbs[i[1]].bone, i[2])
+            limbs[i[0]].attach(limbs[i[1]].bone, i[2], i[3])
 
         return limbs
 
@@ -515,31 +520,3 @@ class Mesh(object):
             self.limbs[i].render()
         glPopMatrix()
         return
-
-def main():
-    import core
-    core.init()
-    core.set3d()
-
-    c = core.Camera()
-    c.distance = 100
-
-    l = core.Light((0,0,-15),
-              (1,1,1,1),
-              (1,1,1,1),
-              (1,1,1,1))
-
-    a = Mesh(*parse_file("test.gmm"))
-    a.animation_action = "test"
-
-    clock = pygame.time.Clock()
-
-    for i in xrange(25):
-        clock.tick(15)
-        core.clear_screen()
-        c.update()
-
-        a.render((0, 0, 25))
-        a.update()
-        pygame.display.flip()
-main()

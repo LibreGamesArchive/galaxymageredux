@@ -38,22 +38,16 @@ n 0.57735027 -0.57735027 0.57735027
 f 5/5 8/8 7/7 6/6
 
 b square -1 0 0 1 0 0
-b square2 1 0 0 2 0 0
-#the following will connect square2 to square 1 at the end of square with the start of sqaure 2
-cb square square2 1 0
+b square2 1 0 0 3 0 0
+#the following will connect square2 to square 1 at the end of square with the start of square 2
+cb square square2 0 0
 
 ani rotate
 #will rotate square2 around square
-ar square2 0 9 0 0 90
+ar square 0 25 0 0 360
 
 ani move
 #will move square and square2
 at square 0 9 9 0 0
-
-ani test
-#at square2 0 15 5 6 7
-#at square 0 15 5 5 5
-#ar square 0 15 5 0 0
-ar square 0 25 0 0 180
 
 #lani other_ani.gmma
