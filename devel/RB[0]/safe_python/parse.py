@@ -5,7 +5,7 @@ def test_safe(filename, acceptable_functions=[]):
        returns False and a list of bad function calls, if the test fails.
        OR returns False, "import" if there is an import statement"""
     text = open(filename, "rU").read()
-    text.replace("\t", "\n")
+    text.replace("\r", "\n")
 
     while "#" in text:
         text = text[0:text.index("#")] +\
@@ -72,5 +72,3 @@ def test_safe(filename, acceptable_functions=[]):
             return False, ok
 
     return True, ok
-
-print test_safe("test.py")
