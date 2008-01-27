@@ -19,7 +19,7 @@ class GuiScreen(object):
         self.dirty = False
 
     def check_events(self, events):
-        a = self.gui.check_inputs(events)
+        return self.gui.check_inputs(events)
 
     def make_scene(self):
         self.gui.lock_updates()
@@ -105,7 +105,11 @@ def main():
 
     while 1:
         cc.tick(9999)
-        gui_screen.check_events(pygame.event.wait())
+        for event in gui_screen.check_events(pygame.event.get()):
+            if event.type == QUIT:
+                print cc.get_fps()
+                pygame.quit()
+                return
 
         core.clear_screen()
 
@@ -113,8 +117,6 @@ def main():
 
         pygame.display.flip()
 
-try:
-    main()
-except:
-    print cc.get_fps()
+
+main()
         
