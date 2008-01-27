@@ -237,7 +237,7 @@ class PYTHON_GUI:
         first=True
         # go through the windows one by one
 
-        if action == MOUSE_LCLK:
+        if not pygame.mouse.get_pressed()[0]:
             self.moving_window = False
         if self.moving_window:
             if event and event.type == MOUSEMOTION:
