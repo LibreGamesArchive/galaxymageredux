@@ -17,6 +17,7 @@ def init(ScreenSize=(640, 480)):
 
     glEnable(GL_LIGHTING)
     glEnable(GL_NORMALIZE)
+    glEnable(GL_BLEND)
     glShadeModel(GL_SMOOTH)
     glEnable(GL_DEPTH_TEST)
     glDepthFunc(GL_LEQUAL)

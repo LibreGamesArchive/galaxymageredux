@@ -106,6 +106,8 @@ class PYTHON_GUI:
 		pygame.font.init()
 		fonts.append(pygame.font.Font(os.path.normpath("./gfx/Vera.ttf"),FONT_STD))
 
+		self.moving_window = False
+
 	def lock_updates(self):
 		"""These next 2 routines are used for mass updating of the GUI
 		   Normally we redraw to the screen when something has changed,
@@ -211,126 +213,117 @@ class PYTHON_GUI:
 		# no matching id found
 		return(False)
 
-	def move_window(self,win):
-		# ok, enter a loop where we catch all events until the left
-		# mouse button is depressed
-		# we only handle mouse moves though, everything else is ignored
-		
-		# first thing we need to do is move this window to the top
-		# of the window list
-		if(self.raise_to_top(win.id_number)==True):
-			self.update_screen()
-		
-		while(True):
-			event=pygame.event.poll()
-			if((event.type==MOUSEBUTTONUP)and(event.button==1)):
-				# time to exit
-				return(True)
-			elif((event.type==MOUSEMOTION)):
-				# now we actually move the bar
-				win.rect.x+=event.rel[0]
-				win.rect.y+=event.rel[1]
-				# update the screen
-				self.update_screen()
-		# nothing happened, but be graceful about it anyway
-		return(True)
+	def move_window(self, win, x, y):
+                self.raise_to_top(win.id_number)
+                win.rect.x += x
+                win.rect.y += y
+                self.update_screen()
+                return True
 
 	# use this function to test the mouse against all objects
 	# that is, all windows and menus
-	def test_mouse(self,x,y,action):
+	def test_mouse(self,x,y,action,event=None):
 		"""test_mouse returns False if nothing got called
 		   Otherwise it handles checking the action against all
 		   of the widgets, menus and windows that are active"""
 		quit=False
 		first=True
 		# go through the windows one by one
-		for foo in self.windows:
-			if quit==True:
-				return(False)
-			# if this is a modal window, then stop after processing:
-			quit=foo.modal
-			# is the mouse pointer inside the window, or is there any window at all?
-			if((foo.rect.collidepoint(x,y)==True)and(foo.visible==True)):
-				# firstly, if we click over a window that is not the top
-				# one, then we first of all bring that window into focus
-				# and then carry the click event down
-				if((first==False)and(action==MOUSE_LCLK)):
-					# focus this window
-					self.raise_to_top(foo.id_number)
-					# and redraw the screen
-					self.update_screen()
-				# the next thing to do is check that the window
-				# itself is not being moved
-				# what's the height of the title bar?
-				wheight=images[WIN_TOP].get_height()
-				# remove the offsets and see if we are in the top bar
-				# we already know that we fit in the x dimension, so just check the y
-				# of course, the event we are checking for is a mouse ldown
-				if((y<(foo.rect.y+wheight))and(action==MOUSE_LDOWN)):
-					# ok, we we are in the top win menu bar
-					# we'll move all of this to another routine
-					self.move_window(foo)
-					# when completed, this routine is over!
-					return(True)
-				# check all of the points inside the window
-				for bar in foo.items:
-					if bar.active==True:
-						# don't forget to include the offsets into the window
-						x_off=x-foo.rect.x
-						y_off=y-foo.rect.y
-						if bar.rect.collidepoint(x_off,y_off)==True:						
-							# get offset into widget
-							x_widget=x_off-bar.rect.x
-							y_widget=y_off-bar.rect.y
-							# now test to see if we need to make a call
-							if((action==MOUSE_OVER)and(bar.callbacks.mouse_over!=mouse_over_std)):
-								# widget asked for callback on mouse over
-								bar.callbacks.mouse_over(bar,x_widget,y_widget)
-								return(True)
-							elif((action==MOUSE_LCLK)and(bar.callbacks.mouse_lclk!=mouse_lclk_std)):
-								# widget asked for callback on mouse left click								
-								bar.callbacks.mouse_lclk(bar,x_widget,y_widget)
-								return(True)
-							elif((action==MOUSE_LCLK)and
-									 (bar.callbacks.mouse_dclick!=mouse_dclick_std)and
-									 (self.dclick_handle!=bar)):
-								# widget wants a double-click: this was the first one, so we need
-								# to keep an eye out for the next click
-								self.dclick_handle=bar
-								# set our timer so we get an event later
-								pygame.time.set_timer(EVENT_DC_END,DCLICK_SPEED)
-								return(False)
-							elif((action==MOUSE_LCLK)and
-									 (bar.callbacks.mouse_dclick!=mouse_dclick_std)and
-									 (self.dclick_handle==bar)):	 
-								# it's a real bona-fida double-click
-								# firstly clear all double-click data, then run the code
-								pygame.time.set_timer(EVENT_DC_END,0)
-								self.dclick_handle=None
-								bar.callbacks.mouse_dclick(bar,x_widget,y_widget)
-								return(True)
-							elif(action==MOUSE_DCLICK):
-								# obviously we got a double-click where it wasn't needed
-								pygame.time.set_timer(EVENT_DC_END,0)
-								self.dclick_handle=None
-								return(False)
-							elif((action==MOUSE_LDOWN)and(bar.callbacks.mouse_ldown!=mouse_ldown_std)):
-								# widget asked for callback on mouse left down
-								bar.callbacks.mouse_ldown(bar,x_widget,y_widget)
-								return(True)
-							elif((action==MOUSE_RCLK)and(bar.callbacks.mouse_rclk!=mouse_rclk_std)):
-								# whilst still debugging, I've left this one out
-								print "Do a mouse right click on ",bar.describe
-								return(True)
-							# and then exit
-							return(False)
-			
-				# if we get here, then we detected an event inside a window
-				# other windows don't get a look in here
-				# we know nothing happend because we are here :-s
-				return(False)
-			# no longer on the first window
-			first=False
+
+		if action == MOUSE_LCLK:
+                        self.moving_window = False
+		if self.moving_window:
+                        if event and event.type == MOUSEMOTION:
+                                self.move_window(self.moving_window, *event.rel)
+                else:
+                        for foo in self.windows:
+                                if quit==True:
+                                        return(False)
+                                # if this is a modal window, then stop after processing:
+                                quit=foo.modal
+                                # is the mouse pointer inside the window, or is there any window at all?
+                                if((foo.rect.collidepoint(x,y)==True)and(foo.visible==True)):
+                                        # firstly, if we click over a window that is not the top
+                                        # one, then we first of all bring that window into focus
+                                        # and then carry the click event down
+                                        if((first==False)and(action==MOUSE_LCLK)):
+                                                # focus this window
+                                                self.raise_to_top(foo.id_number)
+                                                # and redraw the screen
+                                                self.update_screen()
+                                        # the next thing to do is check that the window
+                                        # itself is not being moved
+                                        # what's the height of the title bar?
+                                        wheight=images[WIN_TOP].get_height()
+                                        # remove the offsets and see if we are in the top bar
+                                        # we already know that we fit in the x dimension, so just check the y
+                                        # of course, the event we are checking for is a mouse ldown
+                                        if((y<(foo.rect.y+wheight))and(action==MOUSE_LDOWN)):
+                                                # ok, we we are in the top win menu bar
+                                                # we'll move all of this to another routine
+        ##					self.move_window(foo)
+                                                self.moving_window = foo
+                                                # when completed, this routine is over!
+                                                return(True)
+                                        # check all of the points inside the window
+                                        for bar in foo.items:
+                                                if bar.active==True:
+                                                        # don't forget to include the offsets into the window
+                                                        x_off=x-foo.rect.x
+                                                        y_off=y-foo.rect.y
+                                                        if bar.rect.collidepoint(x_off,y_off)==True:						
+                                                                # get offset into widget
+                                                                x_widget=x_off-bar.rect.x
+                                                                y_widget=y_off-bar.rect.y
+                                                                # now test to see if we need to make a call
+                                                                if((action==MOUSE_OVER)and(bar.callbacks.mouse_over!=mouse_over_std)):
+                                                                        # widget asked for callback on mouse over
+                                                                        bar.callbacks.mouse_over(bar,x_widget,y_widget)
+                                                                        return(True)
+                                                                elif((action==MOUSE_LCLK)and(bar.callbacks.mouse_lclk!=mouse_lclk_std)):
+                                                                        # widget asked for callback on mouse left click								
+                                                                        bar.callbacks.mouse_lclk(bar,x_widget,y_widget)
+                                                                        return(True)
+                                                                elif((action==MOUSE_LCLK)and
+                                                                                 (bar.callbacks.mouse_dclick!=mouse_dclick_std)and
+                                                                                 (self.dclick_handle!=bar)):
+                                                                        # widget wants a double-click: this was the first one, so we need
+                                                                        # to keep an eye out for the next click
+                                                                        self.dclick_handle=bar
+                                                                        # set our timer so we get an event later
+                                                                        pygame.time.set_timer(EVENT_DC_END,DCLICK_SPEED)
+                                                                        return(False)
+                                                                elif((action==MOUSE_LCLK)and
+                                                                                 (bar.callbacks.mouse_dclick!=mouse_dclick_std)and
+                                                                                 (self.dclick_handle==bar)):	 
+                                                                        # it's a real bona-fida double-click
+                                                                        # firstly clear all double-click data, then run the code
+                                                                        pygame.time.set_timer(EVENT_DC_END,0)
+                                                                        self.dclick_handle=None
+                                                                        bar.callbacks.mouse_dclick(bar,x_widget,y_widget)
+                                                                        return(True)
+                                                                elif(action==MOUSE_DCLICK):
+                                                                        # obviously we got a double-click where it wasn't needed
+                                                                        pygame.time.set_timer(EVENT_DC_END,0)
+                                                                        self.dclick_handle=None
+                                                                        return(False)
+                                                                elif((action==MOUSE_LDOWN)and(bar.callbacks.mouse_ldown!=mouse_ldown_std)):
+                                                                        # widget asked for callback on mouse left down
+                                                                        bar.callbacks.mouse_ldown(bar,x_widget,y_widget)
+                                                                        return(True)
+                                                                elif((action==MOUSE_RCLK)and(bar.callbacks.mouse_rclk!=mouse_rclk_std)):
+                                                                        # whilst still debugging, I've left this one out
+                                                                        print "Do a mouse right click on ",bar.describe
+                                                                        return(True)
+                                                                # and then exit
+                                                                return(False)
+                                
+                                        # if we get here, then we detected an event inside a window
+                                        # other windows don't get a look in here
+                                        # we know nothing happend because we are here :-s
+                                        return(False)
+                                # no longer on the first window
+                                first=False
 		# nothing happened? at least inform the last routine
 		return(False)
 
@@ -369,18 +362,18 @@ class PYTHON_GUI:
 			elif((event.type==MOUSEBUTTONUP)and(event.button==1)):
 				x,y=pygame.mouse.get_pos()
 				action=MOUSE_LCLK
-				self.test_mouse(x,y,action)
+				self.test_mouse(x,y,action,event)
 			# some things (like sliders) respond to a mousedown event
 			elif((event.type==MOUSEBUTTONDOWN)and(event.button==1)):
 				x,y=pygame.mouse.get_pos()
 				action=MOUSE_LDOWN
-				self.test_mouse(x,y,action)
+				self.test_mouse(x,y,action,event)
 			else:
 				# have we moved?
 				if(event.type==MOUSEMOTION):
 					x,y=pygame.mouse.get_pos()
 					action=MOUSE_OVER
-					if(self.test_mouse(x,y,action)==False):
+					if(self.test_mouse(x,y,action,event)==False):
 						self.check_button_highlights(x,y)
 			if(action==MOUSE_NONE):
 				return(False)

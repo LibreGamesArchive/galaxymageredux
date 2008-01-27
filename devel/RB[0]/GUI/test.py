@@ -15,47 +15,11 @@ class GuiScreen(object):
         self.gui = GUI.PYTHON_GUI(self.redraw_routine)
         self.make_scene()
 
+        self.surf_data = pygame.image.tostring(self.surf, "RGBA", 1)
+        self.dirty = False
+
     def check_events(self, events):
         a = self.gui.check_inputs(events)
-
-    def render(self):
-        image = self.surf
-
-        x, y = image.get_size()
-        nx, ny = 16, 16
-        while nx < x:
-            nx *= 2
-        while ny < y:
-            ny *= 2
-
-        image = pygame.transform.scale(image, (nx, ny))
-        data = pygame.image.tostring(image, "RGBA", 1)
-
-        glBindTexture(GL_TEXTURE_2D, self.gl_texture)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.get_width(), image.get_height(),
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, data)
-
-        glDisable(GL_DEPTH_TEST)
-        glDisable(GL_LIGHTING)
-        core.set2d(self.size)
-
-        core.clear_screen()
-
-        glBindTexture(GL_TEXTURE_2D, self.gl_texture)
-
-        glBegin(GL_QUADS)
-        glColor4f(1, 1, 1, 1)
-        glTexCoord2f(0, 0); glVertex3f(0, 0, 0)
-        glTexCoord2f(1, 0); glVertex3f(self.size[0], 0, 0)
-        glTexCoord2f(1, 1); glVertex3f(self.size[0], self.size[1], 0)
-        glTexCoord2f(0, 1); glVertex3f(0, self.size[1], 0)
-        glEnd()
-
-        core.set3d(self.size)
-        glEnable(GL_LIGHTING)
-        glEnable(GL_DEPTH_TEST)
 
     def make_scene(self):
         self.gui.lock_updates()
@@ -114,40 +78,43 @@ class GuiScreen(object):
         self.gui.unlock_updates()
 
     def redraw_routine(self, rects):
+        self.dirty = True
         self.surf.fill((0,0,0,0))
         for img in rects:
             self.surf.blit(img.image, img.rect)
 
-        self.render()
-        pygame.display.flip()
+    def render(self):
+        image = self.surf
+        if self.dirty:
+            data = self.surf_data = pygame.image.tostring(image, "RGBA", 1)
+        else:
+            data = self.surf_data
+        glDrawPixels(self.size[0], self.size[1], GL_RGBA, GL_UNSIGNED_BYTE, data)
 
+cc = pygame.time.Clock()
 def main():
     screen_size = (640, 480)
     core.init(screen_size)
     core.set3d(screen_size)
+
+    glClearColor(1, 1, 1, 1)
 
     core.clear_screen()
 
     gui_screen = GuiScreen(screen_size)
 
     while 1:
+        cc.tick(9999)
         gui_screen.check_events(pygame.event.wait())
 
-        glBegin(GL_QUADS)
-        glColor4f(1, 0, 0, 1)
-        glVertex3f(-1, 1, -10)
-        glColor4f(0, 1, 0, 1)
-        glVertex3f(1, 1, -10)
-        glColor4f(0, 0, 1, 1)
-        glVertex3f(1, -1, -10)
-        glColor4f(1, 1, 1, 1)
-        glVertex3f(-1, -1, -10)
-        glEnd()
+        core.clear_screen()
+
+        gui_screen.render()
+
         pygame.display.flip()
 
-##        core.clear_screen()
-##        gui_screen.render()
-##        pygame.display.flip()
-
-main()
+try:
+    main()
+except:
+    print cc.get_fps()
         

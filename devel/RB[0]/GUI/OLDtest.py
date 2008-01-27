@@ -170,10 +170,16 @@ GMR_GUI.add_window(window)
 # it in the first place?).
 GMR_GUI.unlock_updates()
 
+c = pygame.time.Clock()
+
 # this is the main loop. As you can see, it simply lets the GUI do
 # all the work of capturing the events, 1 at a time. It can also
 # update the screen by itself since we have given it a routine to
 # do just that.
-while(True):
-	GMR_GUI.check_inputs(pygame.event.wait())
+try:
+        while(True):
+                c.tick(999)
+                GMR_GUI.check_inputs(pygame.event.wait())
+except:
+        print c.get_fps()
 
