@@ -25,6 +25,23 @@ class PhysicalAttack(Effect):
                 source.statistics[unit.Statistic.PHYSICAL_ATTACK]\
                 .get_effective_value() * self.power))
             return EffectResultList(True, results)
+        else:
+            return EffectResultList(False, [])
+
+class MagicAttack(Effect):
+    def __init__(self, power):
+        super(MagicAttack, self).__init__()
+        self.power = power
+        
+    def execute(self, source, target):
+        if (True): #TODO: Check accuracy/evasion
+            results = []
+            results.append(ReduceHPResult(target, \
+                source.statistics[unit.Statistic.MAGIC_ATTACK]\
+                .get_effective_value() * self.power))
+            return EffectResultList(True, results)
+        else:
+            return EffectResultList(False, [])
 
 
 

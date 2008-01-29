@@ -91,24 +91,26 @@ class Unit(Entity):
         if self.current_CT >= unit_turn_ct_threshold:
             battle.queue_unit_turn(self)
     
-    def use_ability(self, ability, target_units):
+    def use_ability(self, ability_, target_units):
         """
         Use an ability on each of the units in target_units
         Return True if the ability had an effect on at least one of them,
         False otherwise.
         """
         # We should have made sure that the ability still had uses left already
-        assert(ability.num_uses != 0 )
+        assert(ability_.num_uses == ability.Ability.INFINITE_USES or\
+            ability_.num_uses > 0 )
         
         # Decrement the user's mp and ct
-        self.current_MP -= ability.mp_cost
-        self.current_CT -= ability.ct_cost
-        ability.num_uses -= 1
+        self.current_MP -= ability_.mp_cost
+        self.current_CT -= ability_.ct_cost
+        if ability_.num_uses != ability.Ability.INFINITE_USES:
+            ability_.num_uses -= 1
         
         # Carry out the ability on each target
         did_something = False
         for target in target_units:
-            for effect in ability.effects:
+            for effect in ability_.effects:
                 result_list = effect.execute(self, target)
                 if result_list.is_successful and len(result_list.results) > 0:
                     did_something = True

@@ -15,16 +15,24 @@ class Ability(object):
     any number of other things."""
     
     INFINITE_USES = -1
+    UNLIMITED_RANGE = -1
+    DEFAULT_ACTION_CT_COST = 20
     
     def __init__(self):
+        self.Name = None
         self.trigger = None
+        # TODO: At some point there will be abilities that trigger on events.
         self.mp_cost = 0
-        self.ct_cost = 0
+        """ The amount of MP consumed by this ability. """
+        self.ct_cost = Ability.DEFAULT_ACTION_CT_COST
         self.charge_time = 0
-        self.num_uses = 0
-        self.h_range = 0
-        self.v_range_up = 0
-        self.v_range_down = 0
+        self.num_uses = Ability.INFINITE_USES
+        self.min_h_range = 0
+        self.max_h_range = 0
+        self.min_v_range_up = 0
+        self.max_v_range_up = 0
+        self.min_v_range_down = 0
+        self.max_v_range_down = 0
         self.aoe_pattern = AreaOfEffectPattern(AreaOfEffectPattern.CROSS, 1, 0)
         self.effects = []
     
