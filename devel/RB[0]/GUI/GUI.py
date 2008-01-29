@@ -735,7 +735,7 @@ class Window:
         # deal with making the window modal, etc...
         return(bindex)
 
-class Container():
+class Container(object):
     """The container is essentially a window where the window part
        is not drawn. This means that they cannot be moved (as they
        have no border to click on)"""
