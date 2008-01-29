@@ -166,6 +166,7 @@ class PYTHON_GUI:
         window.id_number=self.get_new_id()
         # get the window to draw itself
         window.image=window.draw_window()
+        window.parent_gui = self
         self.windows.append(window)
         # and we'll need to redraw the screen
         self.update_screen()
@@ -381,7 +382,7 @@ class PYTHON_GUI:
 
             if(event.type!=NOEVENT):
                 # if it's a rmb down, then possibly exit
-                if mouse_pass:
+                if self.moving_window or mouse_pass:
                     if((event.type==MOUSEBUTTONDOWN)and(event.button==3)):
                         if(RMOUSE_END==True):
                             unused.append(pygame.event.Event(pygame.QUIT))
@@ -575,6 +576,7 @@ class Window:
             self.image=pygame.Surface((0,0))
 
         self.moving_slider = None
+        self.parent_gui = None
 
     def display_window_details(self):
         """Simple debug routine"""
