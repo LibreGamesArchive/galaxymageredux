@@ -26,6 +26,12 @@ def main():
                            "input", "type your input",
                            widget_pos="bottomleft")
 
+    win = gui.WindowBar(app, (640, -1), "WinB1", "midright",
+                        caption="A movable window bar!")
+    win_button = gui.Button(app, (640, 290), "WinButton1", "AttachedToAWindow!",
+                            widget_pos="midright")
+    win.attach(win_button)
+
     pygame.key.set_repeat(50)
 
     while 1:

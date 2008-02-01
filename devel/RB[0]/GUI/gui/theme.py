@@ -35,7 +35,7 @@ def Container(default, hover, click):
                         "hover": make_image(hover),
                         "click": make_image(click)}
 
-def WindowBar(default, hover, click):
+def WindowBar(default, hover, click, text_color):
     __cur["window_bar"] = {"default": make_image(default),
                          "hover": make_image(hover),
                          "click": make_image(click),

@@ -19,6 +19,11 @@ class App(object):
         self.dirty = False
         self.background_color = background_color
 
+    def move_to_top(self, other):
+        i = self.widgets.index(other)
+        self.widgets.insert(0, self.widgets.pop(i))
+        self.dirty = True
+        return None
 
     def add_widget(self, widg, name):
         self.widgets.insert(0, widg)
@@ -50,8 +55,10 @@ class App(object):
     def render(self):
         if self.dirty:
             self.surface.fill(self.background_color)
+            self.widgets.reverse()
             for i in self.widgets:
                 i.render(self.surface)
+            self.widgets.reverse()
             self.dirty = False
         return self.surface
 
@@ -252,6 +259,9 @@ class Button(Widget):
     def add_widget(self, *other):
         pass
 
+    def move_to_top(self, other):
+        self.parent.move_to_top(self)
+
     def make_image(self):
         if self.over_font:
             font = self.over_font
@@ -334,6 +344,7 @@ class Button(Widget):
             if self.rect.collidepoint(mpos):
                 self.change_image(self.click)
                 self.__mouse_hold_me = True
+                self.parent.move_to_top(self)
                 return None
             return event
         if event.type == MOUSEBUTTONUP:
@@ -341,6 +352,7 @@ class Button(Widget):
                 self.__mouse_hold_me = False
                 if self.rect.collidepoint(mpos):
                     self.change_image(self.regular)
+                    self.parent.move_to_top(self)
                     return Event(Button, self.name, GUI_EVENT_CLICK)
                 return None
             return event
@@ -428,6 +440,9 @@ class MenuList(Widget):
     def add_widget(self, *other):
         pass
 
+    def move_to_top(self, other):
+        self.parent.move_to_top(self)
+
     def render(self, surface, offset=(0, 0)):
         pos = self.pos[0] + offset[0], self.pos[1] + offset[1]
         if self.dirty:
@@ -469,6 +484,9 @@ class Menu(Widget):
         self.make_image()
 
         self.widget_vis = False
+
+    def move_to_top(self, other):
+        self.parent.move_to_top(self)
 
     def make_image(self):
         images = []
@@ -635,6 +653,7 @@ class TextInputBox(Widget):
         if event.type == MOUSEBUTTONDOWN:
             if self.rect.collidepoint(mpos):
                 self.__mouse_hold_me = True
+                self.parent.move_to_top(self)
                 return None
             else:
                 self.__mouse_hold_me = False
@@ -642,6 +661,7 @@ class TextInputBox(Widget):
                 return event
         if event.type == MOUSEBUTTONUP:
             if self.rect.collidepoint(mpos):
+                self.parent.move_to_top(self)
                 if self.__mouse_hold_me:
                     self.focused = True
                 self.__mouse_hold_me = False
@@ -698,6 +718,73 @@ class TextInputBox(Widget):
                 return None
             return event
         return event
+
+
+class WindowBar(Button):
+    def __init__(self, parent, pos, name,
+                 widget_pos="topleft",
+                 width=None, caption="",
+                 font=None, images=None):
+
+        if not images:
+            images = [parent.theme.window_bar["default"],
+                      parent.theme.window_bar["hover"],
+                      parent.theme.window_bar["click"]]
+        if not font:
+            font = copy.copy(parent.theme.font)
+            font["text-color"] = parent.theme.window_bar["text-color"]
+        
+        Button.__init__(self, parent, pos, name, caption,
+                        font, images, widget_pos)
+
+        self.__mouse_hold_me=False
+
+        self.child = None
+
+        self.over_width = width
+        self.make_image()
+
+    def moveup(self):
+        if self.child:
+            self.child.parent.move_to_top(self.child)
+        self.parent.move_to_top(self)
+
+    def event(self, event, offset=(0, 0)):
+        mpos = pygame.mouse.get_pos()
+        mpos = mpos[0] - offset[0], mpos[1] - offset[1]
+        if self.rect.collidepoint(mpos):
+            if self.__mouse_hold_me:
+                self.change_image(self.click)
+            else:
+                self.change_image(self.hover)
+        else:
+            self.change_image(self.regular)
+
+        if event.type == MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(mpos):
+                self.change_image(self.click)
+                self.__mouse_hold_me = True
+                self.moveup()
+                return None
+            return event
+        if event.type == MOUSEBUTTONUP:
+            if self.__mouse_hold_me:
+                self.__mouse_hold_me = False
+                if self.rect.collidepoint(mpos):
+                    self.change_image(self.regular)
+                    self.moveup()
+                    return None
+                return None
+            return event
+        if event.type == MOUSEMOTION:
+            if self.__mouse_hold_me:
+                self.move(event.rel)
+                if self.child:
+                    self.child.move(event.rel)
+        return event
+
+    def attach(self, other):
+        self.child = other
 
 
 #Defines

@@ -3,7 +3,7 @@ app - Check
 label - Check
 button - Check
 menu - Check
-text-input-box
+text-input-box - Check
 container
 window-bar
 vertical scroll-bar
