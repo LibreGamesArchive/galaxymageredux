@@ -603,12 +603,23 @@ class TextInputBox(Widget):
         f = pygame.font.Font(font["font"], font["size"])
 
         if self.focused:
-            t = self.text[0:self.__text_pos] + "|" + self.text[self.__text_pos::]
-        else:
-            t = self.text
+            t = f.size(self.prompt + ": ")[0]
+            miw, height = f.size(self.text[0:self.__text_pos])
+            maw = f.size(self.text[0:self.__text_pos+1])[0]
 
-        self.tex_surface = f.render(self.prompt + ": " + t, font["aa"],
-                               self.theme.input["entry-text-color"])
+            self.tex_surface = f.render(self.prompt + ": " + self.text + " ",
+                                        font["aa"],
+                                   self.theme.input["entry-text-color"])
+            r, g, b = self.theme.input["entry-text-color"]
+            r = 255 - r
+            g = 255 - g
+            b = 255 - b
+            rc = pygame.Rect((t + miw, 0), (maw - miw, height))
+            pygame.draw.rect(self.tex_surface, (r, g, b), rc, 1)
+            
+        else:
+            self.tex_surface = f.render(self.prompt + ": " + self.text, font["aa"],
+                                   self.theme.input["entry-text-color"])
         self.parent.dirty = True
         return None
 
@@ -650,24 +661,30 @@ class TextInputBox(Widget):
                         self.__text_pos -= 1
                         self.make_text()
                 elif event.key == K_DELETE:
-                    self.text = self.text[0:self.__text_pos] + self.text[self.__text_pos+1::]
-                    self.make_text()
-                elif event.key == K_HOME: 
-                    self.__text_pos = 0
-                    self.make_text()
+                    if not self.__text_pos == len(self.text):
+                        self.text = self.text[0:self.__text_pos] + self.text[self.__text_pos+1::]
+                        self.make_text()
+                elif event.key == K_HOME:
+                    if not self.__text_pos == 0:
+                        self.__text_pos = 0
+                        self.make_text()
                 elif event.key == K_END:
-                    self.__text_pos = len(self.text)
-                    self.make_text
+                    if not self.__text_pos == len(self.text):
+                        self.__text_pos = len(self.text)
+                        self.make_text
                 elif event.key == K_LEFT:
-                    self.__text_pos -= 1
-                    self.make_text()
+                    if self.__text_pos > 0:
+                        self.__text_pos -= 1
+                        self.make_text()
                 elif event.key == K_RIGHT:
-                    self.__text_pos += 1
-                    self.make_text()
+                    if self.__text_pos < len(self.text):
+                        self.__text_pos += 1
+                        self.make_text()
                 elif event.key == K_RETURN:
                     a = Event(TextInputBox, self.name, GUI_EVENT_INPUT)
                     a.string = self.text
                     self.text = ""
+                    self.__text_pos = 0
                     self.make_text()
                     return a
                 else:

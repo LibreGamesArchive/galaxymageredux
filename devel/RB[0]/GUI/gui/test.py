@@ -26,7 +26,7 @@ def main():
                            "input", "type your input",
                            widget_pos="bottomleft")
 
-    pygame.key.set_repeat(35)
+    pygame.key.set_repeat(50)
 
     while 1:
         for event in app.get_events():
