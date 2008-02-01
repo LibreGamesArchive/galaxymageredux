@@ -4,8 +4,8 @@ label - Check
 button - Check
 menu - Check
 text-input-box - Check
-container
-window-bar
+container/window
+window-bar - Check
 vertical scroll-bar
 horizontal scroll-bar
 
