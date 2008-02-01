@@ -1,3 +1,3 @@
 
-import parse
-print parse.test_safe("test.py")
+import safe_python
+print safe_python.test_safe("test.py")

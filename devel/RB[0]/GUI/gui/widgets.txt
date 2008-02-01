@@ -1,0 +1,12 @@
+
+app - Check
+label - Check
+button - Check
+menu - Check
+text-input-box
+container
+window-bar
+vertical scroll-bar
+horizontal scroll-bar
+
+theme - Check
