@@ -145,6 +145,8 @@ class Label(Widget):
         self.over_image = image
         self.over_font = font
 
+        self.over_width = None
+
         self.make_image()
 
     def make_image(self):
@@ -162,6 +164,8 @@ class Label(Widget):
                 rect = tex.get_rect()
                 rect.width += bsize[0] * 2
                 rect.height += bsize[1] * 2
+                if self.over_width:
+                    rect.width = self.over_width
                 new = resize_image(image, rect.size)
                 new.blit(tex, bsize)
                 self.comp_image = new
@@ -172,6 +176,8 @@ class Label(Widget):
                 rect = tex.get_rect()
                 rect.width += bsize[0] * 2
                 rect.height += bsize[1] * 2
+                if self.over_width:
+                    rect.width = self.over_width
                 new = resize_image(image, rect.size)
                 new.blit(tex, bsize)
                 self.comp_image = new
@@ -195,6 +201,8 @@ class Label(Widget):
                     rect = tex.get_rect()
                     rect.width += bsize[0] * 2
                     rect.height += bsize[1] * 2
+                    if self.over_width:
+                        rect.width = self.over_width
                     new = resize_image(image, rect.size)
                     new.blit(tex, bsize)
                     self.comp_image = new
@@ -205,6 +213,8 @@ class Label(Widget):
                     rect = tex.get_rect()
                     rect.width += bsize[0] * 2
                     rect.height += bsize[1] * 2
+                    if self.over_width:
+                        rect.width = self.over_width
                     new = resize_image(image, rect.size)
                     new.blit(tex, bsize)
                     self.comp_image = new
@@ -233,6 +243,8 @@ class Button(Widget):
 
         self.text = text
 
+        self.over_width = None
+
         self.make_image()
 
         self.__mouse_hold_me = False
@@ -252,22 +264,34 @@ class Button(Widget):
         if self.over_images:
             self.regular = Label(self, self.pos, self.name, self.text,
                                  font, self.over_images[0])
+            self.regular.over_width = self.over_width
+            self.regular.make_image()
 
             self.hover = Label(self, self.pos, self.name, self.text,
                                font, self.over_images[1])
+            self.hover.over_width = self.over_width
+            self.hover.make_image()
 
             self.click = Label(self, self.pos, self.name, self.text,
                                font, self.over_images[2])
+            self.click.over_width = self.over_width
+            self.click.make_image()
 
         elif self.theme and self.theme.button:
             self.regular = Label(self, self.pos, self.name, self.text,
                                  font, self.theme.button["default"])
+            self.regular.over_width = self.over_width
+            self.regular.make_image()
 
             self.hover = Label(self, self.pos, self.name, self.text,
                                font, self.theme.button["hover"])
+            self.hover.over_width = self.over_width
+            self.hover.make_image()
 
             self.click = Label(self, self.pos, self.name, self.text,
                                font, self.theme.button["click"])
+            self.click.over_width = self.over_width
+            self.click.make_image()
 
         else:
             self.regular = Label(self, self.pos, self.name, self.text,
@@ -374,6 +398,10 @@ class MenuList(Widget):
                 if new.rect.width > width:
                     width = new.rect.width
                 buttons.append(new)
+
+        for i in buttons:
+            i.over_width = width
+            i.make_image()
 
         if self.theme and self.theme.menu["border"]:
             image = self.theme.menu["border"]
