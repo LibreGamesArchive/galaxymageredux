@@ -26,6 +26,8 @@ def main():
                            "input", "type your input",
                            widget_pos="bottomleft")
 
+    pygame.key.set_repeat(35)
+
     while 1:
         for event in app.get_events():
             if event.type == gui.GUI_EVENT:
