@@ -617,9 +617,10 @@ class TextInputBox(Widget):
         if event.type == KEYDOWN:
             if self.focused:
                 if event.key == K_BACKSPACE:
-                    self.text = self.text[0:self.__text_pos-2] + self.text[self.__text_pos::]
-                    self.__text_pos -= 1
-                    self.make_text()
+                    if not self.__text_pos == 0:
+                        self.text = self.text[0:self.__text_pos-1] + self.text[self.__text_pos::]
+                        self.__text_pos -= 1
+                        self.make_text()
                 elif event.key == K_DELETE:
                     self.text = self.text[0:self.__text_pos] + self.text[self.__text_pos+1::]
                     self.make_text()
