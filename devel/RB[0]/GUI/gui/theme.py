@@ -8,7 +8,6 @@ __theme = ""
 __cur = {"button":None,
        "label":None,
        "window":None,
-       "container":None,
        "window_bar":None,
        "scroll_bar":None,
        "menu":None,
@@ -30,21 +29,14 @@ def Label(image, text_color):
     __cur["label"] = {"image": make_image(image),
                       "text-color": text_color}
 
-def Container(default, hover, click):
-    __cur["container"] = {"default": make_image(default),
-                        "hover": make_image(hover),
-                        "click": make_image(click)}
-
 def WindowBar(default, hover, click, text_color):
     __cur["window_bar"] = {"default": make_image(default),
                          "hover": make_image(hover),
                          "click": make_image(click),
                          "text-color": text_color}
 
-def Window(default, hover, click):
-    __cur["window"] = {"default": make_image(default),
-                     "hover": make_image(hover),
-                     "click": make_image(click)}
+def Window(border):
+    __cur["window"] = {"border": make_image(border)}
 
 def ScrollBar(default, hover, click):
     __cur["scroll_bar"] = {"default": make_image(default),
@@ -70,7 +62,6 @@ def Font(font, size, aa):
 def make_theme(theme):
     if not safe_python.test_safe(os.path.join(theme, "theme.txt"),
                                  ["Button", "Label",
-                                  "Container",
                                   "WindowBar",
                                   "Window", "Menu",
                                   "ScrollBar",
@@ -82,7 +73,6 @@ def make_theme(theme):
     __cur = {"button":None,
            "label":None,
            "window":None,
-           "container":None,
            "window_bar":None,
            "scroll_bar":None,
            "menu":None,
@@ -113,17 +103,12 @@ class Theme(object):
                        "click":"noimage",
                        "text-color":(0, 0, 0)}
 
-        self.container = {"default":"noimage",
-                          "hover":"noimage",
-                          "click":"noimage"}
         self.window_bar = {"default":"noimage",
                            "hover":"noimage",
                            "click":"noimage",
                            "text-color":(0, 0, 0)}
 
-        self.window = {"default":"noimage",
-                       "hover":"noimage",
-                       "click":"noimage"}
+        self.window = {"border":"noimage"}
 
         self.label = {"image":"noimage",
                       "text-color":(0, 0, 0)}
@@ -147,9 +132,6 @@ class Theme(object):
 
         if cur["label"]:
             self.label = cur["label"]
-
-        if cur["container"]:
-            self.container = cur["container"]
 
         if cur["window_bar"]:
             self.window_bar = cur["window_bar"]

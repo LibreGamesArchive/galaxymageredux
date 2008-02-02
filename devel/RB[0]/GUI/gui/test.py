@@ -41,6 +41,12 @@ def main():
                             widget_pos="midright")
     win.attach(win_button)
 
+    win2 = gui.Window(app, (-1, -1), "Window1", "topleft",
+                      [150, 150],
+                      caption="window", icon="label.png")
+    subbutton1 = gui.Button(win2, (-1, -1), "SubB1", "Button!",
+                            widget_pos="center")
+
     pygame.key.set_repeat(50)
 
     while 1:
@@ -66,6 +72,8 @@ def main():
                     if event.name == "Input1":
                         if event.action == gui.GUI_EVENT_INPUT:
                             print event.string
+                if event.widget == gui.Window:
+                    print "click!"
         screen.blit(app.render(), (0, 0))
         pygame.display.flip()
 

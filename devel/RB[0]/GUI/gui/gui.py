@@ -106,10 +106,9 @@ def resize_image(image, size):
 class Widget(object):
     def __init__(self, parent, pos = (-1, -1), name="",
                  widget_pos="topleft"):
+        self.name = name
         self.parent = parent
         self.parent.add_widget(self, name)
-
-        self.name = name
 
         self.theme = copy.copy(self.parent.theme)
 
@@ -130,6 +129,10 @@ class Widget(object):
 
     def event(self, event, offset=(0, 0)):
         return event
+
+    def do_dirty(self):
+        if self.parent:
+            self.parent.dirty = True
 
     def move(self, off):
         x, y = self.pos
@@ -179,6 +182,7 @@ class Label(Widget):
         return new
 
     def make_image(self):
+        self.do_dirty()
         if self.over_font:
             font = pygame.font.Font(self.over_font["font"],
                                     self.over_font["size"])
@@ -354,7 +358,7 @@ class Button(Widget):
         self.image = self.regular
         self.rect = self.image.comp_image.get_rect()
         setattr(self.rect, self.widget_pos, self.pos)
-        self.parent.dirty = True
+        self.do_dirty()
 
     def render(self, surface, offset=(0,0)):
         pos = self.rect.left + offset[0], self.rect.top + offset[0]
@@ -482,8 +486,8 @@ class MenuList(Widget):
             self.old_draw_area = self.surface
         self.rect = self.surface.get_rect()
         setattr(self.rect, self.widget_pos, self.pos)
-        self.parent.dirty = True
         self.dirty = True
+        self.do_dirty()
 
         self.buttons = buttons
 
@@ -515,7 +519,7 @@ class MenuList(Widget):
                 event = x
                 break
         if self.dirty:
-            self.parent.dirty = True
+            self.do_dirty()
         return event           
 
 class Menu(Widget):
@@ -591,7 +595,7 @@ class Menu(Widget):
                             else:
                                 event = None
         if self.dirty:
-            self.parent.dirty = True
+            self.do_dirty()
 
         return event
 
@@ -661,7 +665,7 @@ class TextInputBox(Widget):
         self.tex_surface = tex_surface
         self.rect = self.surface.get_rect()
         setattr(self.rect, self.widget_pos, self.pos)
-        self.parent.dirty = True
+        self.do_dirty()
 
     def make_text(self):
         font = None
@@ -691,7 +695,7 @@ class TextInputBox(Widget):
         else:
             self.tex_surface = f.render(self.prompt + ": " + self.text, font["aa"],
                                    self.theme.input["entry-text-color"])
-        self.parent.dirty = True
+        self.do_dirty()
         return None
 
     def render(self, surface, offset=(0, 0)):
@@ -777,7 +781,8 @@ class WindowBar(Button):
     def __init__(self, parent, pos, name,
                  widget_pos="topleft",
                  width=None, caption="",
-                 font=None, images=None):
+                 font=None, images=None,
+                 icon=None):
 
         if not images:
             images = [parent.theme.window_bar["default"],
@@ -788,19 +793,25 @@ class WindowBar(Button):
             font["text-color"] = parent.theme.window_bar["text-color"]
         
         Button.__init__(self, parent, pos, name, caption,
-                        font, images, widget_pos)
+                        font, images, widget_pos, icon)
 
         self.__mouse_hold_me=False
 
         self.child = None
 
+        self.minimized = False
+
         self.over_width = width
         self.make_image()
+
+        self.min_button = Button(self, self.rect.midright, "", "_",
+                                 font, widget_pos="midright")
 
     def moveup(self):
         if self.child:
             self.child.parent.move_to_top(self.child)
         self.parent.move_to_top(self)
+        self.do_dirty()
 
     def event(self, event, offset=(0, 0)):
         mpos = pygame.mouse.get_pos()
@@ -813,31 +824,171 @@ class WindowBar(Button):
         else:
             self.change_image(self.regular)
 
-        if event.type == MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(mpos):
-                self.change_image(self.click)
-                self.__mouse_hold_me = True
+        e = self.min_button.event(event, offset)
+        if self.dirty:
+            self.do_dirty()
+        if not e == event:
+            if e:
                 self.moveup()
-                return None
-            return event
-        if event.type == MOUSEBUTTONUP:
-            if self.__mouse_hold_me:
-                self.__mouse_hold_me = False
+                if e.type == GUI_EVENT:
+                    self.minimized = not self.minimized
+                    return None
+            return e
+        else:
+            if event.type == MOUSEBUTTONDOWN:
                 if self.rect.collidepoint(mpos):
-                    self.change_image(self.regular)
+                    self.change_image(self.click)
+                    self.__mouse_hold_me = True
                     self.moveup()
                     return None
-                return None
-            return event
-        if event.type == MOUSEMOTION:
-            if self.__mouse_hold_me:
-                self.move(event.rel)
-                if self.child:
-                    self.child.move(event.rel)
+                return event
+            if event.type == MOUSEBUTTONUP:
+                if self.__mouse_hold_me:
+                    self.__mouse_hold_me = False
+                    if self.rect.collidepoint(mpos):
+                        self.change_image(self.regular)
+                        self.moveup()
+                        return None
+                    return None
+                return event
+            if event.type == MOUSEMOTION:
+                if self.__mouse_hold_me:
+                    self.move(event.rel)
+                    self.min_button.move(event.rel)
+                    if self.child:
+                        self.child.move(event.rel)
         return event
 
     def attach(self, other):
         self.child = other
+
+    def render(self, surface, offset=(0, 0)):
+        Button.render(self, surface, offset)
+        self.min_button.render(surface, offset)
+        return None
+
+class Window(Widget):
+    def __init__(self, parent, pos, name, widget_pos="topleft",
+                 size=(50, 50), caption="",
+                 font=None, image=None,
+                 icon=None):
+        Widget.__init__(self, parent, pos, name, widget_pos)
+
+        self.size = size
+
+        self.icon = icon
+
+        self.caption = caption
+
+        self.widgets = []
+
+        self.over_font = font
+        self.over_image = image
+        self.make_image()
+
+        self.dirty = False
+
+    def make_image(self):
+        if self.over_image:
+            image = self.over_image
+        else:
+            image = self.theme.window["border"]
+
+        if image and not image == "noimage":
+            w, h = image.get_size()
+            new = resize_image(image, (self.size[0] + w * 2,
+                                       self.size[1] + h * 2))
+
+            self.border = new
+            self.surface = self.border.subsurface((w, h), self.size)
+            self.border_offset = (w, h + 1)
+            self.__old_draw_area = self.surface.copy()
+            self.rect = self.border.get_rect()
+            setattr(self.rect, self.widget_pos, self.pos)
+        else:
+            self.border_offset = (0, 0)
+            self.border = None
+            self.surface = pygame.Surface(self.size).convert()
+            self.__old_draw_area = self.surface.copy()
+            self.rect = self.surface.get_rect()
+            setattr(self.rect, self.widget_pos, self.pos)
+
+        if self.over_font:
+            font = self.over_font
+        else:
+            font = None
+
+        self.drag_bar = WindowBar(self, self.rect.midtop, "", "midbottom",
+                                  self.rect.width, self.caption,
+                                  font, None, self.icon)
+        self.do_dirty()
+        self.drag_bar.attach(self)
+
+    def event(self, event, offset=(0, 0)):
+        e = self.drag_bar.event(event, offset)
+        if not e == event:
+            return e
+        else:
+            o = (self.rect.left - offset[0] + self.border_offset[0],
+                 self.rect.top - offset[1] + self.border_offset[1])
+            mpos = pygame.mouse.get_pos()
+            mpos = mpos[0] - o[0], mpos[1] - o[1]
+            if self.drag_bar.minimized:
+                return event
+            for i in self.widgets:
+                if not i == self.drag_bar:
+                    e = i.event(event, o)
+                    if self.dirty:
+                        self.do_dirty()
+                    if not e == event:
+                        self.parent.move_to_top(self)
+                        if e and e.type == GUI_EVENT:
+                            e.widget = Window
+                        self.do_dirty()
+                        return e
+            if event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP:
+                m = pygame.mouse.get_pos()
+                m = m[0] - offset[0], m[1] - offset[1]
+                if self.rect.collidepoint(m):
+                    self.parent.move_to_top(self)
+                    self.do_dirty()
+                    return None
+            return event
+        return event
+
+    def move_to_top(self, other):
+        i = self.widgets.index(other)
+        self.widgets.insert(0, self.widgets.pop(i))
+        self.dirty = True
+        self.do_dirty()
+        return None
+
+    def add_widget(self, widg, name):
+        self.widgets.insert(0, widg)
+        return None
+
+    def remove_widget(self, name):
+        for i in self.widgets:
+            if i.name == name:
+                self.widgets.remove(i)
+                break
+        return None
+
+    def render(self, surface, offset=(0, 0)):
+        if self.dirty:
+            self.surface.blit(self.__old_draw_area, (0, 0))
+            self.widgets.reverse()
+            for i in self.widgets:
+                i.render(self.surface)
+            self.widgets.reverse()
+            self.dirty = False
+
+        self.drag_bar.render(surface, offset)
+        if not self.drag_bar.minimized:
+            pos = offset[0] + self.rect.left, offset[1] + self.rect.top
+            surface.blit(self.border, pos)
+        return None
+            
 
 
 #Defines
