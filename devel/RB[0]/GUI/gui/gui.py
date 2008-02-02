@@ -144,7 +144,8 @@ class Widget(object):
 class Label(Widget):
     def __init__(self, parent, pos, name, text,
                  font=None, image=None,
-                 widget_pos="topleft"):
+                 widget_pos="topleft",
+                 icon=None):
         Widget.__init__(self, parent, pos, name, widget_pos)
 
         self.text = text
@@ -154,7 +155,28 @@ class Label(Widget):
 
         self.over_width = None
 
+        self.icon = icon
+        if self.icon:
+            self.icon = pygame.image.load(os.path.join(self.theme.theme, self.icon)).convert_alpha()
+
         self.make_image()
+
+    def __combine_images(self, images):
+        flags = images[-1].get_flags()
+        width = 0
+        height = 0
+        for i in images:
+            width += i.get_width()
+            if i.get_height() > height:
+                height = i.get_height()
+
+        new = pygame.Surface((width, height), flags).convert_alpha()
+        new.fill((0,0,0,0))
+        lx = 0
+        for i in images:
+            new.blit(i, (lx, 0))
+            lx += i.get_width()
+        return new
 
     def make_image(self):
         if self.over_font:
@@ -162,6 +184,8 @@ class Label(Widget):
                                     self.over_font["size"])
             tex = font.render(self.text, self.over_font["aa"],
                               self.over_font["text-color"])
+            if self.icon:
+                tex = self.__combine_images([self.icon, tex])
             if self.over_image == "noimage":
                 self.comp_image = tex
             elif self.over_image:
@@ -199,6 +223,8 @@ class Label(Widget):
                                         self.theme.font["size"])
                 tex = font.render(self.text, self.theme.font["aa"],
                                   self.theme.label["text-color"])
+                if self.icon:
+                    tex = self.__combine_images([self.icon, tex])
                 if self.over_image == "noimage":
                     self.comp_image = tex
                 elif self.over_image:
@@ -228,7 +254,10 @@ class Label(Widget):
                 else:
                     self.comp_image = tex
             else:
-                self.comp_image = pygame.Surface((1, 1))
+                if self.icon:
+                    self.comp_image = self.icon
+                else:
+                    self.comp_image = pygame.Surface((1, 1))
             self.rect = self.comp_image.get_rect()
             setattr(self.rect, self.widget_pos, self.pos)
             return None
@@ -242,7 +271,8 @@ class Label(Widget):
 class Button(Widget):
     def __init__(self, parent, pos, name, text,
                  font=None, images=None,
-                 widget_pos="topleft"):
+                 widget_pos="topleft",
+                 icon=None):
         Widget.__init__(self, parent, pos, name, widget_pos)
 
         self.over_font = font
@@ -251,6 +281,8 @@ class Button(Widget):
         self.text = text
 
         self.over_width = None
+
+        self.icon = icon
 
         self.make_image()
 
@@ -273,45 +305,51 @@ class Button(Widget):
 
         if self.over_images:
             self.regular = Label(self, self.pos, self.name, self.text,
-                                 font, self.over_images[0])
+                                 font, self.over_images[0],
+                                 icon=self.icon)
             self.regular.over_width = self.over_width
             self.regular.make_image()
 
             self.hover = Label(self, self.pos, self.name, self.text,
-                               font, self.over_images[1])
+                               font, self.over_images[1],
+                               icon=self.icon)
             self.hover.over_width = self.over_width
             self.hover.make_image()
 
             self.click = Label(self, self.pos, self.name, self.text,
-                               font, self.over_images[2])
+                               font, self.over_images[2],
+                                 icon=self.icon)
             self.click.over_width = self.over_width
             self.click.make_image()
 
         elif self.theme and self.theme.button:
             self.regular = Label(self, self.pos, self.name, self.text,
-                                 font, self.theme.button["default"])
+                                 font, self.theme.button["default"],
+                                 icon=self.icon)
             self.regular.over_width = self.over_width
             self.regular.make_image()
 
             self.hover = Label(self, self.pos, self.name, self.text,
-                               font, self.theme.button["hover"])
+                               font, self.theme.button["hover"],
+                                 icon=self.icon)
             self.hover.over_width = self.over_width
             self.hover.make_image()
 
             self.click = Label(self, self.pos, self.name, self.text,
-                               font, self.theme.button["click"])
+                               font, self.theme.button["click"],
+                                 icon=self.icon)
             self.click.over_width = self.over_width
             self.click.make_image()
 
         else:
             self.regular = Label(self, self.pos, self.name, self.text,
-                                 font)
+                                 font, icon=self.icon)
 
             self.hover = Label(self, self.pos, self.name, self.text,
-                               font)
+                               font, icon=self.icon)
 
             self.click = Label(self, self.pos, self.name, self.text,
-                               font)
+                               font, icon=self.icon)
 
         self.image = self.regular
         self.rect = self.image.comp_image.get_rect()
@@ -363,10 +401,12 @@ class MenuList(Widget):
     def __init__(self, parent, pos, name="",
                  buttons=["None"],
                  font=None, images=None,
-                 widget_pos="topleft"):
+                 widget_pos="topleft",
+                 icons={"None":None}):
         Widget.__init__(self, parent, pos, name, widget_pos)
 
         self.button_list = buttons
+        self.icons = icons
 
         self.over_font = font
         self.over_images = images
@@ -390,8 +430,13 @@ class MenuList(Widget):
             height = 0
             width = 0
             for i in self.button_list:
+                try:
+                    x = self.icons[i]
+                except:
+                    x = None
                 new = Button(self, (0, height), i, i,
-                             font, self.over_images)
+                             font, self.over_images,
+                             icon=x)
                 height += new.rect.height
                 if new.rect.width > width:
                     width = new.rect.width
@@ -404,8 +449,13 @@ class MenuList(Widget):
             height = 0
             width = 0
             for i in self.button_list:
+                try:
+                    x = self.icons[i]
+                except:
+                    x = None
                 new = Button(self, (0, height), i, i,
-                             font, oimages)
+                             font, oimages,
+                             icon=x)
                 height += new.rect.height
                 if new.rect.width > width:
                     width = new.rect.width
@@ -470,13 +520,16 @@ class MenuList(Widget):
 
 class Menu(Widget):
     def __init__(self, parent, pos, name, text,
-                 buttons=["None"],
+                 buttons=["None"], icons={"None":None},
                  font=None, images=None,
-                 widget_pos="topleft"):
+                 widget_pos="topleft",
+                 icon=None):
         Widget.__init__(self, parent, pos, name, widget_pos)
 
         self.text = text
         self.buttons = buttons
+        self.icons = icons
+        self.icon = icon
 
         self.over_font = font
         self.over_images = images
@@ -504,10 +557,10 @@ class Menu(Widget):
                       self.theme.menu["entry-click"]]
 
         self.button = Button(self, self.pos, self.name, self.text,
-                             font, images, self.widget_pos)
+                             font, images, self.widget_pos, self.icon)
 
         self.other = MenuList(self, (self.pos[0], self.pos[1] + self.button.rect.height),
-                              "", self.buttons, font, images, self.widget_pos)
+                              "", self.buttons, font, images, self.widget_pos, self.icons)
 
     def add_widget(self, *other):
         pass

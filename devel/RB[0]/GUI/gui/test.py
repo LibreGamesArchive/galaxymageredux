@@ -12,15 +12,24 @@ def main():
     app = gui.App(pygame.Surface((640, 480)))
     mytheme = gui.make_theme("default_theme")
     app.theme = mytheme
-    label = gui.Label(app, (50, 50), "Label1", "Test Label")
-    button = gui.Button(app, (100, -1), "Button1", "Quit!")
-    b2 = gui.Button(app, (-1, 50), "Button2", "Button2")
+    label = gui.Label(app, (50, 50), "Label1", "Test Label",
+                      icon="label.png")
+    button = gui.Button(app, (100, -1), "Button1", "Quit!",
+                        icon="label.png")
+    b2 = gui.Button(app, (-1, 50), "Button2", "Button2",
+                        icon="label.png")
 
     menu = gui.Menu(app, (-1, -1), "Menu1", "A Menu",
-                  ["tttt1", "tttttttt2", "3"])
+                  ["tttt1", "tttttttt2", "3"],
+                    icon="label.png", icons={"tttt1":"label.png",
+                                             "tttttttt2":"label.png",
+                                             "3":"label.png"})
     blist = gui.MenuList(app, (640, 480), "ButtonList",
                          ["play", "help", "exit"],
-                         widget_pos="bottomright")
+                         widget_pos="bottomright",
+                         icons={"play":"label.png",
+                                "help":"label.png",
+                                "exit":"label.png"})
 
     inp = gui.TextInputBox(app, (0, 480), "Input1",
                            "input", "type your input",
