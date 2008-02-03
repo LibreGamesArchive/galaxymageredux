@@ -4,9 +4,9 @@ label - Check
 button - Check
 menu - Check
 text-input-box - Check
-container/window
+window - Check
 window-bar - Check
-vertical scroll-bar
-horizontal scroll-bar
-
 theme - Check
+
+vertical-scroll-bar
+horizontal-scroll-bar
