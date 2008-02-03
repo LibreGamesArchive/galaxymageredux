@@ -513,9 +513,12 @@ class Mesh(object):
 
         return limbs
 
-    def render(self, pos):
+    def render(self, pos, rotation=(0,0,0)):
         glPushMatrix()
         glTranslatef(*pos)
+        glRotatef(rotation[0], 1, 0, 0)
+        glRotatef(rotation[1], 0, 1, 0)
+        glRotatef(rotation[2], 0, 0, 1)
         for i in self.limbs:
             self.limbs[i].render()
         glPopMatrix()
