@@ -598,7 +598,7 @@ class TextInputBox(Widget):
                 r = 255 - r
                 g = 255 - g
                 b = 255 - b
-                rc = pygame.Rect((t + miw, 0), (maw - miw, height))
+                rc = pygame.Rect((t + miw, 0), (1, height))
                 pygame.draw.rect(self.tex_surface, (r, g, b), rc, 1)
                 
             else:
