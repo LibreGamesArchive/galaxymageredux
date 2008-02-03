@@ -40,6 +40,8 @@ def main():
                      caption="window", icon="label.png")
     subbutton1 = gui.Button(win, (-1, -1), "SubB1", "Button!",
                             widget_pos="center")
+    suni = gui.TextInputBox(win, (0, 150), "In2", "prompt",
+                            "hello :)", widget_pos="bottomleft")
 
     pygame.key.set_repeat(50)
 
@@ -67,7 +69,10 @@ def main():
                         if event.action == gui.GUI_EVENT_INPUT:
                             print event.string
                 if event.widget == gui.Window:
-                    print "click!"
+                    if event.subwidget == gui.Button:
+                        print event.name
+                    if event.subwidget == gui.TextInputBox:
+                        print event.string
         screen.blit(app.render(), (0, 0))
         pygame.display.flip()
 

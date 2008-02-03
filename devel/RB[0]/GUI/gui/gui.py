@@ -545,6 +545,7 @@ class TextInputBox(Widget):
         if self.focused:
             self.force_update()
         self.focused = False
+        self.make_text()
 
     def make_image(self):
 
@@ -601,7 +602,7 @@ class TextInputBox(Widget):
         return None
 
     def render(self, surface, offset=(0, 0)):
-        pos = self.rect.left + offset[0], self.rect.top + offset[1]
+        pos = self.rect.left - offset[0], self.rect.top - offset[1]
         surface.blit(self.surface, pos)
         surface.blit(self.tex_surface, (pos[0] + self.__surf_size[0],
                                         pos[1] + self.__surf_size[1]))
@@ -609,7 +610,7 @@ class TextInputBox(Widget):
 
     def event(self, event, offset=(0, 0)):
         mpos = pygame.mouse.get_pos()
-        mpos = mpos[0] + offset[0], mpos[1] + offset[1]
+        mpos = mpos[0] - offset[0], mpos[1] - offset[1]
         if event.type == MOUSEBUTTONDOWN:
             if self.rect.collidepoint(mpos):
                 self.__mouse_hold_me = True
@@ -834,13 +835,18 @@ class Window(Widget):
             mpos = pygame.mouse.get_pos()
             mpos = mpos[0] - o[0], mpos[1] - o[1]
             if self.drag_bar.minimized:
+                self.not_active()
                 return event
             for i in self.widgets:
                 if not i == self.drag_bar:
                     e = i.event(event, o)
                     if not e == event:
+                        for x in self.widgets:
+                            if not x == i:
+                                x.not_active()
                         self.parent.move_to_top(self)
                         if e and e.type == GUI_EVENT:
+                            e.subwidget = e.widget
                             e.widget = Window
                         return e
             if event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP:
