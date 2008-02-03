@@ -704,7 +704,15 @@ class WindowBar(object):
         self.minimized = False
 
         self.min_button = Button(self, self.bar.rect.midright, "", "_",
-                                 "midright")
+                                 "midright", theme=self.parent.theme)
+        self.max_button = Button(self, self.bar.rect.midright, "", "+",
+                                 "midright", theme=self.parent.theme)
+        width = max([self.max_button.rect.width,
+                     self.min_button.rect.width])
+        self.min_button.over_width = width
+        self.max_button.over_wdith = width
+        self.min_button.make_image()
+        self.max_button.make_image()
 
     def add_widget(self, other):
         pass
@@ -730,7 +738,10 @@ class WindowBar(object):
         else:
             self.bar.change_image(self.bar.regular)
 
-        e = self.min_button.event(event, offset)
+        if self.minimized:
+            e = self.max_button.event(event, offset)
+        else:
+            e = self.min_button.event(event, offset)
         if not e == event:
             self.force_update()
             if e:
@@ -761,12 +772,16 @@ class WindowBar(object):
                 if self.__mouse_hold_me:
                     self.bar.move(event.rel)
                     self.min_button.move(event.rel)
+                    self.max_button.move(event.rel)
                     self.parent.move(event.rel)
         return event
 
     def render(self, surface, offset=(0, 0)):
         self.bar.render(surface, offset)
-        self.min_button.render(surface, offset)
+        if self.minimized:
+            self.max_button.render(surface, offset)
+        else:
+            self.min_button.render(surface, offset)
         return None
 
 class Window(Widget):
