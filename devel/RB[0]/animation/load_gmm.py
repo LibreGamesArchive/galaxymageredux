@@ -140,20 +140,19 @@ def parse_file(file_name):
             tc = []
             n = []
             for v in values[1:]:
-                if "//" in v:
-                    w = v.split('//')
-                    f.append(int(w[0]))
-                    tc.append(int(w[1]))
-                    n.append(int(w[2]))
-                elif "/" in v:
-                    w = v.split("/")
-                    f.append(int(w[0]))
-                    tc.append(0)
-                    n.append(int(w[1]))
-                else:
-                    f.append(int(v))
-                    tc.append(0)
-                    n.append(0)
+                # Split on all slashes
+                w = v.split("/")
+                i = 0
+                # Then append existing value or a dummy to correct array
+                for list in (f, tc, n):
+                    try:
+                        if w[i]:
+                            list.append(int(w[i]))
+                        else:
+                            list.append(0)
+                    except IndexError:
+                        list.append(0)
+                    i += 1
             f = (f, n, tc, material)
             faces.append(f)
             objects[cur_object].append(f)
