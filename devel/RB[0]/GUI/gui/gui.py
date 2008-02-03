@@ -25,9 +25,12 @@ class App(object):
         self.dirty = True
         return None
 
-    def add_widget(self, widg, name):
-        self.widgets.insert(0, widg)
+    def force_update(self):
+        self.dirty = True
 
+    def add_widget(self, widg):
+        self.widgets.insert(0, widg)
+        self.dirty = True
         return None
 
     def remove_widget(self, name):
@@ -46,6 +49,7 @@ class App(object):
                 if ret == event:
                     continue
                 else:
+                    self.dirty = True
                     if ret:
                         return_events.append(ret)
                     break
@@ -105,12 +109,15 @@ def resize_image(image, size):
 
 class Widget(object):
     def __init__(self, parent, pos = (-1, -1), name="",
-                 widget_pos="topleft"):
+                 widget_pos="topleft", theme=None):
         self.name = name
         self.parent = parent
-        self.parent.add_widget(self, name)
+        self.parent.add_widget(self)
 
-        self.theme = copy.copy(self.parent.theme)
+        self.theme = copy.copy(theme)
+        if not self.theme:
+            if self.parent:
+                self.theme = copy.copy(self.parent.theme)
 
         x, y = pos
         if x == -1:
@@ -122,49 +129,28 @@ class Widget(object):
         self.widget_pos = widget_pos
 
         self.rect = pygame.Rect(0, 0, 1, 1)
-        self.rect.center = self.pos
+        self.move()
 
     def render(self, surface, offset=(0, 0)):
         pass
 
+    def force_update(self):
+        self.parent.force_update()
+
     def event(self, event, offset=(0, 0)):
         return event
 
-    def do_dirty(self):
-        if self.parent:
-            self.parent.dirty = True
-
-    def move(self, off):
+    def move(self, off=(0,0)):
         x, y = self.pos
         x += off[0]
         y += off[1]
 
         self.pos = (x, y)
         setattr(self.rect, self.widget_pos, self.pos)
+        self.force_update()
         return None
 
-
-class Label(Widget):
-    def __init__(self, parent, pos, name, text,
-                 font=None, image=None,
-                 widget_pos="topleft",
-                 icon=None):
-        Widget.__init__(self, parent, pos, name, widget_pos)
-
-        self.text = text
-
-        self.over_image = image
-        self.over_font = font
-
-        self.over_width = None
-
-        self.icon = icon
-        if self.icon:
-            self.icon = pygame.image.load(os.path.join(self.theme.theme, self.icon)).convert_alpha()
-
-        self.make_image()
-
-    def __combine_images(self, images):
+    def combine_images(self, images):
         flags = images[-1].get_flags()
         width = 0
         height = 0
@@ -181,31 +167,38 @@ class Label(Widget):
             lx += i.get_width()
         return new
 
+    def not_active(self):
+        pass
+
+
+class Label(Widget):
+    def __init__(self, parent, pos, name, text,
+                 widget_pos="topleft", theme=None,
+                 icon=None):
+        Widget.__init__(self, parent, pos, name, widget_pos, theme)
+
+        self.text = text
+
+        self.over_width = None
+
+        self.icon = icon
+        if self.icon:
+            self.icon = pygame.image.load(os.path.join(self.theme.theme, self.icon)).convert_alpha()
+
+        self.make_image()
+
     def make_image(self):
-        self.do_dirty()
-        if self.over_font:
-            font = pygame.font.Font(self.over_font["font"],
-                                    self.over_font["size"])
-            tex = font.render(self.text, self.over_font["aa"],
-                              self.over_font["text-color"])
+        if self.theme and self.theme.font["font"]:
+            font = pygame.font.Font(self.theme.font["font"],
+                                    self.theme.font["size"])
+            tex = font.render(self.text, self.theme.font["aa"],
+                              self.theme.label["text-color"])
             if self.icon:
-                tex = self.__combine_images([self.icon, tex])
-            if self.over_image == "noimage":
+                tex = self.combine_images([self.icon, tex])
+            image = self.theme.label["image"]
+            if image=="noimage":
                 self.comp_image = tex
-            elif self.over_image:
-                image = self.over_image
-                bsize = (image.get_width() / 3,
-                         image.get_height() / 3)
-                rect = tex.get_rect()
-                rect.width += bsize[0] * 2
-                rect.height += bsize[1] * 2
-                if self.over_width:
-                    rect.width = self.over_width
-                new = resize_image(image, rect.size)
-                new.blit(tex, bsize)
-                self.comp_image = new
-            elif self.theme.label["image"]:
-                image = self.theme.label["image"]
+            elif image:
                 bsize = (image.get_width() / 3,
                          image.get_height() / 3)
                 rect = tex.get_rect()
@@ -218,53 +211,13 @@ class Label(Widget):
                 self.comp_image = new
             else:
                 self.comp_image = tex
-            self.rect = self.comp_image.get_rect()
-            self.rect.center = self.pos
-            return None
         else:
-            if self.theme and self.theme.font["font"]:
-                font = pygame.font.Font(self.theme.font["font"],
-                                        self.theme.font["size"])
-                tex = font.render(self.text, self.theme.font["aa"],
-                                  self.theme.label["text-color"])
-                if self.icon:
-                    tex = self.__combine_images([self.icon, tex])
-                if self.over_image == "noimage":
-                    self.comp_image = tex
-                elif self.over_image:
-                    image = self.over_image
-                    bsize = (image.get_width() / 3,
-                             image.get_height() / 3)
-                    rect = tex.get_rect()
-                    rect.width += bsize[0] * 2
-                    rect.height += bsize[1] * 2
-                    if self.over_width:
-                        rect.width = self.over_width
-                    new = resize_image(image, rect.size)
-                    new.blit(tex, bsize)
-                    self.comp_image = new
-                elif self.theme.label["image"]:
-                    image = self.theme.label["image"]
-                    bsize = (image.get_width() / 3,
-                             image.get_height() / 3)
-                    rect = tex.get_rect()
-                    rect.width += bsize[0] * 2
-                    rect.height += bsize[1] * 2
-                    if self.over_width:
-                        rect.width = self.over_width
-                    new = resize_image(image, rect.size)
-                    new.blit(tex, bsize)
-                    self.comp_image = new
-                else:
-                    self.comp_image = tex
+            if self.icon:
+                self.comp_image = self.icon
             else:
-                if self.icon:
-                    self.comp_image = self.icon
-                else:
-                    self.comp_image = pygame.Surface((1, 1))
-            self.rect = self.comp_image.get_rect()
-            setattr(self.rect, self.widget_pos, self.pos)
-            return None
+                self.comp_image = pygame.Surface((1, 1))
+        self.rect = self.comp_image.get_rect()
+        self.move()
         return None
 
     def render(self, surface, offset=(0, 0)):
@@ -274,101 +227,107 @@ class Label(Widget):
 
 class Button(Widget):
     def __init__(self, parent, pos, name, text,
-                 font=None, images=None,
                  widget_pos="topleft",
-                 icon=None):
-        Widget.__init__(self, parent, pos, name, widget_pos)
-
-        self.over_font = font
-        self.over_images = images
+                 theme=None, icon=None):
+        Widget.__init__(self, parent, pos, name, widget_pos, theme)
 
         self.text = text
 
         self.over_width = None
 
         self.icon = icon
+        if self.icon:
+            self.icon = pygame.image.load(os.path.join(self.theme.theme, self.icon)).convert_alpha()
 
         self.make_image()
 
         self.__mouse_hold_me = False
 
-    def add_widget(self, *other):
-        pass
-
-    def move_to_top(self, other):
-        self.parent.move_to_top(self)
+    def not_active(self):
+        self.change_image(self.regular)
 
     def make_image(self):
-        if self.over_font:
-            font = self.over_font
-        elif self.theme and self.theme.font:
-            font = self.theme.font
-            font["text-color"] = self.theme.button["text-color"]
+        if self.theme and self.theme.font["font"]:
+            font = pygame.font.Font(self.theme.font["font"],
+                                    self.theme.font["size"])
+            tex = font.render(self.text, self.theme.font["aa"],
+                              self.theme.button["text-color"])
+            if self.icon:
+                tex = self.combine_images([self.icon, tex])
+
+            #default button!
+            image = self.theme.button["default"]
+            if image=="noimage":
+                self.regular = tex
+            elif image:
+                bsize = (image.get_width() / 3,
+                         image.get_height() / 3)
+                rect = tex.get_rect()
+                rect.width += bsize[0] * 2
+                rect.height += bsize[1] * 2
+                if self.over_width:
+                    rect.width = self.over_width
+                new = resize_image(image, rect.size)
+                new.blit(tex, bsize)
+                self.regular = new
+            else:
+                self.regular = tex
+
+            #hover button!
+            image = self.theme.button["hover"]
+            if image=="noimage":
+                self.hover = tex
+            elif image:
+                bsize = (image.get_width() / 3,
+                         image.get_height() / 3)
+                rect = tex.get_rect()
+                rect.width += bsize[0] * 2
+                rect.height += bsize[1] * 2
+                if self.over_width:
+                    rect.width = self.over_width
+                new = resize_image(image, rect.size)
+                new.blit(tex, bsize)
+                self.hover = new
+            else:
+                self.hover = tex
+
+            #click button!
+            image = self.theme.button["click"]
+            if image=="noimage":
+                self.click = tex
+            elif image:
+                bsize = (image.get_width() / 3,
+                         image.get_height() / 3)
+                rect = tex.get_rect()
+                rect.width += bsize[0] * 2
+                rect.height += bsize[1] * 2
+                if self.over_width:
+                    rect.width = self.over_width
+                new = resize_image(image, rect.size)
+                new.blit(tex, bsize)
+                self.click = new
+            else:
+                self.click = tex
         else:
-            font = None
-
-        if self.over_images:
-            self.regular = Label(self, self.pos, self.name, self.text,
-                                 font, self.over_images[0],
-                                 icon=self.icon)
-            self.regular.over_width = self.over_width
-            self.regular.make_image()
-
-            self.hover = Label(self, self.pos, self.name, self.text,
-                               font, self.over_images[1],
-                               icon=self.icon)
-            self.hover.over_width = self.over_width
-            self.hover.make_image()
-
-            self.click = Label(self, self.pos, self.name, self.text,
-                               font, self.over_images[2],
-                                 icon=self.icon)
-            self.click.over_width = self.over_width
-            self.click.make_image()
-
-        elif self.theme and self.theme.button:
-            self.regular = Label(self, self.pos, self.name, self.text,
-                                 font, self.theme.button["default"],
-                                 icon=self.icon)
-            self.regular.over_width = self.over_width
-            self.regular.make_image()
-
-            self.hover = Label(self, self.pos, self.name, self.text,
-                               font, self.theme.button["hover"],
-                                 icon=self.icon)
-            self.hover.over_width = self.over_width
-            self.hover.make_image()
-
-            self.click = Label(self, self.pos, self.name, self.text,
-                               font, self.theme.button["click"],
-                                 icon=self.icon)
-            self.click.over_width = self.over_width
-            self.click.make_image()
-
-        else:
-            self.regular = Label(self, self.pos, self.name, self.text,
-                                 font, icon=self.icon)
-
-            self.hover = Label(self, self.pos, self.name, self.text,
-                               font, icon=self.icon)
-
-            self.click = Label(self, self.pos, self.name, self.text,
-                               font, icon=self.icon)
+            if self.icon:
+                self.regular = self.hover = self.click = self.icon
+            else:
+                self.regular = self.hover = self.click = pygame.Surface((1, 1))
 
         self.image = self.regular
-        self.rect = self.image.comp_image.get_rect()
-        setattr(self.rect, self.widget_pos, self.pos)
-        self.do_dirty()
+        self.rect = self.image.get_rect()
+        self.move()
+        return None
 
     def render(self, surface, offset=(0,0)):
         pos = self.rect.left + offset[0], self.rect.top + offset[0]
-        surface.blit(self.image.comp_image, pos)
+        surface.blit(self.image, pos)
         return None
 
     def change_image(self, new):
         if not self.image == new:
             self.image = new
-            self.parent.dirty = True
+            self.force_update()
         return None
 
     def event(self, event, offset=(0, 0)):
@@ -404,18 +363,14 @@ class Button(Widget):
 class MenuList(Widget):
     def __init__(self, parent, pos, name="",
                  buttons=["None"],
-                 font=None, images=None,
                  widget_pos="topleft",
+                 theme=None,
                  icons={"None":None}):
-        Widget.__init__(self, parent, pos, name, widget_pos)
+        Widget.__init__(self, parent, pos, name, widget_pos, theme)
 
         self.button_list = buttons
         self.icons = icons
 
-        self.over_font = font
-        self.over_images = images
-
-        self.dirty = False
         self.surface = pygame.Surface((1, 1))
         self.draw_area = pygame.Surface((1, 1))
 
@@ -423,47 +378,22 @@ class MenuList(Widget):
 
     def make_image(self):
         buttons = []
-
-        if self.over_font:
-            font = self.over_font
-        elif self.theme and self.theme.font:
-            font = self.theme.font
-            font["text-color"] = self.theme.menu["entry-text-color"]
-
-        if self.over_images:
-            height = 0
-            width = 0
-            for i in self.button_list:
-                try:
-                    x = self.icons[i]
-                except:
-                    x = None
-                new = Button(self, (0, height), i, i,
-                             font, self.over_images,
-                             icon=x)
-                height += new.rect.height
-                if new.rect.width > width:
-                    width = new.rect.width
-                buttons.append(new)
-
-        else:
-            oimages = [self.theme.menu["entry-default"],
-                       self.theme.menu["entry-hover"],
-                       self.theme.menu["entry-click"]]
-            height = 0
-            width = 0
-            for i in self.button_list:
-                try:
-                    x = self.icons[i]
-                except:
-                    x = None
-                new = Button(self, (0, height), i, i,
-                             font, oimages,
-                             icon=x)
-                height += new.rect.height
-                if new.rect.width > width:
-                    width = new.rect.width
-                buttons.append(new)
+        self.theme.button["default"] = self.theme.menu["entry-default"]
+        self.theme.button["hover"] = self.theme.menu["entry-hover"]
+        self.theme.button["click"] = self.theme.menu["entry-click"]
+        self.theme.button["text-color"] = self.theme.menu["entry-text-color"]
+        height = 0
+        width = 0
+        for i in self.button_list:
+            try:
+                x = self.icons[i]
+            except:
+                x = None
+            new = Button(self, (0, height), i, i, icon=x)
+            height += new.rect.height
+            if new.rect.width > width:
+                width = new.rect.width
+            buttons.append(new)
 
         for i in buttons:
             i.over_width = width
@@ -485,25 +415,23 @@ class MenuList(Widget):
             self.draw_area = self.surface
             self.old_draw_area = self.surface
         self.rect = self.surface.get_rect()
-        setattr(self.rect, self.widget_pos, self.pos)
-        self.dirty = True
-        self.do_dirty()
-
+        self.move()
         self.buttons = buttons
 
     def add_widget(self, *other):
         pass
 
     def move_to_top(self, other):
-        self.parent.move_to_top(self)
+        pass
+
+    def not_active(self):
+        for i in self.buttons:
+            i.not_active()
 
     def render(self, surface, offset=(0, 0)):
-        pos = self.pos[0] + offset[0], self.pos[1] + offset[1]
-        if self.dirty:
-            self.draw_area.blit(self.old_draw_area, (0, 0))
-            for i in self.buttons:
-                i.render(self.draw_area, offset)
-            self.dirty = False
+        self.draw_area.blit(self.old_draw_area, (0, 0))
+        for i in self.buttons:
+            i.render(self.draw_area, offset)
         surface.blit(self.surface, self.rect)
         return None
 
@@ -512,31 +440,26 @@ class MenuList(Widget):
         for i in self.buttons:
             x = i.event(event, offset)
             if not x == event:
+                self.force_update()
                 if x:
                     x.widget = MenuList
                     x.entry = x.name
                     x.name = self.name
                 event = x
                 break
-        if self.dirty:
-            self.do_dirty()
         return event           
 
 class Menu(Widget):
     def __init__(self, parent, pos, name, text,
                  buttons=["None"], icons={"None":None},
-                 font=None, images=None,
                  widget_pos="topleft",
-                 icon=None):
-        Widget.__init__(self, parent, pos, name, widget_pos)
+                 icon=None, theme=None):
+        Widget.__init__(self, parent, pos, name, widget_pos, theme)
 
         self.text = text
         self.buttons = buttons
         self.icons = icons
         self.icon = icon
-
-        self.over_font = font
-        self.over_images = images
 
         self.make_image()
 
@@ -545,26 +468,19 @@ class Menu(Widget):
     def move_to_top(self, other):
         self.parent.move_to_top(self)
 
+    def not_active(self):
+        self.window_vis = False
+        self.other.not_active()
+        self.button.not_active()
+
     def make_image(self):
-        images = []
-        if self.over_font:
-            font = self.over_font
-        elif self.theme and self.theme.font:
-            font = self.theme.font
-            font["text-color"] = self.theme.menu["entry-text-color"]
-
-        if self.over_images:
-            images = self.over_images
-        elif self.theme:
-            images = [self.theme.menu["entry-default"],
-                      self.theme.menu["entry-hover"],
-                      self.theme.menu["entry-click"]]
-
         self.button = Button(self, self.pos, self.name, self.text,
-                             font, images, self.widget_pos, self.icon)
+                             self.widget_pos, icon=self.icon)
 
         self.other = MenuList(self, (self.pos[0], self.pos[1] + self.button.rect.height),
-                              "", self.buttons, font, images, self.widget_pos, self.icons)
+                              "", self.buttons, self.widget_pos, icons=self.icons)
+
+        self.move()
 
     def add_widget(self, *other):
         pass
@@ -572,11 +488,13 @@ class Menu(Widget):
     def event(self, event, offset=(0, 0)):
         x = self.button.event(event, offset)
         if not x == event:
+            self.force_update()
             if x:
                 if x.type == GUI_EVENT:
                     if x.widget == Button:
                         if x.action == GUI_EVENT_CLICK:
                             self.widget_vis = not self.widget_vis
+            return x
         else:
             if self.widget_vis:
                 x = self.other.event(event)
@@ -592,10 +510,9 @@ class Menu(Widget):
                             mpos = mpos[0] - offset[0], mpos[1] - offset[1]
                             if not self.other.rect.collidepoint(mpos):
                                 self.widget_vis = False
+                                self.force_update()
                             else:
                                 event = None
-        if self.dirty:
-            self.do_dirty()
 
         return event
 
@@ -609,15 +526,11 @@ class TextInputBox(Widget):
     def __init__(self, parent, pos, name,
                  prompt, starting_text,
                  size = 25,
-                 font=None, image=None,
-                 widget_pos="topleft"):
-        Widget.__init__(self, parent, pos, name, widget_pos)
+                 widget_pos="topleft", theme=None):
+        Widget.__init__(self, parent, pos, name, widget_pos, theme)
 
         self.prompt = prompt
         self.text = starting_text
-
-        self.over_font = font
-        self.over_image = image
 
         self.size = size
 
@@ -628,27 +541,23 @@ class TextInputBox(Widget):
 
         self.make_image()
 
+    def not_active(self):
+        if self.focused:
+            self.force_update()
+        self.focused = False
+
     def make_image(self):
-        font = None
-        if self.over_font:
-            font = self.over_font
-        elif self.theme:
+
+        if self.theme:
             font = self.theme.font
-            font["entry-text-color"] = self.theme.input["entry-text-color"]
-
-        image = None
-        if self.over_image:
-            image = self.over_image
-        elif self.theme:
-            image = self.theme.input["border"]
-
-        if font:
             f = pygame.font.Font(font["font"], font["size"])
             width = f.size(self.prompt + ": " + "0" * (self.size + 1))[0]
             height = f.get_linesize()
 
             tex_surface = f.render(self.prompt + ": " + self.text, font["aa"],
                                    self.theme.input["entry-text-color"])
+
+            image = self.theme.input["border"]
 
             if image and not image == "noimage":
                 self.__surf_size = image.get_width() / 3, image.get_height() / 3
@@ -657,45 +566,38 @@ class TextInputBox(Widget):
             else:
                 surface = pygame.Surface((width, height)).convert_alpha()
                 surface.fill((0,0,0,0))
-        else:
-            NoFontError = "No font loaded for TextInputBox widget"
-            raise NoFontError
 
         self.surface = surface
         self.tex_surface = tex_surface
         self.rect = self.surface.get_rect()
-        setattr(self.rect, self.widget_pos, self.pos)
-        self.do_dirty()
+        self.move()
 
     def make_text(self):
-        font = None
-        if self.over_font:
-            font = self.over_font
-        elif self.theme:
+
+        if self.theme:
             font = self.theme.font
-            font["entry-text-color"] = self.theme.input["entry-text-color"]
+            f = pygame.font.Font(font["font"], font["size"])
 
-        f = pygame.font.Font(font["font"], font["size"])
+            if self.focused:
+                t = f.size(self.prompt + ": ")[0]
+                miw, height = f.size(self.text[0:self.__text_pos])
+                maw = f.size(self.text[0:self.__text_pos+1])[0]
 
-        if self.focused:
-            t = f.size(self.prompt + ": ")[0]
-            miw, height = f.size(self.text[0:self.__text_pos])
-            maw = f.size(self.text[0:self.__text_pos+1])[0]
-
-            self.tex_surface = f.render(self.prompt + ": " + self.text + " ",
-                                        font["aa"],
-                                   self.theme.input["entry-text-color"])
-            r, g, b = self.theme.input["entry-text-color"]
-            r = 255 - r
-            g = 255 - g
-            b = 255 - b
-            rc = pygame.Rect((t + miw, 0), (maw - miw, height))
-            pygame.draw.rect(self.tex_surface, (r, g, b), rc, 1)
-            
-        else:
-            self.tex_surface = f.render(self.prompt + ": " + self.text, font["aa"],
-                                   self.theme.input["entry-text-color"])
-        self.do_dirty()
+                self.tex_surface = f.render(self.prompt + ": " + self.text + " ",
+                                            font["aa"],
+                                       self.theme.input["entry-text-color"])
+                r, g, b = self.theme.input["entry-text-color"]
+                r = 255 - r
+                g = 255 - g
+                b = 255 - b
+                rc = pygame.Rect((t + miw, 0), (maw - miw, height))
+                pygame.draw.rect(self.tex_surface, (r, g, b), rc, 1)
+                
+            else:
+                self.tex_surface = f.render(self.prompt + ": " + self.text, font["aa"],
+                                       self.theme.input["entry-text-color"])
+            self.force_update()
+            return None
         return None
 
     def render(self, surface, offset=(0, 0)):
@@ -703,6 +605,7 @@ class TextInputBox(Widget):
         surface.blit(self.surface, pos)
         surface.blit(self.tex_surface, (pos[0] + self.__surf_size[0],
                                         pos[1] + self.__surf_size[1]))
+        return None
 
     def event(self, event, offset=(0, 0)):
         mpos = pygame.mouse.get_pos()
@@ -711,9 +614,12 @@ class TextInputBox(Widget):
             if self.rect.collidepoint(mpos):
                 self.__mouse_hold_me = True
                 self.parent.move_to_top(self)
+                self.force_update()
                 return None
             else:
                 self.__mouse_hold_me = False
+                if self.focused:
+                    self.force_update()
                 self.focused = False
                 return event
         if event.type == MOUSEBUTTONUP:
@@ -725,6 +631,8 @@ class TextInputBox(Widget):
                 self.make_text()
                 return None
             else:
+                if self.focused:
+                    self.force_update()
                 self.focused = False
                 self.__mouse_hold_me = False
                 self.make_text()
@@ -732,6 +640,7 @@ class TextInputBox(Widget):
 
         if event.type == KEYDOWN:
             if self.focused:
+                self.force_update()
                 if event.key == K_BACKSPACE:
                     if not self.__text_pos == 0:
                         self.text = self.text[0:self.__text_pos-1] + self.text[self.__text_pos::]
@@ -777,67 +686,63 @@ class TextInputBox(Widget):
         return event
 
 
-class WindowBar(Button):
-    def __init__(self, parent, pos, name,
-                 widget_pos="topleft",
-                 width=None, caption="",
-                 font=None, images=None,
-                 icon=None):
+class WindowBar(object):
+    def __init__(self, parent, pos, width=None,
+                 caption="", icon=None):
 
-        if not images:
-            images = [parent.theme.window_bar["default"],
-                      parent.theme.window_bar["hover"],
-                      parent.theme.window_bar["click"]]
-        if not font:
-            font = copy.copy(parent.theme.font)
-            font["text-color"] = parent.theme.window_bar["text-color"]
-        
-        Button.__init__(self, parent, pos, name, caption,
-                        font, images, widget_pos, icon)
+        self.parent = parent
+        self.theme = copy.copy(self.parent.theme)
+        self.theme.button = self.theme.window_bar
+
+        self.bar = Button(self, pos, "", caption, "midbottom", icon=icon)
+        self.bar.over_width = width
+        self.bar.make_image()
 
         self.__mouse_hold_me=False
 
-        self.child = None
-
         self.minimized = False
 
-        self.over_width = width
-        self.make_image()
+        self.min_button = Button(self, self.bar.rect.midright, "", "_",
+                                 "midright")
 
-        self.min_button = Button(self, self.rect.midright, "", "_",
-                                 font, widget_pos="midright")
+    def add_widget(self, other):
+        pass
+
+    def move_to_top(self, other):
+        self.moveup()
 
     def moveup(self):
-        if self.child:
-            self.child.parent.move_to_top(self.child)
-        self.parent.move_to_top(self)
-        self.do_dirty()
+        self.parent.force_update()
+
+    def force_update(self):
+        self.parent.force_update()
 
     def event(self, event, offset=(0, 0)):
         mpos = pygame.mouse.get_pos()
         mpos = mpos[0] - offset[0], mpos[1] - offset[1]
-        if self.rect.collidepoint(mpos):
+
+        if self.bar.rect.collidepoint(mpos):
             if self.__mouse_hold_me:
-                self.change_image(self.click)
+                self.bar.change_image(self.bar.click)
             else:
-                self.change_image(self.hover)
+                self.bar.change_image(self.bar.hover)
         else:
-            self.change_image(self.regular)
+            self.bar.change_image(self.bar.regular)
 
         e = self.min_button.event(event, offset)
-        if self.dirty:
-            self.do_dirty()
         if not e == event:
+            self.force_update()
             if e:
                 self.moveup()
                 if e.type == GUI_EVENT:
                     self.minimized = not self.minimized
                     return None
             return e
+
         else:
             if event.type == MOUSEBUTTONDOWN:
-                if self.rect.collidepoint(mpos):
-                    self.change_image(self.click)
+                if self.bar.rect.collidepoint(mpos):
+                    self.bar.change_image(self.bar.click)
                     self.__mouse_hold_me = True
                     self.moveup()
                     return None
@@ -845,32 +750,27 @@ class WindowBar(Button):
             if event.type == MOUSEBUTTONUP:
                 if self.__mouse_hold_me:
                     self.__mouse_hold_me = False
-                    if self.rect.collidepoint(mpos):
-                        self.change_image(self.regular)
+                    if self.bar.rect.collidepoint(mpos):
+                        self.bar.change_image(self.bar.regular)
                         self.moveup()
                         return None
                     return None
                 return event
             if event.type == MOUSEMOTION:
                 if self.__mouse_hold_me:
-                    self.move(event.rel)
+                    self.bar.move(event.rel)
                     self.min_button.move(event.rel)
-                    if self.child:
-                        self.child.move(event.rel)
+                    self.parent.move(event.rel)
         return event
 
-    def attach(self, other):
-        self.child = other
-
     def render(self, surface, offset=(0, 0)):
-        Button.render(self, surface, offset)
+        self.bar.render(surface, offset)
         self.min_button.render(surface, offset)
         return None
 
 class Window(Widget):
     def __init__(self, parent, pos, name, widget_pos="topleft",
                  size=(50, 50), caption="",
-                 font=None, image=None,
                  icon=None):
         Widget.__init__(self, parent, pos, name, widget_pos)
 
@@ -882,29 +782,35 @@ class Window(Widget):
 
         self.widgets = []
 
-        self.over_font = font
-        self.over_image = image
         self.make_image()
 
-        self.dirty = False
+    def not_active(self):
+        for i in self.widgets:
+            i.not_active()
+        return None
 
     def make_image(self):
-        if self.over_image:
-            image = self.over_image
-        else:
+        if self.theme:
             image = self.theme.window["border"]
 
-        if image and not image == "noimage":
-            w, h = image.get_size()
-            new = resize_image(image, (self.size[0] + w * 2,
-                                       self.size[1] + h * 2))
+            if image and not image == "noimage":
+                w, h = image.get_size()
+                new = resize_image(image, (self.size[0] + w * 2,
+                                           self.size[1] + h * 2))
 
-            self.border = new
-            self.surface = self.border.subsurface((w, h), self.size)
-            self.border_offset = (w, h + 1)
-            self.__old_draw_area = self.surface.copy()
-            self.rect = self.border.get_rect()
-            setattr(self.rect, self.widget_pos, self.pos)
+                self.border = new
+                self.surface = self.border.subsurface((w, h), self.size)
+                self.border_offset = (w, h + 1)
+                self.__old_draw_area = self.surface.copy()
+                self.rect = self.border.get_rect()
+                setattr(self.rect, self.widget_pos, self.pos)
+            else:
+                self.border_offset = (0, 0)
+                self.border = None
+                self.surface = pygame.Surface(self.size).convert()
+                self.__old_draw_area = self.surface.copy()
+                self.rect = self.surface.get_rect()
+                setattr(self.rect, self.widget_pos, self.pos)
         else:
             self.border_offset = (0, 0)
             self.border = None
@@ -913,16 +819,10 @@ class Window(Widget):
             self.rect = self.surface.get_rect()
             setattr(self.rect, self.widget_pos, self.pos)
 
-        if self.over_font:
-            font = self.over_font
-        else:
-            font = None
-
-        self.drag_bar = WindowBar(self, self.rect.midtop, "", "midbottom",
+        self.drag_bar = WindowBar(self, self.rect.midtop,
                                   self.rect.width, self.caption,
-                                  font, None, self.icon)
-        self.do_dirty()
-        self.drag_bar.attach(self)
+                                  self.icon)
+        self.force_update()
 
     def event(self, event, offset=(0, 0)):
         e = self.drag_bar.event(event, offset)
@@ -938,32 +838,28 @@ class Window(Widget):
             for i in self.widgets:
                 if not i == self.drag_bar:
                     e = i.event(event, o)
-                    if self.dirty:
-                        self.do_dirty()
                     if not e == event:
                         self.parent.move_to_top(self)
                         if e and e.type == GUI_EVENT:
                             e.widget = Window
-                        self.do_dirty()
                         return e
             if event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP:
                 m = pygame.mouse.get_pos()
                 m = m[0] - offset[0], m[1] - offset[1]
                 if self.rect.collidepoint(m):
                     self.parent.move_to_top(self)
-                    self.do_dirty()
                     return None
+                self.not_active()
             return event
         return event
 
     def move_to_top(self, other):
         i = self.widgets.index(other)
         self.widgets.insert(0, self.widgets.pop(i))
-        self.dirty = True
-        self.do_dirty()
+        self.force_update()
         return None
 
-    def add_widget(self, widg, name):
+    def add_widget(self, widg):
         self.widgets.insert(0, widg)
         return None
 
@@ -975,13 +871,11 @@ class Window(Widget):
         return None
 
     def render(self, surface, offset=(0, 0)):
-        if self.dirty:
-            self.surface.blit(self.__old_draw_area, (0, 0))
-            self.widgets.reverse()
-            for i in self.widgets:
-                i.render(self.surface)
-            self.widgets.reverse()
-            self.dirty = False
+        self.surface.blit(self.__old_draw_area, (0, 0))
+        self.widgets.reverse()
+        for i in self.widgets:
+            i.render(self.surface)
+        self.widgets.reverse()
 
         self.drag_bar.render(surface, offset)
         if not self.drag_bar.minimized:
