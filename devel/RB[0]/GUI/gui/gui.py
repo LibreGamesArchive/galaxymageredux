@@ -817,7 +817,7 @@ class Window(Widget):
             image = self.theme.window["border"]
 
             if image and not image == "noimage":
-                w, h = image.get_size()
+                w, h = image.get_width() / 3, image.get_height() / 3
                 new = resize_image(image, (self.size[0] + w * 2,
                                            self.size[1] + h * 2))
 
@@ -874,8 +874,6 @@ class Window(Widget):
                                         x.not_active()
                                 self.parent.move_to_top(self)
                                 if e and e.type == GUI_EVENT:
-##                                    e.subevent = e
-##                                    e.widget = Window
                                     new = Event(Window, self.name, None)
                                     new.subevent = e
                                     e = new
