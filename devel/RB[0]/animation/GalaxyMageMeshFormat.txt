@@ -16,13 +16,13 @@ Details:
 
 	"o" - creates and sets as current a specific object in the mesh
 	"v" - creates a vertex
-	"n" - creates a normal
+	"vn" - creates a normal
 	"f" - creates a face
 
 	"mtl" - creates a specific material
 	"mc" - binds a color to the chosen mtl
 	"mt" - loads and binds a texture to the chosen mtl
-	"tc" - specifies a texture coordinate
+	"vt" - specifies a texture coordinate
 
 	"usemtl" - sets the current material
 
@@ -42,8 +42,9 @@ USAGE:
       "o" - o (string|object name)
       "v" - v (float) (float) (float)
       "n" - n (float) (float) (float)
-      "f" - f (int|vertex)/(int|normal) or
-              (int|vertex)/(int|normal)/(int|texture coordinate) - if current material has a texture -
+      "f" - f (int|vertex) or
+		  (int|vertex)//(int|normal) or
+              (int|vertex)/(int|texture coordinate)/(int|normal) - if current material has a texture -
                   for each vertex on the face
 
       "mtl" - mtl (string|material name)

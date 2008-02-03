@@ -129,10 +129,10 @@ def parse_file(file_name):
         if values[0] == "v":
             verts.append(map(float, values[1:4]))
 
-        if values[0] == "n":
+        if values[0] == "vn":
             norms.append(map(float, values[1:4]))
 
-        if values[0] == "tc":
+        if values[0] == "vt":
             texcs.append(map(float, values[1:3]))
 
         if values[0] == "f":
@@ -140,16 +140,20 @@ def parse_file(file_name):
             tc = []
             n = []
             for v in values[1:]:
-                w = v.split('/')
-                f.append(int(w[0]))
-                if len(w) >= 2 and len(w[1]) > 0:
+                if "//" in v:
+                    w = v.split('//')
+                    f.append(int(w[0]))
+                    tc.append(int(w[1]))
+                    n.append(int(w[2]))
+                elif "/" in v:
+                    w = v.split("/")
+                    f.append(int(w[0]))
+                    tc.append(0)
                     n.append(int(w[1]))
                 else:
-                    n.append(0)
-                if len(w) >= 3 and len(w[2]) > 0:
-                    tc.append(int(w[2]))
-                else:
+                    f.append(int(v))
                     tc.append(0)
+                    n.append(0)
             f = (f, n, tc, material)
             faces.append(f)
             objects[cur_object].append(f)

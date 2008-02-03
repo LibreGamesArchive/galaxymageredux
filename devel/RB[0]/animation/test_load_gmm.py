@@ -10,15 +10,15 @@ def main():
     core.set3d()
 
     c = core.Camera()
-    c.distance = 100
+    c.distance = 30
 
     l = core.Light((0,0,-15),
               (1,1,1,1),
               (1,1,1,1),
               (1,1,1,1))
 
-    a = Mesh(*parse_file("test.gmm"))
-    a.animation_action = "rotate"
+    a = Mesh(*parse_file("test2.gmm"))
+    a.animation_action = "Action"
 
     clock = pygame.time.Clock()
 
@@ -32,14 +32,14 @@ def main():
             if event.type == KEYDOWN:
                 if event.key == K_a:
                     a.reset_animation()
-                    if a.animation_action == "rotate":
-                        a.animation_action = "move"
+                    if a.animation_action == "Action":
+                        a.animation_action = None
                     else:
-                        a.animation_action = "rotate"
+                        a.animation_action = "Action"
         core.clear_screen()
         c.update()
 
-        a.render((0, 0, 25))
+        a.render((0, -3, 25), (0, -90, 0))
         a.update()
         pygame.display.flip()
 main()
