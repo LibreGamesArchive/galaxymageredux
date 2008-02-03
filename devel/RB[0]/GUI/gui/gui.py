@@ -436,7 +436,8 @@ class MenuList(Widget):
         return None
 
     def event(self, event, offset=(0, 0)):
-        offset = offset[0] + self.rect.left, offset[1] + self.rect.top
+        o = self.draw_area.get_offset()
+        offset = offset[0] + self.rect.left + o[0], offset[1] + self.rect.top + o[1]
         for i in self.buttons:
             x = i.event(event, offset)
             if not x == event:
@@ -493,11 +494,13 @@ class Menu(Widget):
                 if x.type == GUI_EVENT:
                     if x.widget == Button:
                         if x.action == GUI_EVENT_CLICK:
+                            self.parent.move_to_top(self)
                             self.widget_vis = not self.widget_vis
             return x
         else:
             if self.widget_vis:
-                x = self.other.event(event)
+                self.parent.move_to_top(self)
+                x = self.other.event(event, offset)
                 if not x == event:
                     if x:
                         x.widget = Menu
@@ -816,7 +819,7 @@ class Window(Widget):
 
                 self.border = new
                 self.surface = self.border.subsurface((w, h), self.size)
-                self.border_offset = (w, h + 1)
+                self.border_offset = (w, h)
                 self.__old_draw_area = self.surface.copy()
                 self.rect = self.border.get_rect()
                 setattr(self.rect, self.widget_pos, self.pos)
@@ -846,32 +849,50 @@ class Window(Widget):
             self.parent.move_to_top(self)
             return e
         else:
-            o = (self.rect.left - offset[0] + self.border_offset[0],
-                 self.rect.top - offset[1] + self.border_offset[1])
+            o = (self.rect.left + offset[0] + self.border_offset[0],
+                 self.rect.top + offset[1] + self.border_offset[1])
             mpos = pygame.mouse.get_pos()
             mpos = mpos[0] - o[0], mpos[1] - o[1]
             if self.drag_bar.minimized:
                 self.not_active()
                 return event
-            for i in self.widgets:
-                if not i == self.drag_bar:
-                    e = i.event(event, o)
-                    if not e == event:
-                        for x in self.widgets:
-                            if not x == i:
-                                x.not_active()
-                        self.parent.move_to_top(self)
-                        if e and e.type == GUI_EVENT:
-                            e.subwidget = e.widget
-                            e.widget = Window
-                        return e
             if event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP:
                 m = pygame.mouse.get_pos()
                 m = m[0] - offset[0], m[1] - offset[1]
                 if self.rect.collidepoint(m):
                     self.parent.move_to_top(self)
+                    for i in self.widgets:
+                        if not i == self.drag_bar:
+                            e = i.event(event, o)
+                            if not e == event:
+                                for x in self.widgets:
+                                    if not x == i:
+                                        x.not_active()
+                                self.parent.move_to_top(self)
+                                if e and e.type == GUI_EVENT:
+##                                    e.subevent = e
+##                                    e.widget = Window
+                                    new = Event(Window, self.name, None)
+                                    new.subevent = e
+                                    e = new
+                                return e
                     return None
-                self.not_active()
+                else:
+                    self.not_active()
+            else:
+                for i in self.widgets:
+                    if not i == self.drag_bar:
+                        e = i.event(event, o)
+                        if not e == event:
+                            for x in self.widgets:
+                                if not x == i:
+                                    x.not_active()
+                            self.parent.move_to_top(self)
+                            if e and e.type == GUI_EVENT:
+                                new = Event(Window, self.name, None)
+                                new.subevent = e
+                                e = new
+                            return e
             return event
         return event
 
