@@ -479,32 +479,41 @@ class Mesh(object):
             gl_list = glGenLists(1)
             glNewList(gl_list, GL_COMPILE)
             glFrontFace(GL_CCW)
+            verts = []
+            norms = []
+            texcs = []
+            mats = []
             for face in obj2:
                 vertices, normals, texture_coords, material = face
 
-                center = average_verts([self.vertices[i-1] for i in vertices if i > 0])
-     
-                mtl = self.materials[material]
+                verts.extend(vertices)
+                norms.extend(normals)
+                texcs.extend(texture_coords)
+                mats.extend([material] * len(vertices))
+
+            center = average_verts([self.vertices[i-1] for i in verts if i > 0])
+
+            glBegin(GL_POLYGON)
+            for i in xrange(len(verts)):
+                mtl = self.materials[mats[i]]
                 if mtl['tex']:
                     glBindTexture(GL_TEXTURE_2D, mtl['tex'])
                 glColorf(*mtl['color'])
-     
-                glBegin(GL_POLYGON)
-                for i in range(0, len(vertices)):
-                    if normals[i] > 0:
-                        n = self.normals[normals[i] - 1]
-                        if self.swapyz:
-                            n = n[0], n[2], n[1]
-                        glNormal3fv(n)
-                    if texture_coords[i] > 0:
-                        glTexCoord2fv(self.texcoords[texture_coords[i] - 1])
-                    v = self.vertices[vertices[i] - 1]
-                    if self.swapyz:
-                        v = v[0], v[2], v[1]
 
-                    v = v[0] - center[0], v[1] - center[1], v[2] - center[2]
-                    glVertex3fv(v)
-                glEnd()
+                if norms[i] > 0:
+                    n = self.normals[norms[i] - 1]
+                    if self.swapyz:
+                        n = n[0], n[2], n[1]
+                    glNormal3fv(n)
+                if texcs[i] > 0:
+                    glTexCoord2fv(self.texcoords[texcs[i] - 1])
+                v = self.vertices[verts[i] - 1]
+                if self.swapyz:
+                    v = v[0], v[2], v[1]
+
+                v = v[0] - center[0], v[1] - center[1], v[2] - center[2]
+                glVertex3fv(v)
+            glEnd()
             glEndList()
 
             if obj in self.bones:
