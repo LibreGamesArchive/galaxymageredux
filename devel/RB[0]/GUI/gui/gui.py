@@ -828,6 +828,7 @@ class Window(Widget):
     def event(self, event, offset=(0, 0)):
         e = self.drag_bar.event(event, offset)
         if not e == event:
+            self.parent.move_to_top(self)
             return e
         else:
             o = (self.rect.left - offset[0] + self.border_offset[0],
