@@ -446,6 +446,7 @@ class MenuList(Widget):
                     x.widget = MenuList
                     x.entry = x.name
                     x.name = self.name
+                    x.menu_action = "close"
                 event = x
                 break
         return event           
@@ -503,6 +504,9 @@ class Menu(Widget):
                 x = self.other.event(event, offset)
                 if not x == event:
                     if x:
+                        if x.menu_action == "close":
+                            self.widget_vis = False
+                            self.force_update()
                         x.widget = Menu
                         x.name = self.name
                     event = x

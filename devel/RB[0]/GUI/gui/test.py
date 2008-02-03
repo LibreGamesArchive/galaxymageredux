@@ -53,26 +53,6 @@ def main():
     while 1:
         for event in app.get_events():
             if event.type == gui.GUI_EVENT:
-                if event.widget == gui.Button:
-                    if event.name == "Button1":
-                        if event.action == gui.GUI_EVENT_CLICK:
-                            pygame.quit()
-                            return
-                    if event.name == "Button2":
-                        if event.action == gui.GUI_EVENT_CLICK:
-                            print "Hello :)"
-                if event.widget == gui.Menu:
-                    if event.name == "Menu1":
-                        if event.action == gui.GUI_EVENT_CLICK:
-                            print event.entry
-                if event.widget == gui.MenuList:
-                    if event.name == "ButtonList":
-                        if event.action == gui.GUI_EVENT_CLICK:
-                            print event.entry
-                if event.widget == gui.TextInputBox:
-                    if event.name == "Input1":
-                        if event.action == gui.GUI_EVENT_INPUT:
-                            print event.string
                 if event.widget == gui.Window:
                     if event.name == "MainWindow":
                         event = event.subevent
