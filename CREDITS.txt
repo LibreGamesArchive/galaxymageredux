@@ -6,6 +6,7 @@ Programming
 -----------
 A. Joseph Hager <ajhager@gmail.com>
 Matthew Roe (RB[0]) <roebros@gmail.com>
+Markus Martin <archwyrm@gmail.com>
 
 Art
 ---
@@ -15,3 +16,8 @@ Audio
 
 Documentation
 -------------
+
+Special thanks
+--------------
+Campbell Barton and Jiri Hnidek for their Blender OBJ exporter
+
