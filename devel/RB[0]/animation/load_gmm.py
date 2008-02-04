@@ -409,7 +409,7 @@ class Limb(object):
 
     def render(self):
         glPushMatrix()
-        glTranslatef(*self.bone.center)
+        glTranslatef(*self.bone.get_pos())
         glRotatef(self.bone.rotation[0], 1, 0, 0)
         glRotatef(self.bone.rotation[1], 0, 1, 0)
         glRotatef(self.bone.rotation[2], 0, 0, 1)

@@ -39,7 +39,7 @@ def main():
         core.clear_screen()
         c.update()
 
-        a.render((0, -3, 25), (0, -90, 0))
+        a.render((0, -3, 25), (0, 90, 0))
         a.update()
         pygame.display.flip()
 main()
