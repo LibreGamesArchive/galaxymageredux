@@ -17,10 +17,6 @@ def main():
                           [600, 440], caption="Main Window!",
                           icon = "label.png")
 
-    scroll = gui.ScrollBar(app, (640, -1), "Scroller1", "midright", None,
-                           (15, 100*2), (15, 100),
-                           0, 1)
-
     label = gui.Label(main_win, (50, 50), "Label1", "Test Label",
                       icon="label.png")
     button = gui.Button(main_win, (100, -1), "Button1", "Quit!",
@@ -29,13 +25,14 @@ def main():
                         icon="label.png")
 
     menu = gui.Menu(main_win, (-1, -1), "Menu1", "A Menu",
-                  ["tttt1", "tttttttt2", "3"],
+                  ["tttt1", "tttttttt2", "3", "45"] + ["etc..."] * 20,
                     icon="label.png", icons={"tttt1":"label.png",
                                              "tttttttt2":"label.png",
                                              "3":"label.png"})
-    blist = gui.MenuList(main_win, (600, 440), "ButtonList",
-                         ["play", "help", "exit"],
-                         widget_pos="bottomright",
+    blist = gui.MenuList(main_win, (600, 350), "ButtonList",
+                         ["play", "help", "exit", "ta!", "hello?", "etc.",
+                          "bah", "32", "64", "25"],
+                         widget_pos="topright",
                          icons={"play":"label.png",
                                 "help":"label.png",
                                 "exit":"label.png"})
@@ -87,7 +84,6 @@ def main():
                                     print "Window1:", event.name
                                 if event.widget == gui.TextInputBox:
                                     print "Window1: Input:", event.string
-        print scroll.get_value()
         screen.blit(app.render(), (0, 0))
         pygame.display.flip()
 

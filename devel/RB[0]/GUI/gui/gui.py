@@ -326,7 +326,7 @@ class Button(Widget):
         return None
 
     def render(self, surface, offset=(0,0)):
-        pos = self.rect.left + offset[0], self.rect.top + offset[0]
+        pos = self.rect.left + offset[0], self.rect.top + offset[1]
         surface.blit(self.image, pos)
         return None
 
@@ -380,6 +380,8 @@ class MenuList(Widget):
         self.surface = pygame.Surface((1, 1))
         self.draw_area = pygame.Surface((1, 1))
 
+        self.scroll_bar = None
+
         self.make_image()
 
     def make_image(self):
@@ -424,6 +426,38 @@ class MenuList(Widget):
         self.move()
         self.buttons = buttons
 
+        if self.rect.bottom > self.parent.surface.get_height():
+            dif = self.rect.bottom - self.parent.surface.get_height()
+            self.scroll_bar = ScrollBar(self, (self.draw_area.get_width(),
+                                               0), "", "topleft",
+                                        None, (15, self.rect.height),
+                                        (15, self.rect.height - dif - bsize[1] * 2),
+                                        0, 1)
+            width = self.rect.width + self.scroll_bar.rect.width
+            self.rect.height = self.rect.height - dif
+            if self.theme and self.theme.menu["border"]:
+                image = self.theme.menu["border"]
+                bsize = (image.get_width() / 3,
+                         image.get_height() / 3)
+                image = resize_image(image, (width + bsize[0],
+                                             self.rect.height))
+                self.surface = image
+                self.draw_area = self.surface.subsurface(bsize,
+                                            (image.get_width() - bsize[0],
+                                             image.get_height() - bsize[1] * 2))
+                self.old_draw_area = self.draw_area.copy()
+            else:
+                self.surface = pygame.Surface((0, 0))
+                self.draw_area = self.surface
+                self.old_draw_area = self.surface
+
+        self.border = bsize
+
+        self.rect = self.surface.get_rect()
+        self.draw_rect = self.draw_area.get_rect()
+        self.draw_rect.topleft = self.rect.left + self.border[0], self.rect.top + self.border[1]
+        self.move()
+
     def add_widget(self, *other):
         pass
 
@@ -431,11 +465,16 @@ class MenuList(Widget):
         pass
 
     def not_active(self):
+        if self.scroll_bar:
+            self.scroll_bar.not_active()
         for i in self.buttons:
             i.not_active()
 
     def render(self, surface, offset=(0, 0)):
         self.draw_area.blit(self.old_draw_area, (0, 0))
+        if self.scroll_bar:
+            self.scroll_bar.render(self.draw_area, offset)
+            offset = offset[0], offset[1] - self.scroll_bar.get_value()
         for i in self.buttons:
             i.render(self.draw_area, offset)
         surface.blit(self.surface, self.rect)
@@ -443,9 +482,23 @@ class MenuList(Widget):
 
     def event(self, event, offset=(0, 0)):
         o = self.draw_area.get_offset()
-        offset = offset[0] + self.rect.left + o[0], offset[1] + self.rect.top + o[1]
+        o = offset[0] + self.rect.left + o[0], offset[1] + self.rect.top + o[1]
+        if event.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION):
+            mpos = pygame.mouse.get_pos()
+            mpos = mpos[0] - offset[0], mpos[1] - offset[1]
+            self.draw_rect.topleft = self.rect.left + self.border[0], self.rect.top + self.border[1]
+            if not self.draw_rect.collidepoint(mpos):
+                return event
+
+        if self.scroll_bar:
+            x = self.scroll_bar.event(event, o)
+            if not x == event:
+                self.force_update()
+                return x
+            o = o[0], o[1] - self.scroll_bar.get_value()
+
         for i in self.buttons:
-            x = i.event(event, offset)
+            x = i.event(event, o)
             if not x == event:
                 self.force_update()
                 if x:
@@ -453,6 +506,8 @@ class MenuList(Widget):
                     x.entry = x.name
                     x.name = self.name
                     x.menu_action = "close"
+                    if self.scroll_bar:
+                        self.scroll_bar.current_value = 0
                 event = x
                 break
         return event           
@@ -468,6 +523,8 @@ class Menu(Widget):
         self.buttons = buttons
         self.icons = icons
         self.icon = icon
+
+        self.surface = self.parent.surface
 
         self.make_image()
 
@@ -937,20 +994,6 @@ class Window(Widget):
 
 
 class ScrollBar(Widget):
-    def __init__(self, parent, pos=(-1, -1), name="",
-                 widget_pos="topleft", theme=None,
-                 tot_size=(10,10), view_size=(10,10),
-                 start_value=0, direction=0):
-        Widget.__init__(self, parent, pos, name, widget_pos, theme)
-
-        self.tot_size = tot_size
-        self.view_size = view_size
-
-        self.start_value = start_value
-        self.current_value = 0
-
-
-class ScrollBar(Widget):
     def __init__(self, parent, pos=(-1,-1), name="",
                  widget_pos="topleft", theme=None,
                  tot_size=(10,10), view_size=(10,10),
@@ -1041,7 +1084,12 @@ class ScrollBar(Widget):
         self.draw_area.fill((0,0,0,0))
         self.draw_area.blit(self.__old_draw_area, (0,0))
         if not self.image == "noimage":
-            self.draw_area.blit(self.image, self.bar_rect)
+            p = self.bar_rect.topleft
+            if self.direction == 0:
+                p = p[0] + self.current_value, p[1]
+            else:
+                p = p[0], p[1] + self.current_value
+            self.draw_area.blit(self.image, p)
         surface.blit(self.area_bar, pos)
         return None
 
@@ -1049,13 +1097,18 @@ class ScrollBar(Widget):
         p = 0
         if self.current_value:
             p = float(self.current_value) / self.max_value
-        value = self.tot_size[self.direction] * p
+        value = (self.tot_size[self.direction] - self.view_size[self.direction]) * p
         return value
 
     def change_image(self, new):
         if not self.image == new:
             self.image = new
             self.force_update()
+        return None
+
+    def not_active(self):
+        self.change_image(self.regular)
+        self.__mouse_hold_me = False
         return None
 
     def event(self, event, offset=(0,0)):
@@ -1069,18 +1122,18 @@ class ScrollBar(Widget):
         else:
             self.change_image(self.regular)
 
+        if not 1 in pygame.mouse.get_pressed():
+            self.__mouse_hold_me = False
+
         if event.type == MOUSEBUTTONDOWN:
-            #check for scrolls first ;)
             if event.button == 4:
                 if self.current_value > self.min_value:
                     self.current_value -= 1
-                    self.make_image()
                 self.force_update()
                 return None
             elif event.button == 5:
                 if self.current_value < self.max_value:
                     self.current_value += 1
-                    self.make_image()
                 self.force_update()
                 return None
             else:
@@ -1103,18 +1156,17 @@ class ScrollBar(Widget):
         if event.type == MOUSEMOTION:
             if self.__mouse_hold_me:
                 amount = event.rel[self.direction]
+                self.force_update()
                 if amount > 0:
                     if self.current_value < self.max_value:
                         self.current_value += amount
                         if self.current_value > self.max_value:
                             self.current_value = self.max_value
-                        self.make_image()
                 if amount < 0:
                     if self.current_value > self.min_value:
                         self.current_value += amount
                         if self.current_value < self.min_value:
                             self.current_value = self.min_value
-                        self.make_image()
                 return None
             return event
         return event
