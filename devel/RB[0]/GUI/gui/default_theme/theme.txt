@@ -1,4 +1,3 @@
-
 #the basic theme
 
 Label("label.png", (255, 0, 0))
@@ -8,3 +7,4 @@ Menu("label.png", "label.png", "label.png", "noimage", (0, 0, 255))
 Input("label.png", (0, 0, 0))
 WindowBar("label.png", "label.png", "label.png", (255, 255, 0))
 Window("label.png")
+ScrollBar("label.png", "label.png", "label.png", "label.png")

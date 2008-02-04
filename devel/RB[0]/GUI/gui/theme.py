@@ -38,10 +38,11 @@ def WindowBar(default, hover, click, text_color):
 def Window(border):
     __cur["window"] = {"border": make_image(border)}
 
-def ScrollBar(default, hover, click):
-    __cur["scroll_bar"] = {"default": make_image(default),
-                         "hover": make_image(hover),
-                         "click": make_image(click)}
+def ScrollBar(border, default, hover, click):
+    __cur["scroll_bar"] = {"border":make_image(border),
+                           "default": make_image(default),
+                           "hover": make_image(hover),
+                           "click": make_image(click)}
 
 def Menu(border, entry_default, entry_hover, entry_click, entry_text_color):
     __cur["menu"] = {"border": make_image(border),
@@ -113,7 +114,8 @@ class Theme(object):
         self.label = {"image":"noimage",
                       "text-color":(0, 0, 0)}
 
-        self.scroll_bar = {"default":"noimage",
+        self.scroll_bar = {"border":"noimage",
+                           "default":"noimage",
                            "hover":"noimage",
                            "click":"noimage"}
 

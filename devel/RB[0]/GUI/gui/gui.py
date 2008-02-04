@@ -46,14 +46,11 @@ class App(object):
         for event in pygame.event.get():
             for widg in self.widgets:
                 ret = widg.event(event)
-                if ret == event:
-                    continue
-                else:
+                if not ret == event:
                     self.dirty = True
                     if ret:
                         return_events.append(ret)
                     break
-
         return return_events
 
     def render(self):
@@ -68,6 +65,8 @@ class App(object):
 
         
 def resize_image(image, size):
+    if image == "noimage":
+        return image
     x, y = size
     if x < image.get_width(): x = image.get_width()
     if y < image.get_height(): y = image.get_height()
@@ -234,6 +233,7 @@ class Button(Widget):
         self.text = text
 
         self.over_width = None
+        self.over_height = None
 
         self.icon = icon
         if self.icon:
@@ -267,6 +267,8 @@ class Button(Widget):
                 rect.height += bsize[1] * 2
                 if self.over_width:
                     rect.width = self.over_width
+                if self.over_height:
+                    rect.height = self.over_height
                 new = resize_image(image, rect.size)
                 new.blit(tex, bsize)
                 self.regular = new
@@ -285,6 +287,8 @@ class Button(Widget):
                 rect.height += bsize[1] * 2
                 if self.over_width:
                     rect.width = self.over_width
+                if self.over_height:
+                    rect.height = self.over_height
                 new = resize_image(image, rect.size)
                 new.blit(tex, bsize)
                 self.hover = new
@@ -303,6 +307,8 @@ class Button(Widget):
                 rect.height += bsize[1] * 2
                 if self.over_width:
                     rect.width = self.over_width
+                if self.over_height:
+                    rect.height = self.over_height
                 new = resize_image(image, rect.size)
                 new.blit(tex, bsize)
                 self.click = new
@@ -916,6 +922,7 @@ class Window(Widget):
         return None
 
     def render(self, surface, offset=(0, 0)):
+        self.surface.fill((0,0,0,0))
         self.surface.blit(self.__old_draw_area, (0, 0))
         self.widgets.reverse()
         for i in self.widgets:
@@ -927,8 +934,190 @@ class Window(Widget):
             pos = offset[0] + self.rect.left, offset[1] + self.rect.top
             surface.blit(self.border, pos)
         return None
-            
 
+
+class ScrollBar(Widget):
+    def __init__(self, parent, pos=(-1, -1), name="",
+                 widget_pos="topleft", theme=None,
+                 tot_size=(10,10), view_size=(10,10),
+                 start_value=0, direction=0):
+        Widget.__init__(self, parent, pos, name, widget_pos, theme)
+
+        self.tot_size = tot_size
+        self.view_size = view_size
+
+        self.start_value = start_value
+        self.current_value = 0
+
+
+class ScrollBar(Widget):
+    def __init__(self, parent, pos=(-1,-1), name="",
+                 widget_pos="topleft", theme=None,
+                 tot_size=(10,10), view_size=(10,10),
+                 start_value=0, direction=0):
+        Widget.__init__(self, parent, pos, name, widget_pos, theme)
+
+        self.tot_size = tot_size
+        self.view_size = view_size
+
+        self.start_value = start_value
+        self.current_value = start_value
+
+        self.__mouse_hold_me = False
+
+        self.direction = direction
+
+        self.make_image()
+
+    def get_pos(self):
+        return self.current_value - self.start_value
+
+    def move_bar(self, new=(0,0)):
+        if self.direction == 0:
+            self.bar_rect.topleft = (self.current_value, 0)
+        else:
+            self.bar_rect.topleft = (0, self.current_value)
+
+    def make_image(self):
+        max_place = self.tot_size[self.direction] / self.view_size[self.direction]
+
+        bsize = self.theme.scroll_bar["border"].get_size()
+        bsize = bsize[0] / 3, bsize[1] / 3
+
+        if self.direction == 0:
+            big_bar = resize_image(self.theme.scroll_bar["border"],
+                                   (self.view_size[0], bsize[1] * 5))
+        else:
+            big_bar = resize_image(self.theme.scroll_bar["border"],
+                                   (bsize[0] * 5, self.view_size[1]))
+
+        area = (big_bar.get_width() - bsize[0] * 2,
+                big_bar.get_height() - bsize[1] * 2)
+
+        render_area = big_bar.subsurface(bsize, area)
+        old_render_area = render_area.copy()
+
+        bar_size = (area[0] / (self.tot_size[0] / area[0]),
+                    area[1] / (self.tot_size[1] / area[1]))
+
+        if self.direction == 0:
+            w = self.theme.scroll_bar["default"].get_width()
+            if bar_size[0] < w:
+                bar_size = w, bar_size[1]
+
+        else:
+            h = self.theme.scroll_bar["default"].get_height()
+            if bar_size[1] < h:
+                bar_size = bar_size[0], h
+
+        bar_regular = resize_image(self.theme.scroll_bar["default"], bar_size)
+        bar_hover = resize_image(self.theme.scroll_bar["hover"], bar_size)
+        bar_click = resize_image(self.theme.scroll_bar["click"], bar_size)
+
+        self.area_bar = big_bar
+        self.draw_area = render_area
+        self.__old_draw_area = old_render_area
+
+        self.regular = bar_regular
+        self.hover = bar_hover
+        self.click = bar_click
+
+        self.image = self.regular
+
+        self.rect = self.area_bar.get_rect()
+        self.bar_rect = self.image.get_rect()
+
+        self.move()
+        self.move_bar()
+
+        self.min_value = 0
+        if self.direction == 0:
+            self.max_value = self.area_bar.get_width() - bar_size[0] - bsize[0] * 2
+        else:
+            self.max_value = self.area_bar.get_height() - bar_size[1] - bsize[1] * 2
+
+    def render(self, surface, offset=(0,0)):
+        pos = offset[0] + self.rect.left, offset[1] + self.rect.top
+        self.draw_area.fill((0,0,0,0))
+        self.draw_area.blit(self.__old_draw_area, (0,0))
+        if not self.image == "noimage":
+            self.draw_area.blit(self.image, self.bar_rect)
+        surface.blit(self.area_bar, pos)
+        return None
+
+    def get_value(self):
+        p = 0
+        if self.current_value:
+            p = float(self.current_value) / self.max_value
+        value = self.tot_size[self.direction] * p
+        return value
+
+    def change_image(self, new):
+        if not self.image == new:
+            self.image = new
+            self.force_update()
+        return None
+
+    def event(self, event, offset=(0,0)):
+        mpos = pygame.mouse.get_pos()
+        mpos = mpos[0] - offset[0], mpos[1] - offset[1]
+        if self.rect.collidepoint(mpos):
+            if self.__mouse_hold_me:
+                self.change_image(self.click)
+            else:
+                self.change_image(self.hover)
+        else:
+            self.change_image(self.regular)
+
+        if event.type == MOUSEBUTTONDOWN:
+            #check for scrolls first ;)
+            if event.button == 4:
+                if self.current_value > self.min_value:
+                    self.current_value -= 1
+                    self.make_image()
+                self.force_update()
+                return None
+            elif event.button == 5:
+                if self.current_value < self.max_value:
+                    self.current_value += 1
+                    self.make_image()
+                self.force_update()
+                return None
+            else:
+                if self.rect.collidepoint(mpos):
+                    self.change_image(self.click)
+                    self.__mouse_hold_me = True
+                    self.parent.move_to_top(self)
+                    return None
+                return event
+        if event.type == MOUSEBUTTONUP:
+            self.change_image(self.regular)
+            if self.__mouse_hold_me:
+                self.__mouse_hold_me = False
+                return None
+            elif event.button == 4:
+                return None
+            elif event.button == 5:
+                return None
+            return event
+        if event.type == MOUSEMOTION:
+            if self.__mouse_hold_me:
+                amount = event.rel[self.direction]
+                if amount > 0:
+                    if self.current_value < self.max_value:
+                        self.current_value += amount
+                        if self.current_value > self.max_value:
+                            self.current_value = self.max_value
+                        self.make_image()
+                if amount < 0:
+                    if self.current_value > self.min_value:
+                        self.current_value += amount
+                        if self.current_value < self.min_value:
+                            self.current_value = self.min_value
+                        self.make_image()
+                return None
+            return event
+        return event
 
 #Defines
 GUI_EVENT = "This is a string so we don't confuse Pygame ;)"
