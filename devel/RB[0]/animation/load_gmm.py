@@ -252,7 +252,7 @@ class Bone(object):
                         obj_center[1] - self.center[1],
                         obj_center[2] - self.center[2])
 
-        self.__base_values = (tuple(self.start), tuple(self.end), self.get_center())
+        self.__base_values = (tuple(self.start), tuple(self.end), self.get_center(), tuple(self.obj_dif))
 
         self.rotation = [0,0,0]
 
@@ -286,7 +286,7 @@ class Bone(object):
     def reset(self):
         self.rotation = [0,0,0]
 
-        self.start, self.end, self.center = self.__base_values
+        self.start, self.end, self.center, self.obj_dif = self.__base_values
 
     def move(self, x, y, z):
         px, py, pz = self.start
@@ -368,6 +368,36 @@ class Bone(object):
             i.rotate(x, y, z)
 
         self.center = self.get_center()
+
+        sx, sy, sz = self.obj_dif
+        if x:
+            radians = math.radians(x)
+            cos = math.cos(radians)
+            sin = math.sin(radians)
+            ox, oy, oz = float(sx), float(sy), float(sz)
+
+            sy = (cos * oy) - (sin * oz)
+            sz = (sin * oy) + (cos * oz)
+
+        if y:
+            radians = math.radians(y)
+            cos = math.cos(radians)
+            sin = math.sin(radians)
+            ox, oy, oz = float(sx), float(sy), float(sz)
+
+            sx = (cos * ox) - (sin * oz)
+            sz = (sin * ox) + (cos * oz)
+
+        if z:
+            radians = math.radians(z)
+            cos = math.cos(radians)
+            sin = math.sin(radians)
+            ox, oy, oz = float(sx), float(sy), float(sz)
+
+            sx = (cos * ox) - (sin * oy)
+            sy = (sin * ox) + (cos * oy)
+
+        self.obj_dif = (sx, sy, sz)
 
 
 class Limb(object):
