@@ -506,8 +506,8 @@ class MenuList(Widget):
                     x.entry = x.name
                     x.name = self.name
                     x.menu_action = "close"
-                    if self.scroll_bar:
-                        self.scroll_bar.current_value = 0
+##                    if self.scroll_bar:
+##                        self.scroll_bar.current_value = 0
                 event = x
                 break
         return event           
