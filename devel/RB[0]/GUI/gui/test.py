@@ -19,7 +19,7 @@ def main():
 
     label = gui.Label(main_win, (50, 50), "Label1", "Test Label",
                       icon="label.png")
-    button = gui.Button(main_win, (100, -1), "Button1", "Quit!",
+    button = gui.Button(main_win, (50, -1), "Button1", "Quit!",
                         icon="label.png")
     b2 = gui.Button(main_win, (-1, 50), "Button2", "Button2",
                         icon="label.png")

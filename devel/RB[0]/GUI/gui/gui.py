@@ -25,6 +25,9 @@ class App(object):
         self.dirty = True
         return None
 
+    def get_mouse_pos(self):
+        return pygame.mouse.get_pos()
+
     def force_update(self):
         self.dirty = True
 
@@ -70,6 +73,7 @@ def resize_image(image, size):
     x, y = size
     if x < image.get_width(): x = image.get_width()
     if y < image.get_height(): y = image.get_height()
+    size = x, y
     bsize = (image.get_width() / 3,
              image.get_height() / 3)
 
@@ -130,13 +134,16 @@ class Widget(object):
         self.rect = pygame.Rect(0, 0, 1, 1)
         self.move()
 
-    def render(self, surface, offset=(0, 0)):
+    def render(self, surface):
         pass
+
+    def get_mouse_pos(self):
+        return self.parent.get_mouse_pos()
 
     def force_update(self):
         self.parent.force_update()
 
-    def event(self, event, offset=(0, 0)):
+    def event(self, event):
         return event
 
     def move(self, off=(0,0)):
@@ -219,9 +226,8 @@ class Label(Widget):
         self.move()
         return None
 
-    def render(self, surface, offset=(0, 0)):
-        pos = self.rect.left + offset[0], self.rect.top + offset[1]
-        surface.blit(self.comp_image, pos)
+    def render(self, surface):
+        surface.blit(self.comp_image, self.rect.topleft)
         return None
 
 class Button(Widget):
@@ -325,9 +331,8 @@ class Button(Widget):
         self.move()
         return None
 
-    def render(self, surface, offset=(0,0)):
-        pos = self.rect.left + offset[0], self.rect.top + offset[1]
-        surface.blit(self.image, pos)
+    def render(self, surface):
+        surface.blit(self.image, self.rect.topleft)
         return None
 
     def change_image(self, new):
@@ -336,10 +341,9 @@ class Button(Widget):
             self.force_update()
         return None
 
-    def event(self, event, offset=(0, 0)):
-        mpos = pygame.mouse.get_pos()
-        mpos = mpos[0] - offset[0], mpos[1] - offset[1]
-        if self.rect.collidepoint(mpos):
+    def event(self, event):
+        mpos = self.get_mouse_pos()
+        if mpos and self.rect.collidepoint(mpos):
             if self.__mouse_hold_me:
                 self.change_image(self.click)
             else:
@@ -348,7 +352,7 @@ class Button(Widget):
             self.change_image(self.regular)
 
         if event.type == MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(mpos):
+            if mpos and self.rect.collidepoint(mpos):
                 self.change_image(self.click)
                 self.__mouse_hold_me = True
                 self.parent.move_to_top(self)
@@ -357,7 +361,7 @@ class Button(Widget):
         if event.type == MOUSEBUTTONUP:
             if self.__mouse_hold_me:
                 self.__mouse_hold_me = False
-                if self.rect.collidepoint(mpos):
+                if mpos and self.rect.collidepoint(mpos):
                     self.change_image(self.regular)
                     self.parent.move_to_top(self)
                     return Event(Button, self.name, GUI_EVENT_CLICK)
@@ -365,6 +369,101 @@ class Button(Widget):
             return event
         return event
 
+##class Area(Widget):
+##    def __init__(self, parent, name="", widget_pos="topleft",
+##                 theme=None, size=(50,50)):
+##        Widget.__init__(self, parent, (0,0), name, widget_pos, theme)
+##
+##        self.size = size
+##        self.widgets = []
+##
+##        self.hscroll_bar = None
+##        self.vscroll_bar = None
+##
+##        self.check_borders()
+##
+##    def get_mouse_pos(self):
+##        p = self.parent.get_mouse_pos()
+##        if not p:
+##            return None
+##        x, y = p
+##        if self.hscroll_bar:
+##            if y > self.size[1] - self.hscroll_bar.rect.height:
+##                return None
+##        if self.vscroll_bar:
+##            if x > self.size[0] - self.vscroll_bar.rect.width:
+##                return None
+##        return x, y
+##
+##    def move_to_top(self, other):
+##        self.parent.move_to_top(self)
+##
+##    def not_active(self):
+##        for i in self.widgets:
+##            i.not_active()
+##
+##    def check_borders(self):
+##        width = 0
+##        height = 0
+####        for i in self.widgets:
+####            if not i in (self.hscroll_bar, self.vscroll_bar):
+####                print i, self.hscroll_bar, self.vscroll_bar
+####                if i.rect.right > width:
+####                    width = i.rect.right
+####                if i.rect.bottom > height:
+####                    height = i.rect.bottom
+##        for i in self.widgets:
+##            print i
+##
+##        if width > self.size[0]:
+##            #we need a horizontal scroll bar ;)
+##            dif = width - self.size[0]
+##            self.hscroll_bar = ScrollBar(self, (0, self.size[1]),
+##                                         "", "bottomleft",
+##                                         None, (self.size[0], 15),
+##                                         (self.size[0] - dif - 15, 15),
+##                                         0, 0)
+##        #we need a horizontal scroll bar ;)
+##        if height > self.size[1]:
+##            dif = height - self.size[1]
+##            self.vscroll_bar = ScrollBar(self, (self.size[1], 0),
+##                                         "", "topright",
+##                                         None, (15, self.size[1]),
+##                                         (15, self.size[1] - dif - 15),
+##                                         0, 1)
+##
+####        x, y = self.size
+####        if self.hscroll_bar:
+####            y -= self.hscroll_bar.rect.height
+####            self.force_update()
+####        if self.vscroll_bar:
+####            x -= self.vscroll_bar.rect.width
+####            self.force_update()
+####
+####        self.size = x, y
+##
+##        self.surface = pygame.Surface(self.size).convert_alpha()
+##        self.surface.fill((0,0,0,0))
+##        return None
+##
+##    def add_widget(self, widg):
+##        self.widgets.append(widg)
+##        widg.parent = self
+##        return None
+##
+##    def render(self, surface):
+##        self.surface.fill((0,0,0,0))
+##        for i in self.widgets:
+##            i.render(self.surface)
+##        surface.blit(self.surface, (0,0))
+##        return None
+##
+##    def event(self, event):
+##        for i in self.widgets:
+##            e = i.event(event)
+##            if not e == event:
+##                return e
+##        return event
 
 class MenuList(Widget):
     def __init__(self, parent, pos, name="",
@@ -383,6 +482,15 @@ class MenuList(Widget):
         self.scroll_bar = None
 
         self.make_image()
+
+    def get_mouse_pos(self):
+        p = self.parent.get_mouse_pos()
+        if not p:
+            return None
+        x, y = p
+        x -= self.rect.left + self.draw_area.get_offset()[0]
+        y -= self.rect.top + self.draw_area.get_offset()[1]
+        return x, y
 
     def make_image(self):
         buttons = []
@@ -407,7 +515,7 @@ class MenuList(Widget):
             i.over_width = width
             i.make_image()
 
-        if self.theme and self.theme.menu["border"]:
+        if self.theme:
             image = self.theme.menu["border"]
             bsize = (image.get_width() / 3,
                      image.get_height() / 3)
@@ -451,6 +559,17 @@ class MenuList(Widget):
                 self.draw_area = self.surface
                 self.old_draw_area = self.surface
 
+##        height = self.rect.height
+##        dif = self.rect.bottom - self.parent.rect.bottom
+##        if dif > 0:
+##            height =self.parent.rect.bottom
+##        print height
+##
+##        self.area = Area(self, "", "topleft",
+##                         size = (width, height))
+##        for i in buttons:
+##            self.area.add_widget(i)
+
         self.border = bsize
 
         self.rect = self.surface.get_rect()
@@ -469,36 +588,32 @@ class MenuList(Widget):
             self.scroll_bar.not_active()
         for i in self.buttons:
             i.not_active()
+##        self.area.not_active()
 
-    def render(self, surface, offset=(0, 0)):
+    def render(self, surface):
         self.draw_area.blit(self.old_draw_area, (0, 0))
         if self.scroll_bar:
-            self.scroll_bar.render(self.draw_area, offset)
-            offset = offset[0], offset[1] - self.scroll_bar.get_value()
+            self.scroll_bar.render(self.draw_area)
         for i in self.buttons:
-            i.render(self.draw_area, offset)
+            i.render(self.draw_area)
+##        self.area.render(self.draw_area)
         surface.blit(self.surface, self.rect)
         return None
 
-    def event(self, event, offset=(0, 0)):
-        o = self.draw_area.get_offset()
-        o = offset[0] + self.rect.left + o[0], offset[1] + self.rect.top + o[1]
+    def event(self, event):
         if event.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION):
-            mpos = pygame.mouse.get_pos()
-            mpos = mpos[0] - offset[0], mpos[1] - offset[1]
-            self.draw_rect.topleft = self.rect.left + self.border[0], self.rect.top + self.border[1]
-            if not self.draw_rect.collidepoint(mpos):
+            mpos = self.parent.get_mouse_pos()
+            if not (mpos and self.rect.collidepoint(mpos)):
                 return event
 
         if self.scroll_bar:
-            x = self.scroll_bar.event(event, o)
+            x = self.scroll_bar.event(event)
             if not x == event:
                 self.force_update()
                 return x
-            o = o[0], o[1] - self.scroll_bar.get_value()
 
         for i in self.buttons:
-            x = i.event(event, o)
+            x = i.event(event)
             if not x == event:
                 self.force_update()
                 if x:
@@ -506,11 +621,19 @@ class MenuList(Widget):
                     x.entry = x.name
                     x.name = self.name
                     x.menu_action = "close"
-##                    if self.scroll_bar:
-##                        self.scroll_bar.current_value = 0
                 event = x
                 break
-        return event           
+        return event
+##        return self.area.event(event)
+##        e = self.area.event(event)
+##        if not e == event:
+##            self.force_update()
+##            if e:
+##                e.widget = MenuList
+##                e.entry = e.name
+##                e.name = self.name
+##                e.menu_action = "close"
+##        return e
 
 class Menu(Widget):
     def __init__(self, parent, pos, name, text,
@@ -533,6 +656,9 @@ class Menu(Widget):
     def move_to_top(self, other):
         self.parent.move_to_top(self)
 
+    def get_mouse_pos(self):
+        return self.parent.get_mouse_pos()
+
     def not_active(self):
         self.window_vis = False
         self.other.not_active()
@@ -550,8 +676,8 @@ class Menu(Widget):
     def add_widget(self, *other):
         pass
 
-    def event(self, event, offset=(0, 0)):
-        x = self.button.event(event, offset)
+    def event(self, event):
+        x = self.button.event(event)
         if not x == event:
             self.force_update()
             if x:
@@ -564,7 +690,7 @@ class Menu(Widget):
         else:
             if self.widget_vis:
                 self.parent.move_to_top(self)
-                x = self.other.event(event, offset)
+                x = self.other.event(event)
                 if not x == event:
                     if x:
                         if x.menu_action == "close":
@@ -576,20 +702,20 @@ class Menu(Widget):
                 else:
                     if event.type == MOUSEBUTTONDOWN:
                         if event.button == 1:
-                            mpos = pygame.mouse.get_pos()
-                            mpos = mpos[0] - offset[0], mpos[1] - offset[1]
-                            if not self.other.rect.collidepoint(mpos):
+                            mpos = self.get_mouse_pos()
+                            if not (mpos and self.other.rect.collidepoint(mpos)):
                                 self.widget_vis = False
                                 self.force_update()
+                                return event
                             else:
                                 event = None
 
         return event
 
-    def render(self, surface, offset=(0, 0)):
-        self.button.render(surface, offset)
+    def render(self, surface):
+        self.button.render(surface)
         if self.widget_vis:
-            self.other.render(surface, offset)
+            self.other.render(surface)
         return None
 
 class TextInputBox(Widget):
@@ -671,18 +797,17 @@ class TextInputBox(Widget):
             return None
         return None
 
-    def render(self, surface, offset=(0, 0)):
-        pos = self.rect.left - offset[0], self.rect.top - offset[1]
+    def render(self, surface):
+        pos = self.rect.topleft
         surface.blit(self.surface, pos)
         surface.blit(self.tex_surface, (pos[0] + self.__surf_size[0],
                                         pos[1] + self.__surf_size[1]))
         return None
 
-    def event(self, event, offset=(0, 0)):
-        mpos = pygame.mouse.get_pos()
-        mpos = mpos[0] - offset[0], mpos[1] - offset[1]
+    def event(self, event):
+        mpos = self.get_mouse_pos()
         if event.type == MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(mpos):
+            if mpos and self.rect.collidepoint(mpos):
                 self.__mouse_hold_me = True
                 self.parent.move_to_top(self)
                 self.force_update()
@@ -694,7 +819,7 @@ class TextInputBox(Widget):
                 self.focused = False
                 return event
         if event.type == MOUSEBUTTONUP:
-            if self.rect.collidepoint(mpos):
+            if mpos and self.rect.collidepoint(mpos):
                 self.parent.move_to_top(self)
                 if self.__mouse_hold_me:
                     self.focused = True
@@ -759,7 +884,7 @@ class TextInputBox(Widget):
 
 class WindowBar(object):
     def __init__(self, parent, pos, width=None,
-                 caption="", icon=None):
+                 caption="", icon=None, attach_to=None):
 
         self.parent = parent
         self.theme = copy.copy(self.parent.theme)
@@ -770,6 +895,8 @@ class WindowBar(object):
         self.bar.make_image()
 
         self.__mouse_hold_me=False
+
+        self.attach_to = attach_to
 
         self.minimized = False
 
@@ -796,11 +923,13 @@ class WindowBar(object):
     def force_update(self):
         self.parent.force_update()
 
-    def event(self, event, offset=(0, 0)):
-        mpos = pygame.mouse.get_pos()
-        mpos = mpos[0] - offset[0], mpos[1] - offset[1]
+    def get_mouse_pos(self):
+        return self.parent.get_mouse_pos()
 
-        if self.bar.rect.collidepoint(mpos):
+    def event(self, event):
+        mpos = self.get_mouse_pos()
+
+        if mpos and self.bar.rect.collidepoint(mpos):
             if self.__mouse_hold_me:
                 self.bar.change_image(self.bar.click)
             else:
@@ -809,9 +938,9 @@ class WindowBar(object):
             self.bar.change_image(self.bar.regular)
 
         if self.minimized:
-            e = self.max_button.event(event, offset)
+            e = self.max_button.event(event)
         else:
-            e = self.min_button.event(event, offset)
+            e = self.min_button.event(event)
         if not e == event:
             self.force_update()
             if e:
@@ -823,7 +952,7 @@ class WindowBar(object):
 
         else:
             if event.type == MOUSEBUTTONDOWN:
-                if self.bar.rect.collidepoint(mpos):
+                if mpos and self.bar.rect.collidepoint(mpos):
                     self.bar.change_image(self.bar.click)
                     self.__mouse_hold_me = True
                     self.moveup()
@@ -832,7 +961,7 @@ class WindowBar(object):
             if event.type == MOUSEBUTTONUP:
                 if self.__mouse_hold_me:
                     self.__mouse_hold_me = False
-                    if self.bar.rect.collidepoint(mpos):
+                    if mpos and self.bar.rect.collidepoint(mpos):
                         self.bar.change_image(self.bar.regular)
                         self.moveup()
                         return None
@@ -843,15 +972,15 @@ class WindowBar(object):
                     self.bar.move(event.rel)
                     self.min_button.move(event.rel)
                     self.max_button.move(event.rel)
-                    self.parent.move(event.rel)
+                    self.attach_to.move(event.rel)
         return event
 
-    def render(self, surface, offset=(0, 0)):
-        self.bar.render(surface, offset)
+    def render(self, surface):
+        self.bar.render(surface)
         if self.minimized:
-            self.max_button.render(surface, offset)
+            self.max_button.render(surface)
         else:
-            self.min_button.render(surface, offset)
+            self.min_button.render(surface)
         return None
 
 class Window(Widget):
@@ -874,6 +1003,19 @@ class Window(Widget):
         for i in self.widgets:
             i.not_active()
         return None
+
+    def get_mouse_pos(self):
+        p = self.parent.get_mouse_pos()
+        if not p:
+            return None
+        x, y = p
+        if not self.rect.collidepoint((x, y)):
+            return None
+        x -= self.rect.left
+        y -= self.rect.top
+        x -= self.surface.get_offset()[0]
+        y -= self.surface.get_offset()[1]
+        return x, y
 
     def make_image(self):
         if self.theme:
@@ -905,32 +1047,28 @@ class Window(Widget):
             self.rect = self.surface.get_rect()
             setattr(self.rect, self.widget_pos, self.pos)
 
-        self.drag_bar = WindowBar(self, self.rect.midtop,
+        self.drag_bar = WindowBar(self.parent, self.rect.midtop,
                                   self.rect.width, self.caption,
-                                  self.icon)
+                                  self.icon, self)
         self.force_update()
 
-    def event(self, event, offset=(0, 0)):
-        e = self.drag_bar.event(event, offset)
+    def event(self, event):
+        self.force_update()
+        e = self.drag_bar.event(event)
         if not e == event:
             self.parent.move_to_top(self)
             return e
         else:
-            o = (self.rect.left + offset[0] + self.border_offset[0],
-                 self.rect.top + offset[1] + self.border_offset[1])
-            mpos = pygame.mouse.get_pos()
-            mpos = mpos[0] - o[0], mpos[1] - o[1]
+            mpos = self.parent.get_mouse_pos()
             if self.drag_bar.minimized:
                 self.not_active()
                 return event
             if event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP:
-                m = pygame.mouse.get_pos()
-                m = m[0] - offset[0], m[1] - offset[1]
-                if self.rect.collidepoint(m):
+                if mpos and self.rect.collidepoint(mpos):
                     self.parent.move_to_top(self)
                     for i in self.widgets:
                         if not i == self.drag_bar:
-                            e = i.event(event, o)
+                            e = i.event(event)
                             if not e == event:
                                 for x in self.widgets:
                                     if not x == i:
@@ -947,7 +1085,7 @@ class Window(Widget):
             else:
                 for i in self.widgets:
                     if not i == self.drag_bar:
-                        e = i.event(event, o)
+                        e = i.event(event)
                         if not e == event:
                             for x in self.widgets:
                                 if not x == i:
@@ -978,7 +1116,7 @@ class Window(Widget):
                 break
         return None
 
-    def render(self, surface, offset=(0, 0)):
+    def render(self, surface):
         self.surface.fill((0,0,0,0))
         self.surface.blit(self.__old_draw_area, (0, 0))
         self.widgets.reverse()
@@ -986,9 +1124,9 @@ class Window(Widget):
             i.render(self.surface)
         self.widgets.reverse()
 
-        self.drag_bar.render(surface, offset)
+        self.drag_bar.render(surface)
         if not self.drag_bar.minimized:
-            pos = offset[0] + self.rect.left, offset[1] + self.rect.top
+            pos = self.rect.topleft
             surface.blit(self.border, pos)
         return None
 
@@ -1079,8 +1217,8 @@ class ScrollBar(Widget):
         else:
             self.max_value = self.area_bar.get_height() - bar_size[1] - bsize[1] * 2
 
-    def render(self, surface, offset=(0,0)):
-        pos = offset[0] + self.rect.left, offset[1] + self.rect.top
+    def render(self, surface):
+        pos = self.rect.topleft
         self.draw_area.fill((0,0,0,0))
         self.draw_area.blit(self.__old_draw_area, (0,0))
         if not self.image == "noimage":
@@ -1111,19 +1249,15 @@ class ScrollBar(Widget):
         self.__mouse_hold_me = False
         return None
 
-    def event(self, event, offset=(0,0)):
-        mpos = pygame.mouse.get_pos()
-        mpos = mpos[0] - offset[0], mpos[1] - offset[1]
-        if self.rect.collidepoint(mpos):
+    def event(self, event):
+        mpos = self.get_mouse_pos()
+        if mpos and self.rect.collidepoint(mpos):
             if self.__mouse_hold_me:
                 self.change_image(self.click)
             else:
                 self.change_image(self.hover)
         else:
             self.change_image(self.regular)
-
-        if not 1 in pygame.mouse.get_pressed():
-            self.__mouse_hold_me = False
 
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 4:
@@ -1137,7 +1271,7 @@ class ScrollBar(Widget):
                 self.force_update()
                 return None
             else:
-                if self.rect.collidepoint(mpos):
+                if mpos and self.rect.collidepoint(mpos):
                     self.change_image(self.click)
                     self.__mouse_hold_me = True
                     self.parent.move_to_top(self)
