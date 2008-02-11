@@ -528,7 +528,7 @@ class Mesh(object):
                 mtl = self.materials[mats[i]]
                 if mtl['tex']:
                     glBindTexture(GL_TEXTURE_2D, mtl['tex'])
-                glColorf(*mtl['color'])
+                glColor3f(*mtl['color'])
 
                 if norms[i] > 0:
                     n = self.normals[norms[i] - 1]
