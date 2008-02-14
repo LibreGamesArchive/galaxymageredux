@@ -23,6 +23,9 @@ class App(object):
         i = self.widgets.index(other)
         self.widgets.insert(0, self.widgets.pop(i))
         self.dirty = True
+        for i in self.widgets:
+            if not i == other:
+                i.not_active()
         return None
 
     def get_mouse_pos(self):
@@ -251,6 +254,7 @@ class Button(Widget):
 
     def not_active(self):
         self.change_image(self.regular)
+        self.__mouse_hold_me = False
 
     def make_image(self):
         if self.theme and self.theme.font["font"]:
@@ -369,101 +373,209 @@ class Button(Widget):
             return event
         return event
 
-##class Area(Widget):
-##    def __init__(self, parent, name="", widget_pos="topleft",
-##                 theme=None, size=(50,50)):
-##        Widget.__init__(self, parent, (0,0), name, widget_pos, theme)
-##
-##        self.size = size
-##        self.widgets = []
-##
-##        self.hscroll_bar = None
-##        self.vscroll_bar = None
-##
-##        self.check_borders()
-##
-##    def get_mouse_pos(self):
-##        p = self.parent.get_mouse_pos()
-##        if not p:
-##            return None
-##        x, y = p
-##        if self.hscroll_bar:
-##            if y > self.size[1] - self.hscroll_bar.rect.height:
-##                return None
-##        if self.vscroll_bar:
-##            if x > self.size[0] - self.vscroll_bar.rect.width:
-##                return None
-##        return x, y
-##
-##    def move_to_top(self, other):
-##        self.parent.move_to_top(self)
-##
-##    def not_active(self):
-##        for i in self.widgets:
-##            i.not_active()
-##
-##    def check_borders(self):
-##        width = 0
-##        height = 0
-####        for i in self.widgets:
-####            if not i in (self.hscroll_bar, self.vscroll_bar):
-####                print i, self.hscroll_bar, self.vscroll_bar
-####                if i.rect.right > width:
-####                    width = i.rect.right
-####                if i.rect.bottom > height:
-####                    height = i.rect.bottom
-##        for i in self.widgets:
-##            print i
-##
-##        if width > self.size[0]:
-##            #we need a horizontal scroll bar ;)
-##            dif = width - self.size[0]
-##            self.hscroll_bar = ScrollBar(self, (0, self.size[1]),
-##                                         "", "bottomleft",
-##                                         None, (self.size[0], 15),
-##                                         (self.size[0] - dif - 15, 15),
-##                                         0, 0)
-##        #we need a horizontal scroll bar ;)
-##        if height > self.size[1]:
-##            dif = height - self.size[1]
-##            self.vscroll_bar = ScrollBar(self, (self.size[1], 0),
-##                                         "", "topright",
-##                                         None, (15, self.size[1]),
-##                                         (15, self.size[1] - dif - 15),
-##                                         0, 1)
-##
-####        x, y = self.size
-####        if self.hscroll_bar:
-####            y -= self.hscroll_bar.rect.height
-####            self.force_update()
-####        if self.vscroll_bar:
-####            x -= self.vscroll_bar.rect.width
-####            self.force_update()
-####
-####        self.size = x, y
-##
-##        self.surface = pygame.Surface(self.size).convert_alpha()
-##        self.surface.fill((0,0,0,0))
-##        return None
-##
-##    def add_widget(self, widg):
-##        self.widgets.append(widg)
-##        widg.parent = self
-##        return None
-##
-##    def render(self, surface):
-##        self.surface.fill((0,0,0,0))
-##        for i in self.widgets:
-##            i.render(self.surface)
-##        surface.blit(self.surface, (0,0))
-##        return None
-##
-##    def event(self, event):
-##        for i in self.widgets:
-##            e = i.event(event)
-##            if not e == event:
-##                return e
-##        return event
+class Area(Widget):
+    def __init__(self, parent, name="", widget_pos="topleft",
+                 theme=None, size=(50,50)):
+        Widget.__init__(self, parent, (0,0), name, widget_pos, theme)
+
+        self.widgets = []
+
+        self.size = size
+        self.draw_area = pygame.Surface(self.size).convert_alpha()
+        self.draw_area.fill((0,0,0,0))
+        self.surface = self.draw_area.subsurface((0,0), self.size)
+
+        self.rect = self.draw_area.get_rect()
+
+        self.hscroll_bar = None
+        self.vscroll_bar = None
+        self.block = None
+
+        self.lock_add_widgets = False
+
+        self.new_widgets = True
+
+    def not_active(self):
+        if self.hscroll_bar:
+            self.hscroll_bar.not_active()
+        if self.vscroll_bar:
+            self.vscroll_bar.not_active()
+        for i in self.widgets:
+            i.not_active()
+
+    def get_mouse_pos(self):
+        p = self.parent.get_mouse_pos()
+        if p:
+            if not self.rect.collidepoint(p):
+                return False
+            return p
+        return None
+
+    def check_borders(self):
+        width = 0
+        height = 0
+        for i in self.widgets:
+            if not i in (self.hscroll_bar, self.vscroll_bar):
+                if i.rect.right > width:
+                    width = i.rect.right
+                if i.rect.bottom > height:
+                    height = i.rect.bottom
+
+        sw, sh = self.size
+
+        dirty = False
+
+        self.lock_add_widgets = True
+        if self.vscroll_bar:
+            if height > self.size[1]:
+                if not self.vscroll_bar.tot_size[1] == height:
+                    dirty = True
+                    self.vscroll_bar.tot_size = (self.vscroll_bar.tot_size[0],
+                                                 height)
+                    self.vscroll_bar.make_image()
+                sw -= self.vscroll_bar.rect.width
+            else:
+                dirty = True
+                self.vscroll_bar = None
+        else:
+            if height > self.size[1]:
+                dirty = True
+                self.vscroll_bar = ScrollBar(self, (self.size[0], 0),
+                                             "", "topright",
+                                             None, (15, height),
+                                             (15, self.size[1]),
+                                             0, 1)
+                sw -= self.vscroll_bar.rect.width
+
+        if self.hscroll_bar:
+            if width > sw:
+                if not self.hscroll_bar.tot_size[0] == width:
+                    dirty = True
+                    self.hscroll_bar.tot_size = (width,
+                                                 self.hscroll_bar.tot_size[1])
+                    self.hscroll_bar.make_image()
+                else:
+                    pass
+                sh -= self.hscroll_bar.rect.height
+            else:
+                dirty = True
+                self.hscroll_bar = None
+        else:
+            if width > sw:
+                dirty = True
+                self.hscroll_bar = ScrollBar(self, (0, self.size[1]),
+                                             "", "bottomleft",
+                                             None, (width, 15),
+                                             (self.size[0], 15),
+                                             0, 0)
+                sh -= self.hscroll_bar.rect.height
+                if self.vscroll_bar:
+                    self.vscroll_bar.view_size = (self.vscroll_bar.view_size[0],
+                                                  self.vscroll_bar.view_size[1] - 25)
+                    self.vscroll_bar.make_image()
+                    #hmm, we need to ajust the vertical scroll bar now, incase we have made it necessary ;)
+        self.lock_add_widgets = False
+
+        if self.hscroll_bar and self.vscroll_bar:
+            b = resize_image(self.theme.scroll_bar["border"], (25, 25))
+            self.block = (b, b.get_rect())
+            self.block[1].bottomright = self.rect.bottomright
+        else:
+            self.block = None
+
+        new = sw, sh
+        if dirty:
+            self.surface = self.draw_area.subsurface((0,0), new)
+        return None
+
+    def add_widget(self, widg):
+        if not self.lock_add_widgets:
+            self.widgets.insert(0, widg)
+            widg.parent = self
+            self.new_widgets = True
+            self.force_update()
+        return None
+
+    def move_to_top(self, other):
+        if other == self.hscroll_bar or other == self.vscroll_bar:
+            return None
+        i = self.widgets.index(other)
+        self.widgets.insert(0, self.widgets.pop(i))
+        for i in self.widgets:
+            if not i == other:
+                i.not_active()
+        self.force_update()
+        return None
+
+    def remove_widget(self, name):
+        for i in self.widgets:
+            if i.name == name:
+                self.widgets.remove(i)
+                self.new_widgets = True
+                self.force_update()
+                break
+        return None
+
+    def render(self, surface):
+        if self.new_widgets:
+            self.new_widgets = False
+            self.check_borders()
+        self.draw_area.fill((0,0,0,0))
+        self.widgets.reverse()
+        for i in self.widgets:
+            i.render(self.surface)
+        self.widgets.reverse()
+        if self.vscroll_bar:
+            self.vscroll_bar.render(self.draw_area)
+        if self.hscroll_bar:
+            self.hscroll_bar.render(self.draw_area)
+        if self.block:
+            self.draw_area.blit(*self.block)
+        surface.blit(self.draw_area, (0,0))
+        return None
+
+    def move_horz(self, val):
+        for i in self.widgets:
+            if not (i == self.hscroll_bar or i == self.vscroll_bar):
+                i.move((-val, 0))
+
+    def move_vert(self, val):
+        for i in self.widgets:
+            if not (i == self.hscroll_bar or i == self.vscroll_bar):
+                i.move((0, -val))
+
+    def event(self, event):
+        if self.vscroll_bar:
+            e = self.vscroll_bar.event(event)
+            if not e == event:
+                if e and e.type == GUI_EVENT and e.action == GUI_SCROLL_EVENT:
+                    self.move_vert(e.value)
+                    return None
+                return e
+
+        if self.hscroll_bar:
+            e = self.hscroll_bar.event(event)
+            if not e == event:
+                if e and e.type == GUI_EVENT and e.action == GUI_SCROLL_EVENT:
+                    self.move_horz(e.value)
+                    return None
+                return e
+
+        if self.block:
+            if event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP:
+                p = self.get_mouse_pos()
+                if p:
+                    if self.block[1].collidepoint(p):
+                        self.not_active()
+                        return None
+                else:
+                    return event
+
+        for i in self.widgets:
+            e = i.event(event)
+            if not e == event:
+                return e
+        return event
 
 class MenuList(Widget):
     def __init__(self, parent, pos, name="",
@@ -519,63 +631,43 @@ class MenuList(Widget):
             image = self.theme.menu["border"]
             bsize = (image.get_width() / 3,
                      image.get_height() / 3)
+            width += 25
             image = resize_image(image, (width + bsize[0] * 2,
                                          height + bsize[1] * 2))
             self.surface = image
-            self.draw_area = self.surface.subsurface(bsize,
-                                        (image.get_width() - bsize[0],
-                                         image.get_height() - bsize[1]))
-            self.old_draw_area = self.draw_area.copy()
         else:
-            self.surface = pygame.Surface((0, 0))
-            self.draw_area = self.surface
-            self.old_draw_area = self.surface
+            bsize = (0,0)
+            self.surface = pygame.Surface((width, height))
+
+        self.border = bsize
+        
         self.rect = self.surface.get_rect()
         self.move()
-        self.buttons = buttons
 
         if self.rect.bottom > self.parent.surface.get_height():
             dif = self.rect.bottom - self.parent.surface.get_height()
-            self.scroll_bar = ScrollBar(self, (self.draw_area.get_width(),
-                                               0), "", "topleft",
-                                        None, (15, self.rect.height),
-                                        (15, self.rect.height - dif - bsize[1] * 2),
-                                        0, 1)
-            width = self.rect.width + self.scroll_bar.rect.width
-            self.rect.height = self.rect.height - dif
-            if self.theme and self.theme.menu["border"]:
-                image = self.theme.menu["border"]
-                bsize = (image.get_width() / 3,
-                         image.get_height() / 3)
-                image = resize_image(image, (width + bsize[0],
-                                             self.rect.height))
-                self.surface = image
-                self.draw_area = self.surface.subsurface(bsize,
-                                            (image.get_width() - bsize[0],
-                                             image.get_height() - bsize[1] * 2))
-                self.old_draw_area = self.draw_area.copy()
-            else:
-                self.surface = pygame.Surface((0, 0))
-                self.draw_area = self.surface
-                self.old_draw_area = self.surface
+            self.rect.height -= dif
+        if self.rect.right > self.parent.surface.get_width():
+            dif = self.rect.right - self.parent.surface.get_width()
+            self.rect.width -= dif
 
-##        height = self.rect.height
-##        dif = self.rect.bottom - self.parent.rect.bottom
-##        if dif > 0:
-##            height =self.parent.rect.bottom
-##        print height
-##
-##        self.area = Area(self, "", "topleft",
-##                         size = (width, height))
-##        for i in buttons:
-##            self.area.add_widget(i)
+        if self.theme:
+            self.surface = resize_image(self.theme.menu["border"],
+                                        (self.rect.width,
+                                         self.rect.height))
+        else:
+            self.surface = pygame.Surface((width, height)).convert_alpha()
+            self.surface.fill((0,0,0,0))
+        self.background = self.surface.subsurface(self.border,
+                                        (self.rect.width - self.border[0] * 2,
+                                         self.rect.height - self.border[1] * 2))
+        self.back_copy = self.background.copy()
 
-        self.border = bsize
+        self.Area = Area(self, size=(self.rect.width - self.border[0] * 2,
+                                     self.rect.height - self.border[1] * 2))
 
-        self.rect = self.surface.get_rect()
-        self.draw_rect = self.draw_area.get_rect()
-        self.draw_rect.topleft = self.rect.left + self.border[0], self.rect.top + self.border[1]
-        self.move()
+        for i in buttons:
+            self.Area.add_widget(i)
 
     def add_widget(self, *other):
         pass
@@ -584,56 +676,31 @@ class MenuList(Widget):
         pass
 
     def not_active(self):
-        if self.scroll_bar:
-            self.scroll_bar.not_active()
-        for i in self.buttons:
-            i.not_active()
-##        self.area.not_active()
+        self.Area.not_active()
 
     def render(self, surface):
-        self.draw_area.blit(self.old_draw_area, (0, 0))
-        if self.scroll_bar:
-            self.scroll_bar.render(self.draw_area)
-        for i in self.buttons:
-            i.render(self.draw_area)
-##        self.area.render(self.draw_area)
+        self.background.blit(self.back_copy, (0,0))
+        self.Area.render(self.background)
         surface.blit(self.surface, self.rect)
         return None
 
     def event(self, event):
-        if event.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION):
+        if event.type in (MOUSEBUTTONDOWN, MOUSEBUTTONUP):
             mpos = self.parent.get_mouse_pos()
             if not (mpos and self.rect.collidepoint(mpos)):
+                self.not_active()
                 return event
 
-        if self.scroll_bar:
-            x = self.scroll_bar.event(event)
-            if not x == event:
-                self.force_update()
-                return x
-
-        for i in self.buttons:
-            x = i.event(event)
-            if not x == event:
-                self.force_update()
-                if x:
-                    x.widget = MenuList
-                    x.entry = x.name
-                    x.name = self.name
-                    x.menu_action = "close"
-                event = x
-                break
+        e = self.Area.event(event)
+        if not e == event:
+            self.force_update()
+            if e:
+                e.widget = MenuList
+                e.entry = e.name
+                e.name = self.name
+                e.menu_action = "close"
+            return e
         return event
-##        return self.area.event(event)
-##        e = self.area.event(event)
-##        if not e == event:
-##            self.force_update()
-##            if e:
-##                e.widget = MenuList
-##                e.entry = e.name
-##                e.name = self.name
-##                e.menu_action = "close"
-##        return e
 
 class Menu(Widget):
     def __init__(self, parent, pos, name, text,
@@ -997,12 +1064,14 @@ class Window(Widget):
 
         self.widgets = []
 
+        self.lock_add_widg = True
+        self.Area = Area(self, size=size)
+        self.lock_add_widg = False
+
         self.make_image()
 
     def not_active(self):
-        for i in self.widgets:
-            i.not_active()
-        return None
+        return self.Area.not_active()
 
     def get_mouse_pos(self):
         p = self.parent.get_mouse_pos()
@@ -1066,63 +1135,35 @@ class Window(Widget):
             if event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP:
                 if mpos and self.rect.collidepoint(mpos):
                     self.parent.move_to_top(self)
-                    for i in self.widgets:
-                        if not i == self.drag_bar:
-                            e = i.event(event)
-                            if not e == event:
-                                for x in self.widgets:
-                                    if not x == i:
-                                        x.not_active()
-                                self.parent.move_to_top(self)
-                                if e and e.type == GUI_EVENT:
-                                    new = Event(Window, self.name, None)
-                                    new.subevent = e
-                                    e = new
-                                return e
-                    return None
                 else:
                     self.not_active()
-            else:
-                for i in self.widgets:
-                    if not i == self.drag_bar:
-                        e = i.event(event)
-                        if not e == event:
-                            for x in self.widgets:
-                                if not x == i:
-                                    x.not_active()
-                            self.parent.move_to_top(self)
-                            if e and e.type == GUI_EVENT:
-                                new = Event(Window, self.name, None)
-                                new.subevent = e
-                                e = new
-                            return e
-            return event
+            
+            e = self.Area.event(event)
+            if not e == event:
+                if e and e.type == GUI_EVENT:
+                    new = Event(Window, self.name, None)
+                    new.subevent = e
+                    e = new
+                return e
         return event
 
     def move_to_top(self, other):
-        i = self.widgets.index(other)
-        self.widgets.insert(0, self.widgets.pop(i))
-        self.force_update()
+        self.parent.move_to_top(self)
         return None
 
     def add_widget(self, widg):
-        self.widgets.insert(0, widg)
+        if not self.lock_add_widg:
+            self.Area.add_widget(widg)
         return None
 
     def remove_widget(self, name):
-        for i in self.widgets:
-            if i.name == name:
-                self.widgets.remove(i)
-                break
+        self.Area.remove_widget(name)
         return None
 
     def render(self, surface):
         self.surface.fill((0,0,0,0))
         self.surface.blit(self.__old_draw_area, (0, 0))
-        self.widgets.reverse()
-        for i in self.widgets:
-            i.render(self.surface)
-        self.widgets.reverse()
+        self.Area.render(self.surface)
 
         self.drag_bar.render(surface)
         if not self.drag_bar.minimized:
@@ -1178,8 +1219,8 @@ class ScrollBar(Widget):
         render_area = big_bar.subsurface(bsize, area)
         old_render_area = render_area.copy()
 
-        bar_size = (area[0] / (self.tot_size[0] / area[0]),
-                    area[1] / (self.tot_size[1] / area[1]))
+        bar_size = ((area[0] / (self.tot_size[0] / area[0]) - bsize[0] * 2),
+                    (area[1] / (self.tot_size[1] / area[1]) - bsize[1] * 2))
 
         if self.direction == 0:
             w = self.theme.scroll_bar["default"].get_width()
@@ -1260,16 +1301,21 @@ class ScrollBar(Widget):
             self.change_image(self.regular)
 
         if event.type == MOUSEBUTTONDOWN:
+            old_a = self.get_value()
             if event.button == 4:
                 if self.current_value > self.min_value:
                     self.current_value -= 1
                 self.force_update()
-                return None
+                x = Event(ScrollBar, self.name, GUI_SCROLL_EVENT)
+                x.value = self.get_value() - old_a
+                return x
             elif event.button == 5:
                 if self.current_value < self.max_value:
                     self.current_value += 1
                 self.force_update()
-                return None
+                x = Event(ScrollBar, self.name, GUI_SCROLL_EVENT)
+                x.value = self.get_value() - old_a
+                return x
             else:
                 if mpos and self.rect.collidepoint(mpos):
                     self.change_image(self.click)
@@ -1291,6 +1337,8 @@ class ScrollBar(Widget):
             if self.__mouse_hold_me:
                 amount = event.rel[self.direction]
                 self.force_update()
+                old_a = self.get_value()
+                mpos = self.get_mouse_pos()
                 if amount > 0:
                     if self.current_value < self.max_value:
                         self.current_value += amount
@@ -1301,7 +1349,10 @@ class ScrollBar(Widget):
                         self.current_value += amount
                         if self.current_value < self.min_value:
                             self.current_value = self.min_value
-                return None
+                #let's return a scroll bar event!
+                x = Event(ScrollBar, self.name, GUI_SCROLL_EVENT)
+                x.value = self.get_value() - old_a
+                return x
             return event
         return event
 
@@ -1309,6 +1360,7 @@ class ScrollBar(Widget):
 GUI_EVENT = "This is a string so we don't confuse Pygame ;)"
 GUI_EVENT_CLICK = 0
 GUI_EVENT_INPUT = 1
+GUI_SCROLL_EVENT = 2
 
 class Event(object):
     def __init__(self, widg=Widget, name="Name",
