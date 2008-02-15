@@ -411,6 +411,50 @@ class Area(Widget):
             return p
         return None
 
+    def make_vert(self, s, m, bsize):
+        print s, m
+        if self.vscroll_bar:
+            if m > s:
+                if not self.vscroll_bar.tot_size[1] == m:
+                    self.vscroll_bar.tot_size = (self.vscroll_bar.tot_size[0],
+                                                 m)
+                    self.vscroll_bar.make_image()
+            else:
+                self.vscroll_bar = None
+        else:
+            if m > s:
+                self.lock_add_widgets = True
+                self.vscroll_bar = ScrollBar(self, (self.size[0], 0),
+                                             "", "topright",
+                                             None, (bsize[0], m),
+                                             (bsize[0], s),
+                                             0, 1)
+                self.lock_add_widgets = False
+
+    def make_horz(self, s, m, bsize):
+        if self.hscroll_bar:
+            if m > s:
+                if not self.hscroll_bar.tot_size[0] == m:
+                    self.hscroll_bar.tot_size = (m, self.vscroll_bar.tot_size[1])
+                    self.hscroll_bar.make_image()
+            else:
+                self.hscroll_bar = None
+        else:
+            if m > s:
+                self.lock_add_widgets = True
+                self.hscroll_bar = ScrollBar(self, (0, self.size[1]),
+                                             "", "bottomleft",
+                                             None, (m, bsize[1]),
+                                             (s, bsize[1]),
+                                             0, 0)
+                self.lock_add_widgets = False
+
+
+    def calc_s(self, v, m):
+        if v < m:
+            return True
+        return False
+
     def check_borders(self):
         width = 0
         height = 0
@@ -423,69 +467,43 @@ class Area(Widget):
 
         sw, sh = self.size
 
-        dirty = False
+        bsize = self.theme.scroll_bar["border"].get_size()
+        oo = bsize[0] / 3 * 5, bsize[1] / 3 * 5
 
-        self.lock_add_widgets = True
-        if self.vscroll_bar:
-            if height > self.size[1]:
-                if not self.vscroll_bar.tot_size[1] == height:
-                    dirty = True
-                    self.vscroll_bar.tot_size = (self.vscroll_bar.tot_size[0],
-                                                 height)
-                    self.vscroll_bar.make_image()
-                sw -= self.vscroll_bar.rect.width
-            else:
-                dirty = True
-                self.vscroll_bar = None
+        need_v = False
+        need_h = False
+        if self.calc_s(sh, height):
+            need_v = True
+            if self.calc_s(sw - oo[0], width):
+                need_h = True
         else:
-            if height > self.size[1]:
-                dirty = True
-                self.vscroll_bar = ScrollBar(self, (self.size[0], 0),
-                                             "", "topright",
-                                             None, (15, height),
-                                             (15, self.size[1]),
-                                             0, 1)
-                sw -= self.vscroll_bar.rect.width
+            if self.calc_s(sw, width):
+                need_h = True
+                if self.calc_s(sh - oo[1], height):
+                    need_v = True
 
-        if self.hscroll_bar:
-            if width > sw:
-                if not self.hscroll_bar.tot_size[0] == width:
-                    dirty = True
-                    self.hscroll_bar.tot_size = (width,
-                                                 self.hscroll_bar.tot_size[1])
-                    self.hscroll_bar.make_image()
-                else:
-                    pass
-                sh -= self.hscroll_bar.rect.height
-            else:
-                dirty = True
-                self.hscroll_bar = None
+        if need_h and need_v:
+            self.make_horz(sw - oo[0], width, bsize)
+            self.make_vert(sh - oo[1], height, bsize)
+        elif need_h:
+            self.make_horz(sw, width, bsize)
+            self.vscroll_bar = None
+        elif need_v:
+            self.make_vert(sh, height, bsize)
+            self.hscroll_bar = None
         else:
-            if width > sw:
-                dirty = True
-                self.hscroll_bar = ScrollBar(self, (0, self.size[1]),
-                                             "", "bottomleft",
-                                             None, (width, 15),
-                                             (self.size[0], 15),
-                                             0, 0)
-                sh -= self.hscroll_bar.rect.height
-                if self.vscroll_bar:
-                    self.vscroll_bar.view_size = (self.vscroll_bar.view_size[0],
-                                                  self.vscroll_bar.view_size[1] - 25)
-                    self.vscroll_bar.make_image()
-                    #hmm, we need to ajust the vertical scroll bar now, incase we have made it necessary ;)
-        self.lock_add_widgets = False
+            self.hscroll_bar = None
+            self.vscroll_bar = None
 
         if self.hscroll_bar and self.vscroll_bar:
-            b = resize_image(self.theme.scroll_bar["border"], (25, 25))
+            b = resize_image(self.theme.scroll_bar["border"], oo)
             self.block = (b, b.get_rect())
             self.block[1].bottomright = self.rect.bottomright
         else:
             self.block = None
 
         new = sw, sh
-        if dirty:
-            self.surface = self.draw_area.subsurface((0,0), new)
+        self.surface = self.draw_area.subsurface((0,0), new)
         return None
 
     def add_widget(self, widg):
