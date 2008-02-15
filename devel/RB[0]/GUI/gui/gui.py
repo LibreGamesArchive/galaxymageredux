@@ -412,7 +412,6 @@ class Area(Widget):
         return None
 
     def make_vert(self, s, m, bsize):
-        print s, m
         if self.vscroll_bar:
             if m > s:
                 if not self.vscroll_bar.tot_size[1] == m:
