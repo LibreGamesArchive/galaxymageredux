@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 
+
 def sub_rect(r1, r2):
     """remove the area of r2 from r1"""
     if not r1.colliderect(r2):
@@ -61,14 +62,17 @@ def sub_rect(r1, r2):
 
     return ret
 
-def sub_rect_list(r1, rl):
-    dirty = [r1]
-    for i in rl:
+class DirtyRect(object):
+    def __init__(self, rect):
+        self.rect = rect
+
+        self.dirty_rects = [self.rect]
+
+    def subtract(self, other):
         new = []
-        for x in dirty:
-            new.extend(sub_rect(x, i))
-        dirty = new
-    return dirty
+        for i in self.dirty_rects:
+            new.extend(sub_rect(i, other))
+        self.dirty_rects = i
 
 a = pygame.Rect(0,0,100,100)
 b = pygame.Rect(10,10,80,80)
