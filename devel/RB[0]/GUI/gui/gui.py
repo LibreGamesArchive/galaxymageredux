@@ -53,7 +53,6 @@ class App(object):
             for widg in self.widgets:
                 a = self.dirty
                 ret = widg.event(event)
-                if not self.dirty == a:
                 if not ret == event:
                     if ret:
                         return_events.append(ret)
