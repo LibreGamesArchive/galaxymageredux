@@ -16,33 +16,47 @@ class App(object):
 
         self.theme = None
 
-        self.dirty = False
+        self.all_dirty = False
+        self.dirty = []
         self.background_color = background_color
 
     def move_to_top(self, other):
-        i = self.widgets.index(other)
-        self.widgets.insert(0, self.widgets.pop(i))
-        self.dirty = True
-        for i in self.widgets:
-            if not i == other:
-                i.not_active()
-        return None
+        if not other == self.widgets[0]:
+            i = self.widgets.index(other)
+            self.widgets.insert(0, self.widgets.pop(i))
+            self.dirty = True
+            for i in self.widgets:
+                if not i == other:
+                    i.not_active()
+            self.set_dirty_on_widgets()
+            return None
 
     def get_mouse_pos(self):
         return pygame.mouse.get_pos()
 
-    def force_update(self):
-        self.dirty = True
+    def set_dirty_on_widgets(self):
+        self.widgets.reverse()
+        for i in xrange(len(self.widgets)):
+            self.widgets[i].on_top_of_me = self.widgets[i+1::]
+        self.widgets.reverse()
+
+    def force_update(self, other):
+        if other == "ALL":
+            self.all_dirty = True
+        else:
+            self.dirty.append(other)
 
     def add_widget(self, widg):
         self.widgets.insert(0, widg)
-        self.dirty = True
+        self.dirty.append(widg)
+        self.set_dirty_on_widgets()
         return None
 
     def remove_widget(self, name):
         for i in self.widgets:
             if i.name == name:
                 self.widgets.remove(i)
+                self.all_dirty = True
                 break
         return None
 
@@ -60,13 +74,16 @@ class App(object):
         return return_events
 
     def render(self):
-        if self.dirty:
+        if self.all_dirty:
             self.surface.fill(self.background_color)
             self.widgets.reverse()
             for i in self.widgets:
                 i.render(self.surface)
             self.widgets.reverse()
-            self.dirty = False
+            self.all_dirty = False
+        for i in self.dirty:
+            self.dirty = []
+            i.render(self.surface)
         return self.surface
 
         
@@ -117,6 +134,8 @@ class Widget(object):
     def __init__(self, parent, pos = (-1, -1), name="",
                  widget_pos="topleft", theme=None):
         self.name = name
+
+        self.on_top_of_me = []
         self.parent = parent
         self.parent.add_widget(self)
 
@@ -143,8 +162,11 @@ class Widget(object):
     def get_mouse_pos(self):
         return self.parent.get_mouse_pos()
 
-    def force_update(self):
-        self.parent.force_update()
+    def force_update(self, o=None):
+        if o:
+            self.parent.force_update("ALL")
+        else:
+            self.parent.force_update(self)
 
     def event(self, event):
         return event
@@ -229,8 +251,19 @@ class Label(Widget):
         self.move()
         return None
 
+    def render_on_top(self, surface, rect):
+        if self.rect.colliderect(rect):
+            r = self.rect.clip(rect)
+            l = r.left - self.rect.left
+            t = r.top - self.rect.top
+            surface.blit(self.comp_image, r.topleft,
+                         (l,t, r.width, r.height))
+        return None
+
     def render(self, surface):
         surface.blit(self.comp_image, self.rect.topleft)
+        for i in self.on_top_of_me:
+            i.render_on_top(surface, self.rect)
         return None
 
 class Button(Widget):
@@ -335,8 +368,18 @@ class Button(Widget):
         self.move()
         return None
 
+    def render_on_top(self, surface, rect):
+        if self.rect.colliderect(rect):
+            r = self.rect.clip(rect)
+            l = r.left - self.rect.left
+            t = r.top - self.rect.top
+            surface.blit(self.image, r.topleft,
+                         (l,t, r.width, r.height))
+
     def render(self, surface):
         surface.blit(self.image, self.rect.topleft)
+        for i in self.on_top_of_me:
+            i.render_on_top(surface, self.rect)
         return None
 
     def change_image(self, new):
@@ -505,12 +548,19 @@ class Area(Widget):
         self.surface = self.draw_area.subsurface((0,0), new)
         return None
 
+    def set_dirty_on_widgets(self):
+        self.widgets.reverse()
+        for i in xrange(len(self.widgets)):
+            self.widgets[i].on_top_of_me = self.widgets[i+1::]
+        self.widgets.reverse()
+
     def add_widget(self, widg):
         if not self.lock_add_widgets:
             self.widgets.insert(0, widg)
             widg.parent = self
             self.new_widgets = True
             self.force_update()
+            self.set_dirty_on_widgets()
         return None
 
     def move_to_top(self, other):
@@ -522,6 +572,7 @@ class Area(Widget):
             if not i == other:
                 i.not_active()
         self.force_update()
+        self.set_dirty_on_widgets()
         return None
 
     def remove_widget(self, name):
@@ -621,6 +672,9 @@ class MenuList(Widget):
         y -= self.rect.top + self.draw_area.get_offset()[1]
         return x, y
 
+    def force_update(self, o=None):
+        self.parent.force_update(self)
+
     def make_image(self):
         buttons = []
         self.theme.button["default"] = self.theme.menu["entry-default"]
@@ -695,10 +749,20 @@ class MenuList(Widget):
     def not_active(self):
         self.Area.not_active()
 
+    def render_on_top(self, surface, rect):
+        if self.rect.colliderect(rect):
+            r = self.rect.clip(rect)
+            l = r.left - self.rect.left
+            t = r.top - self.rect.top
+            surface.blit(self.surface, r.topleft,
+                         (l,t, r.width, r.height))
+
     def render(self, surface):
         self.background.blit(self.back_copy, (0,0))
         self.Area.render(self.background)
         surface.blit(self.surface, self.rect)
+        for i in self.on_top_of_me:
+            i.render_on_top(surface, self.rect)
         return None
 
     def event(self, event):
@@ -796,11 +860,21 @@ class Menu(Widget):
 
         return event
 
+    def render_on_top(self, surface, rect):
+        self.button.render_on_top(surface, rect)
+        if self.widget_vis:
+            self.other.render_on_top(surface, rect)
+
     def render(self, surface):
         self.button.render(surface)
         if self.widget_vis:
             self.other.render(surface)
+        for i in self.on_top_of_me:
+            i.render_on_top(surface, self.rect)
         return None
+
+    def force_update(self, o=None):
+        self.parent.force_update(self)
 
 class TextInputBox(Widget):
     def __init__(self, parent, pos, name,
@@ -881,11 +955,21 @@ class TextInputBox(Widget):
             return None
         return None
 
+    def render_on_top(self, surface, rect):
+        if self.rect.colliderect(rect):
+            r = self.rect.clip(rect)
+            l = r.left - self.rect.left
+            t = r.top - self.rect.top
+            surface.blit(self.tex_surface, r.topleft,
+                         (l,t, r.width, r.height))
+
     def render(self, surface):
         pos = self.rect.topleft
         surface.blit(self.surface, pos)
         surface.blit(self.tex_surface, (pos[0] + self.__surf_size[0],
                                         pos[1] + self.__surf_size[1]))
+        for i in self.on_top_of_me:
+            i.render_on_top(surface, self.rect)
         return None
 
     def event(self, event):
@@ -1002,10 +1086,13 @@ class WindowBar(object):
         self.moveup()
 
     def moveup(self):
-        self.parent.force_update()
+        self.parent.force_update(self)
 
-    def force_update(self):
-        self.parent.force_update()
+    def force_update(self, o=None):
+        if o:
+            self.parent.force_update("ALL")
+        else:
+            self.parent.force_update(self)
 
     def get_mouse_pos(self):
         return self.parent.get_mouse_pos()
@@ -1057,7 +1144,15 @@ class WindowBar(object):
                     self.min_button.move(event.rel)
                     self.max_button.move(event.rel)
                     self.attach_to.move(event.rel)
+                    self.force_update("ALL")
         return event
+
+    def render_on_top(self, surface, rect):
+        self.bar.render_on_top(surface,rect)
+        if self.minimized:
+            self.max_button.render_on_top(surface, rect)
+        else:
+            self.min_button.render_on_top(surface, rect)
 
     def render(self, surface):
         self.bar.render(surface)
@@ -1177,6 +1272,16 @@ class Window(Widget):
         self.Area.remove_widget(name)
         return None
 
+    def render_on_top(self, surface, rect):
+        if self.rect.colliderect(rect):
+            if not self.drag_bar.minimized:
+                r = self.rect.clip(rect)
+                l = r.left - self.rect.left
+                t = r.top - self.rect.top
+                surface.blit(self.border, r.topleft,
+                             (l,t, r.width, r.height))
+        self.drag_bar.render_on_top(surface, rect)
+
     def render(self, surface):
         self.surface.fill((0,0,0,0))
         self.surface.blit(self.__old_draw_area, (0, 0))
@@ -1186,6 +1291,8 @@ class Window(Widget):
         if not self.drag_bar.minimized:
             pos = self.rect.topleft
             surface.blit(self.border, pos)
+        for i in self.on_top_of_me:
+            i.render_on_top(surface, self.rect)
         return None
 
 
