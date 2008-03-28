@@ -18,7 +18,7 @@
 
 import pyglet
 
-from graphics import colors
+from graphics.colors import *
 import overlay
 import config
 
@@ -28,7 +28,7 @@ class Menu(overlay.Overlay):
         self.items = []
         font = pyglet.font.load(font_name, 48)
         self.title_text = pyglet.font.Text(font, text=title, x=x, y=y,
-                                           color=colors.dark_orange,
+                                           color=cnormalize(dark_orange),
                                            halign='center', valign='center')
         self.selected_index = 0
 
@@ -71,7 +71,7 @@ class MenuItem(object):
     def __init__(self, label, callback, font_name=None):
         self.callback = callback
         font = pyglet.font.load(font_name, 18)
-        self.text = pyglet.font.Text(font, text=label, color=colors.grey,
+        self.text = pyglet.font.Text(font, text=label, color=cnormalize(grey),
                                      halign='center', valign='center')
 
     def has_point(self, x, y):
@@ -84,9 +84,9 @@ class MenuItem(object):
 
     def draw(self, selected):
         if selected:
-            self.text.color = colors.white
+            self.text.color = cnormalize(white)
         else:
-            self.text.color = colors.grey
+            self.text.color = cnormalize(grey)
         self.text.draw()
 
     def on_key_press(self, symbol, modifiers):

@@ -18,13 +18,13 @@
 
 import pyglet
 
-from graphics import colors
+from graphics.colors import *
 import overlay
 import config
 
 
 class ChatBox(overlay.Overlay):
-    def __init__(self, x, y, width, height, callback):
+    def __init__(self, x, y, width, height, callback, ti_align='top'):
         self.x = x
         self.y = y
         self.width = width
@@ -33,7 +33,7 @@ class ChatBox(overlay.Overlay):
 
         # Scrollable text display for chat messages.
         self.text_display = pyglet.text.document.UnformattedDocument()
-        self.text_display.set_style(0, 0, {"color": (114, 159, 207, 255)})
+        self.text_display.set_style(0, 0, {"color": grey})
         self.td_layout = pyglet.text.layout.IncrementalTextLayout(self.text_display,
                                                                   width, height,
                                                                   multiline=True)
@@ -42,19 +42,23 @@ class ChatBox(overlay.Overlay):
 
         # Text input with a caret for nice editing.
         self.text_input = pyglet.text.document.UnformattedDocument()
-        self.text_input.set_style(0, 0, {"color": (163, 163, 163, 255)})
+        self.text_input.set_style(0, 0, {"color": grey})
         self.ti_layout = pyglet.text.layout.IncrementalTextLayout(self.text_input,
                                                                   width,
                                                                   20)
         self.ti_layout.x = x
-        self.ti_layout.y = y+25
-        self.ti_layout.selection_color = (46, 52, 54, 255)
-        self.ti_layout.selection_background_color = (163, 163, 163, 255)
+        if ti_align != 'top':
+            self.ti_layout.y = y - height
+        else:
+            self.ti_layout.y = y+25
+        self.ti_layout.selection_color = black
+        self.ti_layout.selection_background_color = grey
         self.ti_caret = pyglet.text.caret.Caret(self.ti_layout)
-        self.ti_caret.color = (163, 163, 163)
+        self.ti_caret.color = grey[:-1]
 
     def add_text(self, text):
-        self.text_display.insert_text(0, text + "\n")
+        self.text_display.insert_text(len(self.text_display.text), '\n' + text)
+        self.td_layout.view_y -= 10000000 # Probably a little hackish.
 
     def on_text(self, text):
         if ord(text) != 13: # Hack. Do not want hard returns showing up.

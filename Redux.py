@@ -28,7 +28,8 @@ from pyglet.gl import *
 from network import pausingreactor; pausingreactor.install()
 from twisted.internet import reactor
 
-from graphics import colors, sprite3d, model, scene
+from graphics import scene
+from graphics.colors import *
 from network.basic import Client
 import config
 
@@ -40,7 +41,7 @@ class Redux(pyglet.window.Window):
         # Initialize Opengl state
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glClearColor(*colors.black)
+        glClearColor(*cnormalize(black))
 
         # Setup scene
         self.scenes = []

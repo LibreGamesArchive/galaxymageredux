@@ -15,10 +15,9 @@ Make a list of all needed basic overlays:
   where people pick their teams/color/army(lobby)
 
 ChatBox:
-  chat history. Able to access up to x lines by pressing up or down.
-  ctrl-c, ctrl-v, ctrl-x copy, past, cut
-  add possible background color and/or border
-  make where the text input box is customizable (top or bottom)
+  ctrl-c, ctrl-v, ctrl-x copy, past, cut for input and display
+  allow coloring of names (using pyglet htmldoc?).
+  / commands in server (not really part of chatbox but works for now.)
 
 Make a list of all the needed basic underlays:
   units

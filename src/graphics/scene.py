@@ -124,7 +124,7 @@ class GameScene(Scene, Client):
         self.connect()
 
         # Create underlays and overlays.
-        self.chatbox = overlay.ChatBox(10, 250, 350, 200, self.send_message)
+        self.chatbox = overlay.ChatBox(10, 250, 350, 200, self.send_message, 'bottom')
         self.overlays.append(self.chatbox)
 
         # Set one of them active.
