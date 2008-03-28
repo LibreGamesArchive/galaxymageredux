@@ -1,5 +1,6 @@
 Create a way of destroying a server and disconnecting from a server.
 Investigate why the new way of handling the reactor slows things down.
+Look into a better way of handling scene heirarchy.
 Clean up 3d model/Animation/Sprite/codec code.
 Model, texture and animate for basic classes (mage, ranger, warrior, rogue)
 Test on windows/find tester for mac osx
