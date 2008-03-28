@@ -18,6 +18,10 @@
 # Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
+# Add our src directory to the path.
+import sys
+sys.path.insert(0, 'src')
+
 import pyglet
 pyglet.options['debug_gl'] = False
 from pyglet.gl import *
