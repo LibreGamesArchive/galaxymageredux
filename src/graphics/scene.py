@@ -27,9 +27,8 @@ from network.realm import Realm
 import config
 
 
-for datadir in config.datadirs:
-            pyglet.resource.path.append(datadir)
-            pyglet.resource.reindex()
+pyglet.resource.path.extend(config.datadirs)
+pyglet.resource.reindex()
 pyglet.resource.add_font('quark.ttf')
 
 

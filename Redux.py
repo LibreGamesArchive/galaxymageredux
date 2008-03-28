@@ -78,7 +78,6 @@ class Redux(pyglet.window.Window):
         self.scene.draw()
         if config.fps:
             self.fps_display.draw()
-        reactor.resume()
 
     def update(self, dt):
         if self.next_scene:
@@ -94,7 +93,6 @@ class Redux(pyglet.window.Window):
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
             self.pop_scene()
-        reactor.resume()
 
 
 # ---------------------------------------------------------------------------

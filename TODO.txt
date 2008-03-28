@@ -1,15 +1,21 @@
 Create a way of destroying a server and disconnecting from a server.
-Investigate why the new way of handling the reactor slows things down.
 Look into a better way of handling scene heirarchy.
+Error function/recovery for twisted.
 Clean up 3d model/Animation/Sprite/codec code.
 Model, texture and animate for basic classes (mage, ranger, warrior, rogue)
 Test on windows/find tester for mac osx
 Need Camera class.
 Make a list of all needed basic overlays:
-  chat box
-  menu
-  menu items (toggle, text entry, choice, key/joy entry, value scroll)
-  display that shows an avatar with stats in order of who's turn it will be.
+ *chat box
+ *menu
+  menu items
+   *normal
+   *toggle
+    text entry
+    choice
+    key/joy entry
+    value scroll)
+  display that shows all units; avatar with stats in order of who's turn it will be.
   dialogue
   the action widget (attack, do nothing, spell/ability, etc)
   where people pick their teams/color/army(lobby)
