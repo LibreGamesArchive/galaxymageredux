@@ -1,23 +1,10 @@
-Above all, we would like to thank Colin McMillen for the initial idea and
-work on GalaxyMage.  Without his hard work and vision, GalaxyMage Redux
-would not be a reality.
+Contributors:
+    A. Joseph Hager <ajhager@gmail.com> - Programming, Design, Art
+    Matthew Roe (RB[0]) <roebros@gmail.com> - Programming, Design
+    Markus Martin <archwyrm@gmail.com> - Programming, Design
 
-Programming
------------
-A. Joseph Hager <ajhager@gmail.com>
-Matthew Roe (RB[0]) <roebros@gmail.com>
-Markus Martin <archwyrm@gmail.com>
-
-Art
----
-
-Audio
------
-
-Documentation
--------------
-
-Special thanks
---------------
-Campbell Barton and Jiri Hnidek for their Blender OBJ exporter
-
+Thank you:
+    Colin McMillen - For your idea and hardwork on GalaxyMage.
+    Alex Holkner - Thank you so much for writing pyglet so we didn't have to!
+    Campbell Barton and Jiri Hnidek - Blender OBJ exporter
+    David Keeney - Pausing Reactor

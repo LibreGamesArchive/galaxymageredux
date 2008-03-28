@@ -1,0 +1,30 @@
+Create a way of destroying a server and disconnecting from a server.
+Investigate why the new way of handling the reactor slows things down.
+Clean up 3d model/Animation/Sprite/codec code.
+Model, texture and animate for basic classes (mage, ranger, warrior, rogue)
+Test on windows/find tester for mac osx
+Need Camera class.
+Make a list of all needed basic overlays:
+  chat box
+  menu
+  menu items (toggle, text entry, choice, key/joy entry, value scroll)
+  display that shows an avatar with stats in order of who's turn it will be.
+  dialogue
+  the action widget (attack, do nothing, spell/ability, etc)
+  where people pick their teams/color/army(lobby)
+
+ChatBox:
+  chat history. Able to access up to x lines by pressing up or down.
+  ctrl-c, ctrl-v, ctrl-x copy, past, cut
+  add possible background color and/or border
+  make where the text input box is customizable (top or bottom)
+
+Make a list of all the needed basic underlays:
+  units
+  particle effects
+  2d billboards (units taking damage, etc.)
+  map
+
+Ideas:
+  voice chat
+  In multiplayer, create a top down view, and allow team members to draw on it.
