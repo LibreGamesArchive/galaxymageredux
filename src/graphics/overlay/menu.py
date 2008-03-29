@@ -26,6 +26,7 @@ import config
 class Menu(overlay.Overlay):
     def __init__(self, title, x, y, font_name=None):
         self.items = []
+        self.font_name = font_name
         font = pyglet.font.load(font_name, 48)
         self.title_text = pyglet.font.Text(font, text=title, x=x, y=y,
                                            color=cnormalize(dark_orange),
@@ -37,8 +38,12 @@ class Menu(overlay.Overlay):
         self.items[self.selected_index].selected = True
 
     def add_item(self, item):
+        font = pyglet.font.load(self.font_name, 18)
+        item.text = pyglet.font.Text(font, text=item.text, color=cnormalize(grey),
+                                     halign='center', valign='center')
         item.text.x = self.title_text.x
         item.text.y = self.title_text.y - (len(self.items) + 2) * 40
+
         self.items.append(item)
 
     def on_key_press(self, symbol, modifiers):
@@ -68,11 +73,9 @@ class Menu(overlay.Overlay):
 
 
 class MenuItem(object):
-    def __init__(self, label, callback, font_name=None):
+    def __init__(self, label, callback):
         self.callback = callback
-        font = pyglet.font.load(font_name, 18)
-        self.text = pyglet.font.Text(font, text=label, color=cnormalize(grey),
-                                     halign='center', valign='center')
+        self.text = label
 
     def has_point(self, x, y):
         my_x = self.text.x
@@ -99,13 +102,10 @@ class MenuItem(object):
 
 
 class ToggleMenuItem(MenuItem):
-    def __init__(self, label, value, callback, font_name=None):
+    def __init__(self, label, value, callback):
         self.value = value
         self.label = label
-        self.callback = callback
-        super(ToggleMenuItem, self).__init__(self.get_label(),
-                                             self.callback,
-                                             font_name)
+        MenuItem.__init__(self, self.get_label(), callback)
 
     def get_label(self):
         return self.label + (self.value and ': ON' or ': OFF')

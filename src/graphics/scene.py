@@ -27,7 +27,13 @@ from network.realm import Realm
 import config
 
 
-pyglet.resource.path.extend(config.datadirs)
+pyglet.resource.path.extend(['data/core/font',
+                             'data/core/image',
+                             'data/core/map',
+                             'data/core/model',
+                             'data/core/music',
+                             'data/core/sfx',
+                             'data/core/music'])
 pyglet.resource.reindex()
 pyglet.resource.add_font('quark.ttf')
 
@@ -80,46 +86,65 @@ class Scene(object):
             overlay.update(dt)
 
 
-class IntroScene(Scene, Client):
+class IntroScene(Scene):
     def __init__(self, window):
         Scene.__init__(self, window)
-        # Temporary hack to minimize port conflicts.
-        port = random.randint(1025, 10000)
-        Client.__init__(self, 'localhost', port, config.user)
-
-        # Create and start server.
-        self.realm = Realm(port, Server())
-        self.realm.start()
-        self.connect()
 
         # Create underlays and overlays.
         self.menu = overlay.Menu('Redux', 400, 400, font_name='Quark')
-        self.menu.add_item(overlay.MenuItem('Start Game',
-                                            self.start_game,
-                                            font_name='Quark'))
-        self.menu.add_item(overlay.ToggleMenuItem('Vsync',
-                                                  self.window.vsync,
-                                                  self.window.set_vsync,
-                                                  font_name='Quark'))
+        self.menu.add_item(overlay.MenuItem('Start Game', self.start_game))
+        self.menu.add_item(overlay.MenuItem('Join Game', self.join_game))
+        self.menu.add_item(overlay.MenuItem('Options', lambda: None))
+        self.menu.add_item(overlay.MenuItem('About', lambda: None))
+        self.menu.add_item(overlay.MenuItem('Quit', self.window.pop_scene))
+        #self.menu.add_item(overlay.ToggleMenuItem('Vsync', self.window.vsync,
+        #                                          self.window.set_vsync))
         self.overlays.append(self.menu)
 
         # Set one of them active.
         self.active = self.menu
 
     def start_game(self):
-        self.window.push_scene(GameScene(self.window))
+        self.window.push_scene(LocalGameScene(self.window))
+
+    def join_game(self):
+        self.window.push_scene(NetworkGameScene(self.window, 'localhost', 44444))
 
 
-class GameScene(Scene, Client):
+class LocalGameScene(Scene, Client):
     def __init__(self, window):
         Scene.__init__(self, window)
         # Temporary hack to minimize port conflicts.
-        port = random.randint(1025, 10000)
-        Client.__init__(self, 'localhost', port, config.user)
+        port = random.randint(1025, 100000)
+        Client.__init__(self, 'localhost', 44444, config.user)
 
         # Create and start server.
-        self.realm = Realm(port, Server())
+        self.realm = Realm(44444, Server())
         self.realm.start()
+        self.connect()
+
+        # Create underlays and overlays.
+        self.chatbox = overlay.ChatBox(10, 250, 350, 200, self.send_message, 'bottom')
+        self.overlays.append(self.chatbox)
+
+        # Set one of them active.
+        self.active = self.chatbox
+
+    # send_ = to server, message
+    def send_message(self, msg):
+        self.avatar.callRemote('message', msg)
+
+    # remote_ = from server, message
+    def remote_message(self, msg):
+        self.chatbox.add_text(msg)
+
+
+class NetworkGameScene(Scene, Client):
+    def __init__(self, window, host, port):
+        Scene.__init__(self, window)
+        Client.__init__(self, host, port, config.user)
+
+        # Create and start server.
         self.connect()
 
         # Create underlays and overlays.

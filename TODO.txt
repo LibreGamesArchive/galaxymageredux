@@ -1,3 +1,19 @@
+First release:
+  Make it possible to disconnect from a server.
+  Make a dedicated server and run it on ajhager.com
+  Make interesting menus.
+  menu with servers listed "ajhager.com" is the only one.
+  scene that connects to ajhager.com.
+  some kind of 3d model animating in the background.
+  And just chat functionality (finish chat features) /who command.
+
+Scenes:
+  The way I have scenes now isn't exactly what we need.
+  At the window level, we only need to be able to 'set' the scene.
+  at the scene level we need overlay's and underlays.
+  lays have visible flag to start and stop drawing.
+  scenes manage who gets input.
+
 Create a way of destroying a server and disconnecting from a server.
 Look into a better way of handling scene heirarchy.
 Error function/recovery for twisted.

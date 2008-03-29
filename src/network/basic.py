@@ -30,12 +30,12 @@ class Server(object):
         self.type = ''
 
     def join(self, avatar):
-        self.remoteAll("chat", "* %s joined the server *" % avatar.name)
+        self.remoteAll("message", "* %s joined the server *" % avatar.name)
         self.avatars.append(avatar)
 
     def leave(self, avatar):
         self.avatars.remove(avatar)
-        self.remoteAll("chat", " *%s left the server* " % avatar.name)
+        self.remoteAll("message", " * %s left the server * " % avatar.name)
 
     def remote(self, avatar, action, *args):
         df = avatar.client.callRemote(action, *args)
@@ -119,4 +119,3 @@ class Client(pb.Referenceable):
 
     def shutdown(self, result):
         print result
-        reactor.stop()
