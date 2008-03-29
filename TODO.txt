@@ -1,52 +1,24 @@
-First release:
-  Make it possible to disconnect from a server.
-  Make a dedicated server and run it on ajhager.com
-  Make interesting menus.
-  menu with servers listed "ajhager.com" is the only one.
-  scene that connects to ajhager.com.
-  some kind of 3d model animating in the background.
-  And just chat functionality (finish chat features) /who command.
-
-Scenes:
-  The way I have scenes now isn't exactly what we need.
-  At the window level, we only need to be able to 'set' the scene.
-  at the scene level we need overlay's and underlays.
-  lays have visible flag to start and stop drawing.
-  scenes manage who gets input.
-
-Create a way of destroying a server and disconnecting from a server.
-Look into a better way of handling scene heirarchy.
 Error function/recovery for twisted.
+Error checking in callbacks.
+Stop cursor blinking in menus if not selected.
+Fix any crashes.
+Make it possible to disconnect from and destroy a server.
+
+Make resolution configurable.
+Make changes to the config file savable.
+Need Camera class.
 Clean up 3d model/Animation/Sprite/codec code.
 Model, texture and animate for basic classes (mage, ranger, warrior, rogue)
-Test on windows/find tester for mac osx
-Need Camera class.
-Make a list of all needed basic overlays:
- *chat box
- *menu
-  menu items
-   *normal
-   *toggle
-    text entry
-    choice
-    key/joy entry
-    value scroll)
-  display that shows all units; avatar with stats in order of who's turn it will be.
-  dialogue
-  the action widget (attack, do nothing, spell/ability, etc)
-  where people pick their teams/color/army(lobby)
+Look into a better way of handling scene heirarchy.
 
-ChatBox:
-  ctrl-c, ctrl-v, ctrl-x copy, past, cut for input and display
-  allow coloring of names (using pyglet htmldoc?).
-  / commands in server (not really part of chatbox but works for now.)
+display that shows all units; avatar with stats in order of who's turn it will be.
+dialogue
+the action widget (attack, do nothing, spell/ability, etc)
+where people pick their teams/color/army(lobby)
+units
+particle effects
+2d billboards (units taking damage, etc.)
+map
 
-Make a list of all the needed basic underlays:
-  units
-  particle effects
-  2d billboards (units taking damage, etc.)
-  map
-
-Ideas:
-  voice chat
-  In multiplayer, create a top down view, and allow team members to draw on it.
+Find tester for mac osx
+In multiplayer, create a top down view, and allow team members to draw on it.

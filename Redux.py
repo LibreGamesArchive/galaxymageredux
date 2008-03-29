@@ -36,42 +36,21 @@ import config
 class Redux(pyglet.window.Window):
     def __init__(self):
         pyglet.window.Window.__init__(self, config.width, config.height,
-                caption='Redux 0.1')
+                caption='Redux 0.1-alpha1')
 
         # Initialize Opengl state
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glClearColor(*cnormalize(black))
 
-        # Setup scene
-        self.scenes = []
-        self.scene = None
-        self.next_scene = None
-        self.push_scene(self.scene)
-        self._set_scene(scene.IntroScene(self))
+        # Set up scene.
+        self.scene = scene.IntroScene()
 
         # Creat fps display
         self.fps_display = pyglet.clock.ClockDisplay()
 
         # Schedule game updates
         pyglet.clock.schedule_interval(self.update, 1/60.)
-
-    def _set_scene(self, scene):
-        self.next_scene = None
-        if self.scene:
-            self.scene.exit()
-        self.scene = scene
-        scene.enter()
-
-    def push_scene(self, scene):
-        self.next_scene = scene
-        self.scenes.append(self.scene)
-
-    def pop_scene(self):
-        self.next_scene = self.scenes.pop()
-
-    def replace_scene(self, scene):
-        self.next_scene = scene
 
     def on_draw(self):
         self.clear()
@@ -80,19 +59,16 @@ class Redux(pyglet.window.Window):
             self.fps_display.draw()
 
     def update(self, dt):
-        if self.next_scene:
-            self._set_scene(self.next_scene)
-
-        if not self.scenes:
-            reactor.stop()
-            pyglet.app.exit()
-
         self.scene.update(dt)
         reactor.resume()
 
+    def quit(self):
+        reactor.stop()
+        pyglet.app.exit()
+
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ESCAPE:
-            self.pop_scene()
+            self.quit()
 
 
 # ---------------------------------------------------------------------------

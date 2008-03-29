@@ -35,16 +35,13 @@ class Menu(overlay.Overlay):
 
     def reset(self):
         self.selected_index = 0
-        self.items[self.selected_index].selected = True
 
-    def add_item(self, item):
-        font = pyglet.font.load(self.font_name, 18)
-        item.text = pyglet.font.Text(font, text=item.text, color=cnormalize(grey),
-                                     halign='center', valign='center')
-        item.text.x = self.title_text.x
-        item.text.y = self.title_text.y - (len(self.items) + 2) * 40
-
-        self.items.append(item)
+    def add_items(self, items):
+        for item in items:
+            item.doc.set_style(0, 0, {'font_name': self.font_name})
+            item.text.x = self.title_text.x
+            item.text.y = self.title_text.y - (len(self.items) + 2) * 40
+            self.items.append(item)
 
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.DOWN:
@@ -66,6 +63,12 @@ class Menu(overlay.Overlay):
             if self.items[index].has_point(x, y):
                 self.selected_index = index
 
+    def on_text(self, text):
+        self.items[self.selected_index].on_text(text)
+
+    def on_text_motion(self, motion):
+        self.items[self.selected_index].on_text_motion(motion)
+
     def draw(self):
         self.title_text.draw()
         for i, item in enumerate(self.items):
@@ -74,22 +77,28 @@ class Menu(overlay.Overlay):
 
 class MenuItem(object):
     def __init__(self, label, callback):
+        self.doc = pyglet.text.document.UnformattedDocument(label)
+        self.doc.set_style(0, 0, {'color': grey})
+        self.doc.set_style(0, 0, {'font_size': 18})
+        self.text = pyglet.text.layout.IncrementalTextLayout(self.doc, 400, 40)
+        self.text.valign = 'center'
+        self.text.halign = 'center'
         self.callback = callback
-        self.text = label
+        self.selected = False
 
     def has_point(self, x, y):
         my_x = self.text.x
         my_y = self.text.y
-        my_w = self.text.width
-        my_h = self.text.height
+        my_w = self.text.content_width
+        my_h = self.text.content_height
         return x >= my_x - my_w/2 and x <= my_x + my_w/2 and \
-                y >=my_y - my_h/2 and y <= my_y + my_h/2 
+                y >= my_y - my_h/2 and y <= my_y + my_h/2 
 
     def draw(self, selected):
         if selected:
-            self.text.color = cnormalize(white)
+            self.doc.set_style(0, 0, {'color': white})
         else:
-            self.text.color = cnormalize(grey)
+            self.doc.set_style(0, 0, {'color': grey})
         self.text.draw()
 
     def on_key_press(self, symbol, modifiers):
@@ -99,6 +108,45 @@ class MenuItem(object):
     def on_mouse_press(self, x, y, button, modifiers):
         if button == pyglet.window.mouse.LEFT:
             self.callback()
+
+    def on_text(self, text):
+        pass
+
+    def on_text_motion(self, motion):
+        pass
+            
+
+class InputMenuItem(MenuItem):
+    def __init__(self, label, value, callback):
+        self.label = label + ': '
+        MenuItem.__init__(self, self.label + str(value), callback)
+        self.caret_position = len(self.label)
+        self.caret = pyglet.text.caret.Caret(self.text)
+        self.caret.color = grey[:-1]
+        self.caret.position = len(self.doc.text)
+
+    def on_text(self, text):
+        if ord(text) != 13:
+            self.caret.on_text(text)
+            self.callback(self.doc.text[self.caret_position:])
+
+    def on_text_motion(self, motion):
+        if (motion == pyglet.window.key.MOTION_BACKSPACE or \
+                motion == pyglet.window.key.MOTION_LEFT) and \
+                self.caret.position != self.caret_position:
+            self.caret.on_text_motion(motion)
+            self.callback(self.doc.text[self.caret_position:])
+
+        if motion == pyglet.window.key.MOTION_DELETE or \
+                motion == pyglet.window.key.MOTION_RIGHT:
+            self.caret.on_text_motion(motion)
+            self.callback(self.doc.text[self.caret_position:])
+
+    def on_key_press(self, symbol, modifiers):
+        pass
+
+    def on_mouse_press(self, x, y, button, modifiers):
+        pass
 
 
 class ToggleMenuItem(MenuItem):
@@ -113,23 +161,11 @@ class ToggleMenuItem(MenuItem):
     def on_key_press(self, symbol, modifiers):
         if symbol == pyglet.window.key.ENTER:
             self.value = not self.value
-            self.text.text = self.get_label()
+            self.doc.text = self.get_label()
             self.callback(self.value)
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button == pyglet.window.mouse.LEFT:
             self.value = not self.value
-            self.text.text = self.get_label()
+            self.doc.text = self.get_label()
             self.callback(self.value)
-
-
-#class TextInputMenuItem(MenuItem):
-#    def __init__(self, label, value, callback):
-#        self.label = label
-#        self.value = value
-#        self.callback = callback
-#        self.text_input = TextInput(
-#        super(TextInputMenuItem, self).__init__(self.label, self.callback)
-#
-#    def on_key_press(self, symbol, modifiers):
-#        pass

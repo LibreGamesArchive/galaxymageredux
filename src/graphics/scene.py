@@ -21,7 +21,8 @@ import random
 import pyglet
 from pyglet.gl import *
 
-from graphics import model, sprite3d, colors, overlay
+from graphics.overlay import Menu, MenuItem, ToggleMenuItem, InputMenuItem, ChatBox
+from graphics.colors import *
 from network.basic import Client, Server
 from network.realm import Realm
 import config
@@ -39,11 +40,13 @@ pyglet.resource.add_font('quark.ttf')
 
 
 class Scene(object):
-    def __init__(self, window):
-        self.window = window
+    def __init__(self):
+        self.window = None
+        for window in pyglet.app.windows:
+            self.window = window
+
         self.overlays = [] # 2d
         self.underlays = [] # 3d
-        self.active = None
 
     def setup_2d(self):
         glMatrixMode(GL_PROJECTION)
@@ -59,17 +62,12 @@ class Scene(object):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
-    def activate(self, lay):
-        self.window.pop_handlers()
-        self.active = lay
-        self.window.push_handlers(self.active)
+    def update(self, dt):
+        for underlay in self.underlays:
+            underlay.update(dt)
+        for overlay in self.overlays:
+            overlay.update(dt)
 
-    def enter(self):
-        self.window.push_handlers(self.active)
-
-    def exit(self):
-        self.window.pop_handlers()
-            
     def draw(self):
         self.setup_3d()
         for underlay in self.underlays:
@@ -79,80 +77,95 @@ class Scene(object):
         for overlay in self.overlays:
             overlay.draw()
 
-    def update(self, dt):
-        for underlay in self.underlays:
-            underlay.update(dt)
-        for overlay in self.overlays:
-            overlay.update(dt)
-
 
 class IntroScene(Scene):
-    def __init__(self, window):
-        Scene.__init__(self, window)
+    def __init__(self):
+        Scene.__init__(self)
 
-        # Create underlays and overlays.
-        self.menu = overlay.Menu('Redux', 400, 400, font_name='Quark')
-        self.menu.add_item(overlay.MenuItem('Start Game', self.start_game))
-        self.menu.add_item(overlay.MenuItem('Join Game', self.join_game))
-        self.menu.add_item(overlay.MenuItem('Options', lambda: None))
-        self.menu.add_item(overlay.MenuItem('About', lambda: None))
-        self.menu.add_item(overlay.MenuItem('Quit', self.window.pop_scene))
-        #self.menu.add_item(overlay.ToggleMenuItem('Vsync', self.window.vsync,
-        #                                          self.window.set_vsync))
-        self.overlays.append(self.menu)
+        # Main Menu.
+        self.main_menu = Menu('Redux', 400, 400, font_name='Quark')
+        self.main_menu.add_items([MenuItem('Start Game', self.start_game),
+                                  MenuItem('Join Game', self.focus_join_game_menu),
+                                  MenuItem('Options', self.focus_options_menu),
+                                  MenuItem('Quit', self.window.quit)])
 
-        # Set one of them active.
-        self.active = self.menu
+        # Join Game Menu.
+        self.join_game_host = 'localhost'
+        self.join_game_port = 44444
+        self.join_game_menu = Menu('Start Game', 400, 400, font_name='Quark')
+        self.join_game_menu.add_items([InputMenuItem('Host', self.join_game_host, self.set_join_game_host),
+                                       InputMenuItem('Port', self.join_game_port, self.set_join_game_port),
+                                       MenuItem('Join', self.join_game),
+                                       MenuItem('Back', self.focus_main_menu)])
+
+        # Options Menu.
+        self.options_menu = Menu('Options', 400, 400, font_name='Quark')
+        self.options_menu.add_items([InputMenuItem('Name', config.name, self.set_name),
+                                     ToggleMenuItem('Fps', config.fps, self.set_fps),
+                                     ToggleMenuItem('Vsync', self.window.vsync, self.window.set_vsync),
+                                     ToggleMenuItem('Sound', config.sound, self.set_sound),
+                                     MenuItem('Back', self.focus_main_menu)])
+
+        # Set up initial scene.
+        self.focus_main_menu()
+
+    def focus_main_menu(self):
+        self.set_menu(self.main_menu)
+
+    def focus_join_game_menu(self):
+        self.set_menu(self.join_game_menu)
+
+    def focus_options_menu(self):
+        self.set_menu(self.options_menu)
+
+    def set_menu(self, menu):
+        self.window.remove_handlers(*self.overlays)
+        self.overlays = [menu]
+        self.window.push_handlers(*self.overlays)
+
+    def set_sound(self, value):
+        config.sound = value
+
+    def set_name(self, value):
+        config.name = value
+
+    def set_fps(self, value):
+        config.fps = value
+
+    def set_join_game_host(self, value):
+        self.join_game_host = value
+
+    def set_join_game_port(self, value):
+        self.join_game_port = int(value)
 
     def start_game(self):
-        self.window.push_scene(LocalGameScene(self.window))
+        self.window.remove_handlers(*(self.overlays + self.underlays))
+        realm = Realm(44444, Server())
+        realm.start()
+        self.window.scene = GameScene()
 
     def join_game(self):
-        self.window.push_scene(NetworkGameScene(self.window, 'localhost', 44444))
+        self.window.remove_handlers(*(self.overlays + self.underlays))
+        self.window.scene = GameScene(self.join_game_host, self.join_game_port)
 
 
-class LocalGameScene(Scene, Client):
-    def __init__(self, window):
-        Scene.__init__(self, window)
-        # Temporary hack to minimize port conflicts.
-        port = random.randint(1025, 100000)
-        Client.__init__(self, 'localhost', 44444, config.user)
+class GameScene(Scene, Client):
+    def __init__(self, host='localhost', port=44444):
+        Scene.__init__(self)
+        Client.__init__(self, host, port, config.name)
 
-        # Create and start server.
-        self.realm = Realm(44444, Server())
-        self.realm.start()
+        # Join server.
         self.connect()
 
-        # Create underlays and overlays.
-        self.chatbox = overlay.ChatBox(10, 250, 350, 200, self.send_message, 'bottom')
-        self.overlays.append(self.chatbox)
+        # Chat box..
+        self.chatbox = ChatBox(10, 250, 350, 200, self.send_message, 'bottom')
 
-        # Set one of them active.
-        self.active = self.chatbox
+        # Set up initial scene.
+        self.overlays = [self.chatbox]
+        self.focus_chatbox()
 
-    # send_ = to server, message
-    def send_message(self, msg):
-        self.avatar.callRemote('message', msg)
-
-    # remote_ = from server, message
-    def remote_message(self, msg):
-        self.chatbox.add_text(msg)
-
-
-class NetworkGameScene(Scene, Client):
-    def __init__(self, window, host, port):
-        Scene.__init__(self, window)
-        Client.__init__(self, host, port, config.user)
-
-        # Create and start server.
-        self.connect()
-
-        # Create underlays and overlays.
-        self.chatbox = overlay.ChatBox(10, 250, 350, 200, self.send_message, 'bottom')
-        self.overlays.append(self.chatbox)
-
-        # Set one of them active.
-        self.active = self.chatbox
+    def focus_chatbox(self):
+        self.window.push_handlers(*self.overlays)
 
     # send_ = to server, message
     def send_message(self, msg):
