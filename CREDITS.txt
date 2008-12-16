@@ -5,6 +5,3 @@ Contributors:
 
 Thank you:
     Colin McMillen - For your idea and hardwork on GalaxyMage.
-    Alex Holkner - Thank you so much for writing pyglet so we didn't have to!
-    Campbell Barton and Jiri Hnidek - Blender OBJ exporter
-    David Keeney - Pausing Reactor

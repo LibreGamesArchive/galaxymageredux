@@ -1,8 +1,7 @@
 Redux: an open-source tactical RPG.
 http://galaxymageredux.googlecode.com/
 
-Copyright (c) 20007-2008 A. Joseph Hager <ajhager@gmail.com> and 
-contributors. See CREDITS.txt for more information.
+Copyright (c) 2008 GalaxyMage Redux contributors. See CREDITS.txt for more information.
 
 INSTALLATION
 
@@ -12,8 +11,8 @@ You will also need a couple of Python libraries.
 * Python
   http://python.org
 
-* Pyglet
-  http://pyglet.org
+* PyOpenGL
+  http://pyopengl.sourceforge.net/
 
 * Twisted
   http://twistedmatrix.com
