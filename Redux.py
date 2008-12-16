@@ -21,3 +21,6 @@
 # Add our src directory to the path.
 import sys
 sys.path.insert(0, 'src')
+
+import game
+game.play()
