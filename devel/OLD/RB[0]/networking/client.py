@@ -6,7 +6,7 @@ class ClientProtocol(tprotocol.Protocol):
         self.factory = factory
 
     def sendData(self, data):
-        reactor.callLater(0, self.transport.write, data)
+        self.transport.write(data)
 
     def dataReceived(self, data):
         self.factory.helper.receiveData(self.transport, data)
