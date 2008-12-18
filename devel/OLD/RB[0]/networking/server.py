@@ -41,7 +41,7 @@ class ServerHelper(object):
 
     def newConnection(self, transport):
         print "New Connection:", transport
-##        transport.write("Welcome!")
+        transport.write("Welcome!")
 
     def lostConnection(self, transport, reason):
         print "Lost Connection:", transport, "reason:\n", reason
@@ -49,7 +49,7 @@ class ServerHelper(object):
     def receiveData(self, transport, data):
         print "Received data from:", transport
         print ":->Data:", data
-##        transport.write(["Received", data])
+        transport.write("Received: "+data)
 
     def killTransport(self, transport):
         transport.loseConnection()
