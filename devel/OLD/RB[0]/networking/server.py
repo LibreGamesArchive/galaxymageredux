@@ -4,6 +4,10 @@ from twisted.internet.protocol import Protocol, Factory
 from twisted.internet import reactor
 from twisted.internet.tcp import Server as TStransport
 
+import safe_store
+
+END_LINE = "<*END_LINE*>"
+
 class ServerTransport(TStransport):
     def __init__(self, sock, protocol, client, server, sessionno):
         TStransport.__init__(self, sock, protocol, client, server, sessionno)
@@ -16,18 +20,15 @@ class ServerProtocol(Protocol):
 
     def connectionMade(self):
         self.helper().newConnection(self.transport)
-        self.factory.all_transports.append(self.transport)
 
     def dataReceived(self, data):
-        self.helper().receiveData(self.transport, data)
-        self.factory.all_transports[0].write("WelcomeX2!")
+        for d in data.split(END_LINE):
+            self.helper().receiveData(self.transport, safe_store.load(d))
 
     def connectionLost(self, reason):
         self.helper().lostConnection(self.transport, reason)
         if self.transport in self.factory.all_transports:
             self.factory.all_transports.remove(self.transport)
-        else:
-            print self.factory.all_transports
 
 class ServerHelper(object):
     def __init__(self):
@@ -41,7 +42,7 @@ class ServerHelper(object):
 
     def newConnection(self, transport):
         print "New Connection:", transport
-        transport.write("Welcome!")
+        self.write(transport, "Welcome!")
 
     def lostConnection(self, transport, reason):
         print "Lost Connection:", transport, "reason:\n", reason
@@ -49,10 +50,13 @@ class ServerHelper(object):
     def receiveData(self, transport, data):
         print "Received data from:", transport
         print ":->Data:", data
-        transport.write("Received: "+data)
+        self.write(transport, "!WeDidReceive: "+data)
 
     def killTransport(self, transport):
         transport.loseConnection()
+
+    def write(self, transport, data):
+        transport.write(safe_store.store(data)+END_LINE)
 
 class ServerFactory(Factory):
     def __init__(self, helper, protocol, transport):

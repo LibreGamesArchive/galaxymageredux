@@ -1,12 +1,16 @@
 from twisted.internet import reactor
 import twisted.internet.protocol as tprotocol
 
+import safe_store
+from server import END_LINE
+
 class ClientProtocol(tprotocol.Protocol):
     def __init__(self, factory):
         self.factory = factory
 
     def dataReceived(self, data):
-        self.factory.helper.receiveData(self.transport, data)
+        for d in data.split(END_LINE):
+            self.factory.helper.receiveData(self.transport, safe_store.load(d))
 
     def connectionMade(self):
         self.factory.transport = self.transport
@@ -24,7 +28,7 @@ class ClientHelper(object):
 
     def dispatch(self, data):
         if self.factory.transport:
-            self.factory.transport.write(data)
+            self.write(self.factory.transport, data)
         else:
             print "TError!"
 
@@ -34,6 +38,9 @@ class ClientHelper(object):
 
     def lostConnection(self, transport, reason):
         print "Connection lost, reason:\n", reason
+
+    def write(self, transport, data):
+        transport.write(safe_store.store(data)+END_LINE)
 
 class ClientFactory(tprotocol.ClientFactory):
     def __init__(self, helper, protocol):
@@ -71,5 +78,5 @@ class Client(object):
 
     def connect(self):
         reactor.connectTCP(self.hostname, self.port, self.factory)
-        reactor.callLater(1, self.run_app)
+        reactor.callLater(0, self.run_app)
         reactor.run()
