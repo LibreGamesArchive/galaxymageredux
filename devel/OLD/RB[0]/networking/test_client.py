@@ -10,7 +10,6 @@ class MyApp(object):
 
     def loop(self):
         self.client.helper.dispatch("test?")
-        self.running = raw_input("->")
 
 c = client.Client(MyApp)
 c.connect()
