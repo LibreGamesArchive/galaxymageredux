@@ -568,13 +568,15 @@ def select_tiles(tiles, mouse_pos):
     mx, my = mouse_pos
     my = ScreenSize[1] - my
     cur_color = 1
-    last_color = glReadPixelsf(mx, my, 1, 1, GL_RGB)
+    last_color = glReadPixelsf(mx, my, 1, 1, GL_RGB).ravel()
     correct = None
     for i in tiles:
         glColor3f(cur_color, 0, 0)
         i.render(pick=True)
-        result = glReadPixelsf(mx, my, 1, 1, GL_RGB)
-        if last_color != result:
+        result = glReadPixelsf(mx, my, 1, 1, GL_RGB).ravel()
+        if not (last_color[0]==result[0] and\
+                last_color[1]==result[1] and\
+                last_color[2]==result[1]):
             last_color = result
             correct = i
             if cur_color == 0.5:
