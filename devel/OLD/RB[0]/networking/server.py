@@ -3,17 +3,19 @@ from twisted.internet.protocol import Protocol
 from twisted.internet.protocol import Protocol, Factory
 from twisted.internet import reactor
 from twisted.internet.tcp import Server as TStransport
+from twisted.protocols.basic import LineReceiver
 
 import safe_store
 
-END_LINE = "<*END_LINE*>"
+##END_LINE = "<*END_LINE*>"
 
 class ServerTransport(TStransport):
     def __init__(self, sock, protocol, client, server, sessionno):
         TStransport.__init__(self, sock, protocol, client, server, sessionno)
         protocol.factory.all_transports.append(self)
 
-class ServerProtocol(Protocol):
+##class ServerProtocol(Protocol):
+class ServerProtocol(LineReceiver):
 
     def helper(self):
         return self.factory.helper
@@ -21,9 +23,11 @@ class ServerProtocol(Protocol):
     def connectionMade(self):
         self.helper().newConnection(self.transport)
 
-    def dataReceived(self, data):
-        for d in data.split(END_LINE):
-            self.helper().receiveData(self.transport, safe_store.load(d))
+##    def dataReceived(self, data):
+##        for d in data.split(END_LINE):
+##            self.helper().receiveData(self.transport, safe_store.load(d))
+    def lineReceived(self, line):
+        self.helper().receiveData(self.transport, safe_store.load(line))
 
     def connectionLost(self, reason):
         self.helper().lostConnection(self.transport, reason)
@@ -56,7 +60,7 @@ class ServerHelper(object):
         transport.loseConnection()
 
     def write(self, transport, data):
-        transport.write(safe_store.store(data)+END_LINE)
+        transport.write(safe_store.store(data))#+END_LINE)
 
 class ServerFactory(Factory):
     def __init__(self, helper, protocol, transport):
