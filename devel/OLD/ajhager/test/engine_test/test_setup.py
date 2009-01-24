@@ -1,8 +1,10 @@
-import sys
-sys.path.append("..")
-import battle
-import unit
-from map import Map, MapPanel
+import sys, os, unittest
+
+# Add the source directory to the PYTHONPATH)
+sys.path.append(os.path.join("..","..","src"))
+
+from engine import battle, unit
+from engine.map import Map, MapPanel
 
 b = battle.Battle()
 alice = unit.Unit( "Alice", unit.Gender.FEMALE, b )

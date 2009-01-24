@@ -1,17 +1,18 @@
-import sys, os
-sys.path.append("..")
+import sys, os, unit, unittest
 
-import ability
-import battle
-import effect
-import unit
-import unittest
+# Add the source directory to the PYTHONPATH)
+sys.path.append(os.path.join("..","..","src"))
 
-sys.path.append(os.path.join('..', '..', '..', 'data', 'core', 'abilities'))
+from engine import ability, battle, effect, unit
+
+# Add the ability directory to the PYTHONPATH
+ability_dir = os.path.join( '..', '..', '..', '..', '..',
+                            'data', 'core', 'ability')
+sys.path.append(ability_dir)
 import physical_attacks
 import attack_spells
 
-b = battle.Battle()
+b = battle.Battle
 
 class PunchTestCase(unittest.TestCase):
     def setUp(self):

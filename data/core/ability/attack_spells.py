@@ -1,8 +1,12 @@
 import sys, os
-sys.path.append(os.path.join('..', '..', '..', 'src', 'engine'))
 
-from ability import Ability
-import effect
+src_dir = os.path.join( '..', '..', '..', 'src')
+devel_dir = os.path.join('..', '..', '..', 'devel', 'OLD', 'ajhager', 'src')
+sys.path.append(src_dir)
+sys.path.append(devel_dir)
+
+from engine import ability, effect
+from engine.ability import Ability
 
 """
 A basic magic spell

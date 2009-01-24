@@ -1,12 +1,10 @@
 """Unit tests for effect module"""
+import sys, os, unittest
 
-import sys
-sys.path.append("..")
+# Add the source directory to the PYTHONPATH)
+sys.path.append(os.path.join("..","..","src"))
 
-import effect
-import unit
-import unittest
-import battle
+from engine import effect, battle
 
 b = battle.Battle()
 

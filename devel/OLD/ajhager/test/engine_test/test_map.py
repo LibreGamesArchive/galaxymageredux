@@ -1,8 +1,10 @@
 """Unit tests for map module"""
+import sys, os, unittest
 
-import map
-import unit
-import unittest
+# Add the source directory to the PYTHONPATH)
+sys.path.append(os.path.join("..","..","src"))
+
+from engine import map, unit
 
 class MapPanelTestCase(unittest.TestCase):
     def testMapPanelEdges(self):
