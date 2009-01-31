@@ -1,7 +1,7 @@
 import newnet
 
-class TestClient(Client):
-    def update():
+class TestClient(newnet.Client):
+    def update(self):
         line = raw_input(":->")
         if line == "q":
             c.close()
