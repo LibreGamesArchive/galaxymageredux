@@ -25,6 +25,9 @@ class GameServer(newnet.Server):
     def CA_sendMessage(self, avatar, message):
         self.remoteAll("GetMessage", "creator", avatar.name, message)
 
+##    def update(self):
+##        print "update!"
+
 
 s = GameServer()
 r = newnet.Realm(44444, s)

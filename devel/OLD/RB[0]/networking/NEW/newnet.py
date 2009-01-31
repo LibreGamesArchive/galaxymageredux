@@ -12,6 +12,7 @@ class Server(object):
         self.avatarTypes = {}
         self.avatars = []
         self.type = ''
+        self.running = True
 
     def join(self, avatar):
         self.remoteAll("serverMessage", "%s joined the server" % avatar.name)
@@ -33,6 +34,14 @@ class Server(object):
 
     def requestNewAvatar(self):
         return BaseAvatar
+
+    def run_updater(self):
+        self.update()
+        if self.running:
+            reactor.callLater(0, self.run_updater)
+
+    def update(self):
+        pass
 
 class BaseAvatar(pb.Avatar):
     def __init__(self, name, server, clientRef):
@@ -69,12 +78,12 @@ class Client(pb.Referenceable):
     def connected(self, avatar):
         self.avatar = avatar
         self.running = True
-        self.start_updating()
+        self.run_updater()
 
-    def start_updating(self):
+    def run_updater(self):
         self.update()
         if self.running:
-            reactor.callLater(0, self.start_updating)
+            reactor.callLater(0, self.run_updater)
 
     def update(self):
         pass
@@ -82,6 +91,10 @@ class Client(pb.Referenceable):
     def shutdown(self, result):
         print result
         reactor.stop()
+
+    def close(self):
+        reactor.stop()
+        self.running = False
 
 class UsernameChecker(object):
     implements(checkers.ICredentialsChecker)
@@ -109,12 +122,13 @@ class Realm(object):
         p = portal.Portal(self)
         p.registerChecker(c)
         reactor.listenTCP(self.port, pb.PBServerFactory(p))
+        self.server.run_updater()
         reactor.run()
 
     def requestAvatar(self, name, clientRef, *interfaces):
         assert pb.IPerspective in interfaces
 
-        avatar = self.server.requestNewAvatar()
+        avatarType = self.server.requestNewAvatar()
 
         avatar = avatarType(name, self.server, clientRef)
         avatar.attached()
