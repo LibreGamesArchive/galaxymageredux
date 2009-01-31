@@ -20,10 +20,10 @@ class GameServer(newnet.Server):
         return PlayerAvatar
 
     def PA_sendMessage(self, avatar, message):
-        self.remoteAll("GetMessage", "player", avatar.name, message)
+        self.remoteAll("getMessage", "player " + avatar.name + " " + message)
 
     def CA_sendMessage(self, avatar, message):
-        self.remoteAll("GetMessage", "creator", avatar.name, message)
+        self.remoteAll("getMessage", "creator " + avatar.name + " " + message)
 
 ##    def update(self):
 ##        print "update!"

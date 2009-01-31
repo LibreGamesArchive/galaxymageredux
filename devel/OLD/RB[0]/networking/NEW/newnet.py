@@ -47,7 +47,7 @@ class BaseAvatar(pb.Avatar):
     def __init__(self, name, server, clientRef):
         self.name = name
         self.server = server
-        self.clientRef = clientRef
+        self.client= clientRef
 
     def attached(self):
         self.server.join(self)
@@ -95,6 +95,10 @@ class Client(pb.Referenceable):
     def close(self):
         reactor.stop()
         self.running = False
+
+    # Methods callable by the server
+    def remote_getMessage(self, message):
+        print 'Got "', message, '" from server'
 
 class UsernameChecker(object):
     implements(checkers.ICredentialsChecker)

@@ -1,13 +1,12 @@
 import newnet
 
-c = newnet.Client("localhost", 44444, "test!")
+class TestClient(Client):
+    def update():
+        line = raw_input(":->")
+        if line == "q":
+            c.close()
+        else:
+            c.avatar.callRemote("sendMessage", line)
 
-def mainloop():
-    line = raw_input(":->")
-    if line == "q":
-        c.close()
-    else:
-        c.avatar.perspective_sendMessage(line)
-
-c.update = mainloop
+c = TestClient("localhost", 44444, "test!")
 c.connect()
