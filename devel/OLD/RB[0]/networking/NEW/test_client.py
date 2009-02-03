@@ -7,7 +7,7 @@ class TestClient(newnet.Client):
         self.get_input = True
 
     def input_received(self, line):
-        """Callback for to send out a finished line of input."""
+        """Callback for sending out a finished line of input."""
         if line == "q":
             c.close()
         elif len(line) > 0:
