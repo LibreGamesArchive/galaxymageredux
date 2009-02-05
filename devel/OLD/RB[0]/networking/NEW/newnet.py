@@ -15,12 +15,12 @@ class Server(object):
         self.running = True
 
     def join(self, avatar):
-        self.remoteAll("serverMessage", "%s joined the server" % avatar.name)
+        self.remoteAll("getMessage", "%s joined the server" % avatar.name)
         self.avatars.append(avatar)
 
     def leave(self, avatar):
         self.avatars.remove(avatar)
-        self.remoteAll("serverMessage", "%s left the server" % avatar.name)
+        self.remoteAll("getMessage", "%s left the server" % avatar.name)
 
     def remote(self, avatar, action, *args):
         df = avatar.client.callRemote(action, *args)
