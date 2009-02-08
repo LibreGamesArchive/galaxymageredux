@@ -12,8 +12,11 @@ class Game(net.Client):
     def __init__(self):
         net.Client.__init__(self, "localhost", 44444, "test!")
         self.config = load_config()
-##        pyggel.init((self.config["width"],
-##                     self.config["height"]))
+        pyggel.init((800, 600))
+
+        if self.config["fullscreen"]:
+            pyggel.view.toggle_fullscreen()
+        pyggel.view.set_title(self.config["name"])
 
         self.get_input = True
 
