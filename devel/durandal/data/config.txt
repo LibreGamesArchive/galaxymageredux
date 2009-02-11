@@ -1,4 +1,0 @@
-name = 'reduxian'
-fps = True
-sound = True
-fullscreen = False
