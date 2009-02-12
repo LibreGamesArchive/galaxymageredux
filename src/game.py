@@ -1,8 +1,8 @@
-import pyggel
+import pyggel, os
 from pyggel import *
 
 import net
-from twisted.internet import reactor, threads
+from twisted.internet import reactor, threads, error
 
 def load_config():
     exec open("data/config.txt")
@@ -37,6 +37,17 @@ class Game(net.Client):
             # Execute function as soon as input is available
             d.addCallback(self.input_received)
             self.get_input = False
+
+    def errHandler(self, failure):
+        e = failure.trap(error.ConnectionRefusedError)
+        if e == error.ConnectionRefusedError:
+            self.hostname = raw_input(self.hostname + " refused connection, Alternate server hostname:")
+            if hostname == '':
+                self.shutdown(failure)
+            self.connect() # maybe make a reconnect method?
+        else:
+            print "Unexpected failure: "
+            self.shutdown(failure)
 
 def play():
     g = Game()

@@ -128,7 +128,7 @@ class CreatorAvatar(BaseAvatar):
 
 
 class Client(pb.Referenceable):
-    #the client is the low level connection class - anything we want teh server to be able to contact needs to be here.
+    #the client is the low level connection class - anything we want the server to be able to contact needs to be here.
     #we contact the server through this client by accessing our avatar:
     #self.avatar.callRemote("Name", *args, **kwargs) - where "Name" is the method
     #   name from the avatar, preceeded by "perspective_" - so "perspective_Name"
@@ -147,7 +147,7 @@ class Client(pb.Referenceable):
         cred = credentials.UsernamePassword(self.username, self.username)
         d = f.login(cred, self)
         d.addCallback(self.connected)
-        d.addErrback(self.shutdown)
+        d.addErrback(self.errHandler)
         reactor.run()
         
     def connected(self, avatar):
@@ -166,6 +166,9 @@ class Client(pb.Referenceable):
     def shutdown(self, result):
         print result
         reactor.stop()
+
+    def errHandler(self, result):
+        print result
 
     def close(self):
         reactor.stop()
