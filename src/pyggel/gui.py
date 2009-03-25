@@ -6,7 +6,7 @@ The gui module contains classes to create and use a simple Graphical User Interf
 """
 
 from include import *
-import view, font, event
+import view, font, event, misc
 import time
 import image as _image
 import os
@@ -43,16 +43,16 @@ class Theme(object):
                 self.path = ""
         else:
             self.path = ""
-        for i in list(locals()) + list(globals()) + list(dir(__builtins__)):
-            if not i in ("self", "filename"):
-                exec "%s = None"%i
 
-        exec "g={%s}"%open(filename, "rU").read()
-        for widget in g:
-            for val in g[widget]:
-                self.theme[widget][val] = g[widget][val]
+        if misc.test_safe(filename)[0]:
+            exec "g={%s}"%open(filename, "rU").read()
+            for widget in g:
+                for val in g[widget]:
+                    self.theme[widget][val] = g[widget][val]
 
-        self.make_fonts()
+            self.make_fonts()
+        else:
+            print "Warning! Theme: %s is not safe!"%filename
 
     def make_default_theme(self):
         """Create a base theme so that anything not specified in a loaded theme (if any) are missed."""

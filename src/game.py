@@ -5,14 +5,17 @@ import net
 from twisted.internet import reactor, threads, error
 
 def load_config():
-    exec open("data/config.txt")
-    return locals()
+    if pyggel.misc.test_safe("data/config.txt")[0]:
+        exec open("data/config.txt")
+        return locals()
+    else:
+        raise ImportWarning("Warning, config file is not safe! Make sure no function calls or importing are present!!!")
 
 class Game(net.Client):
     def __init__(self):
         net.Client.__init__(self, "localhost", 44444, "test!")
         self.config = load_config()
-        pyggel.init((800, 600))
+        pyggel.init(self.config["resolution"], (640, 480)) #keep 2d at 640x480
 
         if self.config["fullscreen"]:
             pyggel.view.toggle_fullscreen()
