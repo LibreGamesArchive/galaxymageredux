@@ -119,9 +119,9 @@ class Cube(object):
             for x in i[:4]:
                 glTexCoord2fv(coords[ix])
                 a, b, c = self.corners[x]
-                a *= 1.1
-                b *= 1.1
-                c *= 1.1
+##                a *= 1.1
+##                b *= 1.1
+##                c *= 1.1
                 glVertex3f(a,b,c)
                 ix += 1
             glEnd()
@@ -148,7 +148,7 @@ class Cube(object):
 
     def copy(self):
         """Return a copy of the quad - uses the same display list"""
-        n = Cube(self.size, self.pos, self.rotation, self.color, self.texture)
+        n = Cube(self.size, self.pos, self.rotation, self.colorize, self.texture)
         n.display_list = self.display_list
         n.scale = self.scale
         return n
