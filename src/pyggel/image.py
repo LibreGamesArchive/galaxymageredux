@@ -172,9 +172,6 @@ class Image(object):
         pos = self.pos
 
         glPushMatrix()
-        rx = 1.0 * view.screen.screen_size[0] / view.screen.screen_size_2d[0]
-        ry = 1.0 * view.screen.screen_size[1] / view.screen.screen_size_2d[1]
-        glScalef(rx, ry, 1)
         glTranslatef(pos[0]+ox, pos[1]+oy, 0)
 
         glRotatef(self.rotation[0], 1, 0, 0)

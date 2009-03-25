@@ -64,11 +64,16 @@ class Scene(object):
 
         if self.render2d:
             view.set2d()
+            glPushMatrix()
+            rx = 1.0 * view.screen.screen_size[0] / view.screen.screen_size_2d[0]
+            ry = 1.0 * view.screen.screen_size[1] / view.screen.screen_size_2d[1]
+            glScalef(rx, ry, 1)
             glDisable(GL_LIGHTING)
             for i in self.graph.render_2d:
                 if i.visible: i.render()
             if view.screen.lighting:
                 glEnable(GL_LIGHTING)
+            glPopMatrix()
 
     def add_2d(self, ele):
         """Add a 2d object or list of objects to the scene."""
