@@ -422,7 +422,7 @@ class App(object):
 
     def get_mouse_pos(self):
         """Return mouse pos based on App position - always (0,0)"""
-        return view.screen.get_mouse_pos()
+        return view.screen.get_mouse_pos2d()
 
     def new_widget(self, widget):
         """Add a new widget to the App."""

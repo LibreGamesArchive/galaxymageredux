@@ -94,6 +94,11 @@ class _Screen(object):
         glScissor(*self.clips[-1])
 
     def get_mouse_pos(self):
+        """Return mouse pos in relation to the real screen size."""
+        return pygame.mouse.get_pos()
+
+    def get_mouse_pos2d(self):
+        """Return mouse pos in relation to 2d screen size."""
         rx = 1.0 * self.screen_size_2d[0] / self.screen_size[0]
         ry = 1.0 * self.screen_size_2d[1] / self.screen_size[1]
 
