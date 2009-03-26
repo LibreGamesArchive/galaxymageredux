@@ -4,6 +4,8 @@ from pyggel import *
 import net
 from twisted.internet import reactor, threads, error
 
+import ui
+
 def load_config():
     if pyggel.misc.test_safe("data/config.txt")[0]:
         exec open("data/config.txt")
@@ -25,7 +27,7 @@ class Game(net.Client):
         self.event_handler = pyggel.event.Handler()
         self.scene = pyggel.scene.Scene()
         self.app = pyggel.gui.App(self.event_handler)
-        self.message_frame = pyggel.gui.Frame(self.app, size=(640, 400))
+        self.message_frame = ui.MessageBox(self.app, size=(640, 400))
         pyggel.gui.NewLine(self.app)
         self.input = pyggel.gui.Input(self.app, callback=self.input_received, font_color=(1,1,1,1),
                                       width=640)
@@ -66,8 +68,7 @@ class Game(net.Client):
             self.shutdown(failure)
 
     def remote_getMessage(self, message):
-        pyggel.gui.Label(self.message_frame, message)
-        pyggel.gui.NewLine(self.message_frame)
+        self.message_frame.add_message(message)
 
 def play():
     g = Game()
