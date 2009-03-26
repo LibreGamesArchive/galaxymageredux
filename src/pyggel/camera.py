@@ -31,6 +31,10 @@ class Base(object):
         """Return the position of the camera as a tuple"""
         return self.posx, self.posy, self.posz
 
+    def set_pos(self, pos):
+        """Set the position of the camera from a tuple"""
+        self.posx, self.posy, self.posz = pos
+
     def get_rotation(self):
         """Return the rotation of the camera as a tuple"""
         return self.rotx, self.roty, self.rotz

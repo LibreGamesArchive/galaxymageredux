@@ -13,13 +13,3 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 import numpy
-
-
-from data import Texture
-import view
-x = view.require_init #bypass the textures not wanting to load before init, blank texture doesn't require it...
-view.require_init = lambda: None
-image = pygame.Surface((2,2))
-image.fill((255,255,255,255))
-blank_texture = Texture(image)
-view.require_init = x

@@ -6,9 +6,85 @@ The misc module contains various functions and classes that don't fit anywhere e
 """
 
 from include import *
-import image, view, data, math3d
+import view, math3d, data
 
 import random
+
+def test_safe(filename, acceptable_functions=[]):
+    """tests all the function calls in a file against a set of acceptable ones.
+       this function also does not allow importing of other modules.
+       returns True, [] if there are only acceptable function calls,
+       returns False and a list of bad function calls, if the test fails.
+       OR returns False, "import" if there is an import statement"""
+    text = open(filename, "rU").read()
+    text.replace("\r", "\n")
+
+    while "#" in text:
+        text = text[0:text.index("#")] +\
+               text[text.index("\n", text.index("#"))::]
+
+    for i in text.split():
+        if i == "import" or\
+           i[-7::] == ":import" or\
+           i[-7::] == ";import":
+            return False, "import"
+
+    #split all the text
+    new = []
+    cur = ""
+    cur_string = False
+    for i in text:
+        if not cur_string:
+            if i == "(":
+                new.append(cur)
+                cur = ""
+                new.append("(")
+
+            elif i == ")":
+                new.append(cur)
+                cur = ""
+                new.append(")")
+            else:
+                if i == '"':
+                    cur_string = True
+                cur+=i
+
+        else:
+            if i == '"':
+                cur_string = False
+                cur += i
+            else:
+                cur += i
+
+    if cur:
+        new.append(cur)
+
+    #remove anything that isn't a function call
+    ok = []
+    for i in xrange(len(new)):
+        if new[i] == "(":
+            last = new[i-1].split()[-1].split(".")[-1]
+            if last == "(" or True in [last.endswith(__i) for __i in (", ", ",", ": ", ":")]:
+                continue
+            if len(new[i-1].split()) >= 2:
+                before_that = new[i-1].split()[-2].split(".")[-1]
+            else:
+                before_that = None
+            #remove a function/class declaration, and tuple declarations, they are different!
+            if not before_that in ["def", "class"] and\
+               not last in ["print", "=", "in"]:
+                ok.append(last)
+            else:
+                if before_that in ["def", "class"]:
+                    acceptable_functions.append(last)
+
+    for i in ok:
+        if i in acceptable_functions:
+            continue
+        else:
+            return False, ok
+
+    return True, []
 
 def randfloat(a, b):
     """Returns a random floating point number in range(a,b)."""
@@ -16,39 +92,6 @@ def randfloat(a, b):
     b = int(b*100000000)
     x = random.randint(a, b)
     return x * 0.00000001
-
-def create_empty_texture(size=(2,2), color=(1,1,1,1)):
-    """Create an empty data.Texture
-       size must be a two part tuple representing the pixel size of the texture
-       color must be a four-part tuple representing the (RGBA 0-1) color of the texture"""
-    i = pygame.Surface(size)
-    if len(color) == 4:
-        r, g, b, a = color
-    else:
-        r, g, b = color
-        a = 1
-    r *= 255
-    g *= 255
-    b *= 255
-    a *= 255
-    i.fill((r,g,b,a))
-    return data.Texture(i)
-
-def create_empty_image(size=(2,2), color=(1,1,1,1)):
-    """Same as create_empty_texture, except returns an image.Image instead"""
-    i = pygame.Surface(size)
-    if len(color) == 3:
-        color = color + (1,)
-    i.fill((255,255,255,255))
-    return image.Image(i, colorize=color)
-
-def create_empty_image3d(size=(2,2), color=(1,1,1,1)):
-    """Same as create_empty_texture, except returns an image.Image3D instead"""
-    i = pygame.Surface(size)
-    if len(color) == 3:
-        color = color + (1,)
-    i.fill((255,255,255,255))
-    return image.Image3D(i, colorize=color)
 
 class ObjectGroup(object):
     """A simple Group object for storing a lot of similar objects in."""

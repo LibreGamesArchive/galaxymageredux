@@ -7,7 +7,7 @@ from include import *
 
 import mesh, view, image, camera, math3d, light
 import scene, font, geometry, misc, picker, data
-import particle
+import particle, event, gui
 
 def quit():
     """Deinitialize PYGGEL..."""

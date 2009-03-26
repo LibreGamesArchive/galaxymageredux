@@ -7,6 +7,7 @@ The geometry module contains classes used to render 3d geometric primitives.
 
 from include import *
 import view, data, misc
+from data import blank_texture, Texture
 
 class Cube(object):
     """A geometric cube that can be colored and textured"""
@@ -20,6 +21,7 @@ class Cube(object):
            texture can be None, a data.Texture object or a list of 6 data.Texture objects
                if None the cube will not be textures
                if data.Texture the texture will be mapped as a cube map to the cube
+               a string representing the filename of an image to load as a cube map
                if a list of 6 textures each face of the quad will have one of the images"""
         view.require_init()
         self.size = size
@@ -27,6 +29,8 @@ class Cube(object):
         self.rotation = rotation
         if not texture:
             texture = blank_texture
+        if type(texture) is type(""):
+            texture = Texture(texture)
         self.texture = texture
         self.colorize = colorize
 
@@ -83,9 +87,17 @@ class Cube(object):
             reg_type = 0
         else:
             reg_type = 1
+            _t = []
+            for i in self.texture:
+                if type(i) is type(""):
+                    _t.append(Texture(i))
+                else:
+                    _t.append(i)
+            self.texture = _t
 
         ox = .25
         oy = .33
+        last_tex = None
         for i in self.sides:
             ix = 0
             x, y = self.split_coords[i[5]]
@@ -95,7 +107,10 @@ class Cube(object):
                 coords = ((x, y), (x, y+oy), (x+ox, y+oy), (x+ox, y))
             else:
                 coords = ((0,0), (0,1), (1,1), (1,0))
-                self.texture[i[4]].bind()
+                tex = self.texture[i[4]]
+                if not tex == last_tex:
+                    tex.bind()
+                    last_tex = tex
 
             glBegin(GL_QUADS)
 
@@ -104,9 +119,9 @@ class Cube(object):
             for x in i[:4]:
                 glTexCoord2fv(coords[ix])
                 a, b, c = self.corners[x]
-                a *= 1.1
-                b *= 1.1
-                c *= 1.1
+##                a *= 1.1
+##                b *= 1.1
+##                c *= 1.1
                 glVertex3f(a,b,c)
                 ix += 1
             glEnd()
@@ -133,7 +148,7 @@ class Cube(object):
 
     def copy(self):
         """Return a copy of the quad - uses the same display list"""
-        n = Cube(self.size, self.pos, self.rotation, self.color, self.texture)
+        n = Cube(self.size, self.pos, self.rotation, self.colorize, self.texture)
         n.display_list = self.display_list
         n.scale = self.scale
         return n
@@ -152,7 +167,7 @@ class Quad(Cube):
            pos is the position of the quad
            rotation is the rotation of the quad
            colorize is the color of the quad
-           texture can be None or a data.Texture object - entire texture is mapped to the face
+           texture can be None, a string filename of an image to load or a data.Texture object - entire texture is mapped to the face
            facing is which face of the cube this is, values are:
                left, right, top, bottom, front, back or 0, 1, 2, 3, 4, 5"""
 
@@ -221,7 +236,7 @@ class Plane(Quad):
            pos is the position of the quad
            rotation is the rotation of the quad
            colorize is the color of the quad
-           texture can be None or a data.Texture object - entire texture is mapped to the face
+           texture can be None, a string filename of an image to load or a data.Texture object - entire texture is mapped to the face
            facing is which face of the cube this is, values are:
                left, right, top, bottom, front, back or 0, 1, 2, 3, 4, 5
            tile is the number of times to tile the texture across the Plane"""
@@ -287,7 +302,12 @@ class Plane(Quad):
         glRotatef(b, 0, 1, 0)
         glRotatef(c, 0, 0, 1)
         s = self.size / self.tile if (self.size and self.tile) else self.size
-        glScalef(.5*self.size,.5*s,.5*self.size)
+        if self.facing in (2,3):
+            glScalef(.5*self.size,.5*s,.5*self.size)
+        if self.facing in (0,1):
+            glScalef(.5*s,.5*self.size,.5*self.size)
+        if self.facing in (4,5):
+            glScalef(.5*self.size,.5*self.size,.5*s)
         try:
             glScalef(*self.scale)
         except:
@@ -308,7 +328,7 @@ class Skybox(Cube):
        Used to simulate a sky, or other things where you want to fill the view with something other than a blank color"""
     def __init__(self, texture, colorize=(1,1,1,1)):
         """Create the Skybox
-           texture can be teh same as a Cube, None, data.Texture or  list of 6 data.Texture objects
+           texture can be the same as a Cube, None, data.Texture, string filename or  list of 6 data.Texture objects
            colorize - the color of the Skybox"""
         Cube.__init__(self, 1, colorize=colorize, texture=texture)
         self.sides = ((3,0,4,7, 2, 2, 5),#left
@@ -348,7 +368,7 @@ class Sphere(object):
            pos ithe position of the sphere
            rotation is the rotation of the sphere
            colorize is the color of the sphere
-           texture can be None or a data.Texture object that will be mapped to the sphere
+           texture can be None, a string filename of an image to load or a data.Texture object that will be mapped to the sphere
            detail is the level of detail for the Sphere, higher = a more smooth sphere"""
         view.require_init()
         self.size = size
@@ -357,6 +377,8 @@ class Sphere(object):
         self.colorize = colorize
         if not texture:
             texture = blank_texture
+        if type(texture) is type(""):
+            texture = Texture(texture)
         self.texture = texture
         self.detail = detail
         self.scale = 1
@@ -418,13 +440,14 @@ class Skyball(Sphere):
     """A Skyball is like a Skybox - except it is a sphere intead of a cube"""
     def __init__(self, texture=None, colorize=(1,1,1,1), detail=30):
         """Create the Skyball
-           texture can be None or the data.Texture object to map to the Sphere"""
+           texture can be None, a string filename or the data.Texture object to map to the Sphere"""
         Sphere.__init__(self, 1, colorize=colorize,
                         texture=texture, detail=detail)
 
     def render(self, camera):
         """Render the Skyball
            camera is the camera the scene is using"""
+        glDisable(GL_LIGHTING)
         glDepthMask(GL_FALSE)
         glPushMatrix()
         camera.set_skybox_data()
@@ -432,6 +455,8 @@ class Skyball(Sphere):
         Sphere.render(self)
         glPopMatrix()
         glDepthMask(GL_TRUE)
+        if view.screen.lighting:
+            glEnable(GL_LIGHTING)
 
     def copy(self):
         """Return a copy of teh Skyball - sharing the same dadta.DisplayList"""

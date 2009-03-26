@@ -23,12 +23,15 @@ def Pick512Objects(x, y, objs, camera):
     glLoadIdentity()
     gluPickMatrix(x, viewport[3] - y, 1, 1, viewport)
     glMultMatrixd(previousviewmatrix)
-    camera.push()
+    if camera:
+        camera.push()
     for i in objs:
         glPushName(i[1])
-        if i[0].visible: i[0].render(camera)
+        if i[0].visible:
+            i[0].render(camera)
         glPopName()
-    camera.pop()
+    if camera:
+        camera.pop()
     glFlush()
     glMatrixMode(GL_PROJECTION)
     glLoadMatrixd(previousviewmatrix)
@@ -82,7 +85,7 @@ class Group(object):
             self.all_objs.remove(obj)
             self.all_names.remove(name)
         except:
-            pass
+            print "!@#!@#@#"
 
     def pick(self, mouse_pos, camera=None):
         """Run Pick512Objects(mouse_pos[0], mouse_pos[1], self.objects, camera) and return results."""
@@ -92,7 +95,7 @@ class Group(object):
         far = []
         names = []
         for objgroup in self.objects:
-            if not objgroup:
+            if not objgroup and len(self.objects)>1:
                 self.objects.remove(objgroup)
                 continue
             _n = Pick512Objects(x, y, objgroup, camera)

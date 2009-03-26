@@ -7,7 +7,7 @@ like textures, display lists and vertex arrays.
 """
 
 from include import *
-import view, misc
+import view
 
 class Texture(object):
     """An object to load and store an OpenGL texture"""
@@ -117,7 +117,7 @@ class VertexArray(object):
         if render_type is None:
             render_type = GL_QUADS
         self.render_type = render_type
-        self.texture = misc.create_empty_texture()
+        self.texture = create_empty_texture()
 
         self.max_size = max_size
 
@@ -142,3 +142,25 @@ class VertexArray(object):
         glDisableClientState(GL_VERTEX_ARRAY)
         glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+
+def create_empty_texture(size=(2,2), color=(1,1,1,1)):
+    """Create an empty data.Texture
+       size must be a two part tuple representing the pixel size of the texture
+       color must be a four-part tuple representing the (RGBA 0-1) color of the texture"""
+    i = pygame.Surface(size)
+    if len(color) == 4:
+        r, g, b, a = color
+    else:
+        r, g, b = color
+        a = 1
+    r *= 255
+    g *= 255
+    b *= 255
+    a *= 255
+    i.fill((r,g,b,a))
+    return Texture(i)
+
+x = view.require_init #bypass the textures not wanting to load before init, blank texture doesn't require it...
+view.require_init = lambda: None
+blank_texture = create_empty_texture()
+view.require_init = x

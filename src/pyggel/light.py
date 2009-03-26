@@ -20,8 +20,8 @@ class Light(object):
         """Create the light
            pos it the position of the light
            ambient is the ambient color of the light
-           diffuse is teh diffuse color of teh light
-           specular is how much the materials using this light will shine?
+           diffuse is the diffuse color of the light
+           specular is how much objects mirror the light, ie how shiny they are
            spot_direction is the 3d direction the light will be facing if it is directional
            directional is whether the light is directional or global"""
         self.pos = pos

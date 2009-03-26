@@ -16,7 +16,9 @@ class _Screen(object):
     def __init__(self):
         """Create the screen."""
         self.screen_size = (640, 480)
+        self.screen_size_2d = (640, 480)
         self.rect = pygame.rect.Rect(0,0,*self.screen_size)
+        self.rect2d = pygame.rect.Rect(0,0,*self.screen_size_2d)
         self.fullscreen = False
         self.hwrender = True
         self.decorated = True
@@ -24,20 +26,35 @@ class _Screen(object):
         self.fog = True
         self.fog_color = (.5,.5,.5,.5)
 
+        self.cursor = None
+        self.cursor_visible = True
+        self.cursor_center = False
+
         self.debug = True
 
         self.have_init = False
 
+        self.icon = None
+        self.title = None
+
         self.clips = [(0,0,self.screen_size[0],self.screen_size[1])]
         glScissor(*self.clips[0])
 
-    def set_size(self, size):
+    def set_size(self, size, size2d):
         """Set the screen size."""
-        self.screen_size = size
+        if size:
+            self.screen_size = size
+        if size2d:
+            self.screen_size_2d = size2d
+            self.rect2d = pygame.rect.Rect(0,0,*size2d)
+
+        size = self.screen_size
         self.clips = [] #clear!
         self.clips.append((0,0,size[0],size[1]))
         self.rect = pygame.rect.Rect(0,0,*size)
         glScissor(*self.clips[0])
+
+        return self.screen_size
 
     def get_params(self):
         """Return the pygame window initiation parameters needed."""
@@ -59,6 +76,16 @@ class _Screen(object):
         self.clips.append(new)
         glScissor(*new)
 
+    def push_clip2d(self, pos, size):
+        """Convert a 2d pos/size rect into GL coords for clipping."""
+        rx = 1.0 * self.screen_size[0] / self.screen_size_2d[0]
+        ry = 1.0 * self.screen_size[1] / self.screen_size_2d[1]
+
+        x, y = pos
+        w, h = size
+
+        self.push_clip((int(x*rx), self.screen_size[1]-int(y*ry)-int(h*ry), int(w*rx), int(h*ry)))
+
     def pop_clip(self):
         """Pop the last clip off the stack."""
         if len(self.clips) == 1:
@@ -66,16 +93,35 @@ class _Screen(object):
         self.clips.pop()
         glScissor(*self.clips[-1])
 
+    def get_mouse_pos(self):
+        rx = 1.0 * self.screen_size_2d[0] / self.screen_size[0]
+        ry = 1.0 * self.screen_size_2d[1] / self.screen_size[1]
+
+        mx, my = pygame.mouse.get_pos()
+
+        return int(mx*rx), int(my*ry)
+
 screen = _Screen()
 
-def init(screen_size=None, use_psyco=True, icon_image=None):
+def init(screen_size=None, screen_size_2d=None,
+         use_psyco=True, icon_image=None,
+         fullscreen=False, hwrender=True,
+         decorated=True):
     """Initialize the display, OpenGL and whether to use psyco or not.
-       screen_size must be the pixel dimensions of the display window
-       use_psyco must be a boolean value indicating whether psyco should be used or not"""
-    if screen_size:
-        screen.set_size(screen_size)
-    else:
-        screen_size = screen.screen_size
+       screen_size must be the pixel dimensions of the display window (defaults to 640x480)
+       screen_size_2d is the 2d size of the screen that the 2d elements use (defaults to screen_size),
+           the 2d elements are handled as if this is the real screen size,
+           and then scaled to fit the real screen size at render time,
+           this allows multiple screen resolutions without resorting to hacking the 2d or,
+           like some 3d engines do, make the 2d elements really 3d that are projected funny.
+       use_psyco must be a boolean value indicating whether psyco should be used or not (only if available)
+       icon_image must be a string indicating the image to load from disk, or a pygame Surface to use for the window icon
+       full_screen indicates whether the render screen is fullscreen or not
+       hwrender indicates whether hwrendering should be used for pygame operations
+       decorated indicates whether the display window should have a border and top bar or not"""
+    if screen_size and not screen_size_2d:
+        screen_size_2d = screen_size
+    screen_size = screen.set_size(screen_size, screen_size_2d)
 
     if use_psyco:
         try:
@@ -84,19 +130,23 @@ def init(screen_size=None, use_psyco=True, icon_image=None):
         except:
             pass
 
+    screen.fullscreen = fullscreen
+    screen.hwrender = hwrender
+    screen.decorated = decorated
+
     pygame.init()
 
     if type(icon_image) is type(""):
         pygame.display.set_icon(pygame.image.load(icon_image))
     elif icon_image:
         pygame.display.set_icon(icon_image)
+    screen.icon = icon_image
 
     set_title()
 
     build_screen()
 
     glEnable(GL_TEXTURE_2D)
-    glFrontFace(GL_CW)
     glEnable(GL_COLOR_MATERIAL)
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
@@ -131,17 +181,9 @@ def set_background_color(rgb=(0,0,0)):
     """Set the background color (RGB 0-1) of the display."""
     glClearColor(*rgb+(0,))
 
-def set_fullscreen(boolean):
-    """Enable/Disable fullscreen mode."""
-    screen.fullscreen = boolean
-    build_screen()
-
-def toggle_fullscreen():
-    """Toggles fullscreen mode."""
-    set_fullscreen(not screen.fullscreen)
-
 def set_title(text="PYGGEL App"):
     pygame.display.set_caption(text)
+    screen.title = text
 
 def set_lighting(boolean):
     """Enable/Disable OpenGL lighting."""
@@ -155,23 +197,24 @@ def toggle_lighting():
     """Toggle OpenGL lighting."""
     set_lighting(not screen.lighting)
 
-def set_hardware_render(boolean):
-    """Enable/Disable hardware rendering of screen."""
-    screen.hwrender = boolean
-    build_screen()
+def set_cursor(image, center=False):
+    """Set the cursor to image.Image or image.Animation."""
+    screen.cursor = image
+    screen.cursor_visible = True
+    screen.cursor_center = center
+    pygame.mouse.set_visible(0)
 
-def toggle_hardware_render():
-    """Toggle hardware rendering."""
-    set_hardware_render(not screen.hwrender)
+def set_cursor_visible(boolean=True):
+    """Enable/Disable cursor visiblity."""
+    screen.cursor_visible = boolean
+    if boolean and not screen.cursor:
+        pygame.mouse.set_visible(1)
+    else:
+        pygame.mouse.set_visible(0)
 
-def set_decorated(boolean):
-    """Enable/Disable window decorations (title bar, sides, etc.)"""
-    screen.decorated = boolean
-    build_screen()
-
-def toggle_decorated():
-    """Toggle window decorations."""
-    set_decorated(not screen.decorated)
+def toggle_cursor_visible():
+    """Toggle cursor visibility."""
+    screen.cursor_visible = not screen.cursor_visible
 
 def set_fog_color(rgba=(.5,.5,.5,.5)):
     """Set the fog color (RGBA 0-1)"""
@@ -236,6 +279,17 @@ def set3d():
 
 def refresh_screen():
     """Flip the screen buffer, displaying any changes since the last clear."""
+    if screen.cursor and screen.cursor_visible and pygame.mouse.get_focused():
+        glDisable(GL_LIGHTING)
+        screen.cursor.pos = screen.get_mouse_pos()
+        if screen.cursor_center:
+            x, y = screen.cursor.pos
+            x -= int(screen.cursor.get_width() / 2)
+            y -= int(screen.cursor.get_height() / 2)
+            screen.cursor.pos = (x, y)
+        screen.cursor.render()
+        if screen.lighting:
+            glEnable(GL_LIGHTING)
     pygame.display.flip()
 
 def clear_screen(scene=None):
@@ -248,6 +302,6 @@ def clear_screen(scene=None):
     glEnable(GL_SCISSOR_TEST)
 
 def require_init():
-    """Called if a function requires init to have been called - raises TypeError if not."""
+    """Called if a function requires the view to have been init'd - raises TypeError if not."""
     if not screen.have_init:
-        raise TypeError, "pyggel.init must be called before this action can occur"
+        raise TypeError, "view must be init'd before this action can occur (pyggel.init or pyggel.view.init)"

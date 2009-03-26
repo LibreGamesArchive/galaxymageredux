@@ -91,7 +91,7 @@ class Behavior3D(object):
         self.emitter = emitter
 
         self.particle_lifespan = 1
-        self.image = misc.create_empty_image3d((8,8))
+        self.image = image.create_empty_image3d((8,8))
         self.image.pos = self.emitter.pos
 
     def get_dimensions(self):
@@ -118,7 +118,7 @@ class Fire3D(Behavior3D):
     def __init__(self, emitter):
         Behavior3D.__init__(self, emitter)
 
-        self.image = misc.create_empty_image3d((8,8), (1,.5,0,1))
+        self.image = image.create_empty_image3d((8,8), (1,.5,0,1))
         self.image.scale = .25
         self.image.pos = self.emitter.pos
         self.particle_lifespan = 20

@@ -20,27 +20,7 @@ class Tree(object):
         self.skybox = None
         self.lights = []
 
-        self.pick_3d = picker.Group()
-        self.pick_3d_blend = picker.Group()
-        self.pick_3d_merged = picker.Group()
-        self.pick_3d_always = picker.Group()
-
-class PickResult(object):
-    """A simple class for storing the results of a picking operation."""
-    def __init__(self, hits, depths):
-        """Create the result.
-           hits must be a three part tuple representing the topmost object picked from each render_3d* group in the scene Tree
-           depths must be a three part tuple representing the depths of the hits"""
-        self.hit3d, self.hit3d_blend, self.hit3d_always = hits
-        self.dep3d, self.dep3d_blend, self.dep3d_always = depths
-
-        a, b, c = depths
-        if a == None: a = 100
-        if b == None: b = 100
-        if c == None: c = 100
-        depths = [a, b, c]
-
-        self.hit = hits[depths.index(min(depths))]
+        self.pick = picker.Group()
 
 class Scene(object):
     """A simple scene class used to store, render, pick and manipulate objects."""
@@ -51,15 +31,16 @@ class Scene(object):
         self.render2d = True
         self.render3d = True
 
-    def render(self, camera):
+    def render(self, camera=None):
         """Render all objects.
-           camera must be the camera object used to render the scene"""
+           camera must no or the camera object used to render the scene"""
         view.set3d()
         my_lights = list(all_lights)
-        if self.graph.skybox:
+        if self.graph.skybox and camera:
             self.graph.skybox.render(camera)
         if self.render3d:
-            camera.push()
+            if camera:
+                camera.push()
             for i in self.graph.lights:
                 i.gl_light = my_lights.pop()
                 i.shine()
@@ -78,57 +59,74 @@ class Scene(object):
 
             for i in self.graph.lights:
                 i.hide()
-            camera.pop()
+            if camera:
+                camera.pop()
 
         if self.render2d:
             view.set2d()
+            glPushMatrix()
+            rx = 1.0 * view.screen.screen_size[0] / view.screen.screen_size_2d[0]
+            ry = 1.0 * view.screen.screen_size[1] / view.screen.screen_size_2d[1]
+            glScalef(rx, ry, 1)
             glDisable(GL_LIGHTING)
             for i in self.graph.render_2d:
                 if i.visible: i.render()
             if view.screen.lighting:
                 glEnable(GL_LIGHTING)
+            glPopMatrix()
 
     def add_2d(self, ele):
-        """Add a 2d object to the scene."""
-        self.graph.render_2d.append(ele)
-        ele.scene = self
+        """Add a 2d object or list of objects to the scene."""
+        if not hasattr(ele, "__iter__"):
+            ele = [ele]
+        for i in ele:
+            self.graph.render_2d.append(i)
+            i.scene = self
 
     def remove_2d(self, ele):
         """Remove a 2d object from the scene."""
         self.graph.render_2d.remove(ele)
 
     def add_3d(self, ele):
-        """Add a 3d, non-blended, depth-tested object to the scene."""
-        self.graph.render_3d.append(ele)
-        self.graph.pick_3d.add_obj(ele)
+        """Add a 3d, non-blended, depth-tested object or list of objects to the scene."""
+        if not hasattr(ele, "__iter__"):
+            ele = [ele]
+        for i in ele:
+            self.graph.render_3d.append(i)
+            self.graph.pick.add_obj(i)
 
     def remove_3d(self, ele):
         """Remove a 3d object from the scene."""
         self.graph.render_3d.remove(ele)
-        self.graph.pick_3d.rem_obj(ele)
+        self.graph.pick.rem_obj(ele)
 
     def add_3d_blend(self, ele):
-        """Add a 3d, blended, depth-tested object to the scene."""
-        self.graph.render_3d_blend.append(ele)
-        self.graph.pick_3d_blend.add_obj(ele)
+        """Add a 3d, blended, depth-tested object or list of objects to the scene."""
+        if not hasattr(ele, "__iter__"):
+            ele = [ele]
+        for i in ele:
+            self.graph.render_3d_blend.append(i)
+            self.graph.pick.add_obj(i)
 
     def remove_3d_blend(self, ele):
         """Remove a 3d blended object from the scene."""
         self.graph.render_3d_blend.remove(ele)
-        self.graph.pick_3d_blend.rem_obj(ele)
+        self.graph.pick.rem_obj(ele)
 
     def add_3d_always(self, ele):
-        """Add a 3d, blended, non-depth-tested (always visible) object to the scene."""
-        self.graph.render_3d_always.append(ele)
-        self.graph.pick_3d_always.add_obj(ele)
+        """Add a 3d, blended, non-depth-tested (always visible) object or list of objects to the scene."""
+        if not hasattr(ele, "__iter__"):
+            ele = [ele]
+        for i in ele:
+            self.graph.render_3d_always.append(i)
 
     def remove_3d_always(self, ele):
         """Remove a 3d always visible obejct from the scene."""
         self.graph.render_3d_always.remove(ele)
-        self.graph.pick_3d_always.rem_obj(ele)
 
-    def add_skybox(self, ele):
-        """Add a Skybox or Skyball object to the scene."""
+    def add_skybox(self, ele=None):
+        """Add a Skybox or Skyball object to the scene.
+           If None is given, disables skybox."""
         self.graph.skybox = ele
 
     def add_light(self, light):
@@ -142,48 +140,22 @@ class Scene(object):
         if light in self.graph.lights:
             self.graph.lights.remove(light)
 
-    def pick(self, mouse_pos, camera):
-        """Run picker and return which object(s) are hit in each render_3d* group in the scene.
+    def pick(self, mouse_pos, camera=None):
+        """Run picker and return which object(s) are hit in the 3d and 3d_blend groups, 3d_always objects won't pick!!!
            mouse_pos is the position of the mouse on screen
-           camera is teh camera used to render the scene
-           Returns a PickResult object"""
+           camera is the camera used to render the scene
+           Returns picked object or None"""
         view.set3d()
 
+        glDisable(GL_LIGHTING)
         glEnable(GL_ALPHA_TEST)
-        h1 = self.graph.pick_3d.pick(mouse_pos, camera)
+        h = self.graph.pick.pick(mouse_pos, camera)
         glDisable(GL_ALPHA_TEST)
-
-        glDepthMask(GL_FALSE)
-        h2 = self.graph.pick_3d_blend.pick(mouse_pos, camera)
-        glDepthMask(GL_TRUE)
-
-        glDisable(GL_DEPTH_TEST)
-        h3 = self.graph.pick_3d_always.pick(mouse_pos, camera)
-        glEnable(GL_DEPTH_TEST)
-
-        hits = []
-        depths = []
-
-        if h1:
-            hits.append(h1[0])
-            depths.append(h1[1])
+        glEnable(GL_LIGHTING)
+        if h:
+            hit, depth = h
         else:
-            hits.append(None)
-            depths.append(None)
-
-        if h2:
-            hits.append(h2[0])
-            depths.append(h2[1])
-        else:
-            hits.append(None)
-            depths.append(None)
-
-        if h3:
-            hits.append(h3[0])
-            depths.append(h3[1])
-        else:
-            hits.append(None)
-            depths.append(None)
+            hit = None
 
         view.clear_screen()
-        return PickResult(hits, depths)
+        return hit

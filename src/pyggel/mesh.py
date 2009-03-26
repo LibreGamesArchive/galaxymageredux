@@ -7,7 +7,8 @@ The mesh module contains mesh classes for different kinds of meshes, as well as 
 
 from include import *
 import os
-import image, view, misc, data
+import image, view, data
+from data import blank_texture
  
 def OBJ(filename, swapyz=True, pos=(0,0,0),
         rotation=(0,0,0), colorize=(1,1,1,1)):
@@ -55,7 +56,7 @@ def OBJ(filename, swapyz=True, pos=(0,0,0),
                     tex = data.Texture(os.path.join(path, values[1]), 1)
                     smtl[mtl] = tex
                 elif values[0]=="Kd":
-                    tex = misc.create_empty_texture(color=map(float, values[1:]))
+                    tex = data.create_empty_texture(color=map(float, values[1:]))
                     smtl[mtl] = tex
         elif values[0] == 'f':
             face = []
@@ -77,16 +78,23 @@ def OBJ(filename, swapyz=True, pos=(0,0,0),
 
     gl_list = data.DisplayList()
     gl_list.begin()
+    current_tex = None
     for face in sfaces:
         vertices, normals, texture_coords, material = face
         if smtl:
             mtl = smtl[material]
             try:
-                mtl.bind()
+                if not current_tex == mtl:
+                    mtl.bind()
+                    current_tex = mtl
             except:
-                blank_texture.bind()
+                if not current_tex == blank_texture:
+                    blank_texture.bind()
+                    current_tex = blank_texure
         else:
-            blank_texture.bind()
+            if not current_tex == blank_texutre:
+                blank_texture.bind()
+                current_tex = blank_texture
         glBegin(GL_POLYGON)
         for i in xrange(len(vertices)):
             if normals[i] > 0:
