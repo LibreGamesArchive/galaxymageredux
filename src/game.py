@@ -29,7 +29,7 @@ class Game(net.Client):
 
     def sendMessage(self, line):
         """Callback for sending out a finished line of input."""
-        if len(line) > 0:
+        if len(line) > 0 and self.avatar:
             self.avatar.callRemote("sendMessage", line)
 
     def update(self):
@@ -37,14 +37,12 @@ class Game(net.Client):
 
     def errHandler(self, failure):
         e = failure.trap(error.ConnectionRefusedError)
-        if e == error.ConnectionRefusedError:
-            self.hostname = raw_input(self.hostname + " refused connection, Alternate server hostname:")
-            if hostname == '':
-                self.shutdown(failure)
-            self.connect() # maybe make a reconnect method?
+        print e
+        if not self.config["verbose_logging"]:
+            if e == error.ConnectionRefusedError:
+                self.game_state.get_errorMessage("Could not connect to host! :(")
         else:
-            print "Unexpected failure: "
-            self.shutdown(failure)
+            self.game_state.get_errorMessage(repr(e))
 
     def remote_getMessage(self, message):
         self.game_state.get_netMessage(message)

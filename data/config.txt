@@ -3,3 +3,4 @@ fps = True
 sound = True
 fullscreen = False
 resolution = (800,600)
+verbose_logging = False

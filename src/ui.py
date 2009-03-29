@@ -55,6 +55,10 @@ class GameState(object):
         if self.active_child:
             self.active_child.get_netMessage(message)
 
+    def get_errorMessage(self, message):
+        if self.active_child:
+            self.active_child.get_errorMessage(message)
+
     def send_netMessage(self, message):
         self.game.sendMessage(message)
 
@@ -125,3 +129,7 @@ class ChatWindow(GameState):
     def get_netMessage(self, message):
         GameState.get_netMessage(self, message)
         self.message_frame.add_message(message)
+    
+    def get_errorMessage(self, message):
+        GameState.get_netMessage(self, message)
+        self.message_frame.add_message(message) #TODO: color red
