@@ -23,7 +23,7 @@ class Game(net.Client):
             pyggel.view.toggle_fullscreen()
         pyggel.view.set_title(self.config["name"])
 
-        self.game_state = ui.Root(self)
+        self.game_state = ui.MainMenu(self)
 
         net.Client.__init__(self, "localhost", 44444, "test!")
 

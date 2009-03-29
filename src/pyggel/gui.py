@@ -379,7 +379,7 @@ class App(object):
         self.fonts = {"default":(font.Font(), font.MEFont())}
         self.theme = Theme(self)
 
-        self.packer = Packer(self, size=view.screen.screen_size)
+        self.packer = Packer(self, size=view.screen.screen_size_2d)
 
         self.visible = True
 

@@ -56,7 +56,7 @@ class GameState(object):
     def send_netMessage(self, message):
         self.game.sendMessage(message)
 
-class Root(GameState):
+class MainMenu(GameState):
     def __init__(self, game, parent=None):
         GameState.__init__(self, game)
         self.children = {"chat":ChatWindow}
@@ -64,6 +64,7 @@ class Root(GameState):
         self.event_handler = pyggel.event.Handler()
         self.scene = pyggel.scene.Scene()
         self.app = pyggel.gui.App(self.event_handler)
+        self.app.packer.packtype="center"
         pyggel.gui.Button(self.app, "Chat!", callbacks=[lambda:self.goto("chat")])
         self.scene.add_2d(self.app)
 
@@ -76,6 +77,7 @@ class Root(GameState):
                 self.game.close()
                 self.game.running = False
                 pyggel.quit()
+                return None
 
             pyggel.view.clear_screen()
             self.scene.render()
