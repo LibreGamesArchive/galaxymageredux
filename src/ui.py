@@ -7,14 +7,16 @@ class MessageBox(pyggel.gui.Frame):
         self.num_messages = num_messages
 
         self.theme = pyggel.gui.Theme(self)
-        self.theme.theme["Label"]["font-color-inactive"] = (1,1,1,1)
+        self.theme.load("data/gui/theme.py")
+        l = self.theme.theme["Label"]
+        l["background-image"] = None
 
         self.packer.pack_upwards = self.pack_upwards
         self.packer.packtype = "upwards"
         self._messages = []
 
     def pack_upwards(self):
-        bottom = self.size[1]
+        bottom = self.size[1]-self.tsize[1]*2
         self.widgets.reverse() #flip them!
         for i in self.widgets:
             pos = (0, bottom-i.size[1])
@@ -90,11 +92,11 @@ class ChatWindow(GameState):
         self.event_handler = pyggel.event.Handler()
         self.scene = pyggel.scene.Scene()
         self.app = pyggel.gui.App(self.event_handler)
-        self.message_frame = MessageBox(self.app, size=(640, 400))
-        pyggel.gui.NewLine(self.app)
         self.app.theme.load("data/gui/theme.py")
+        self.message_frame = MessageBox(self.app, size=(630, 400)) #640-10 for tile size
+        pyggel.gui.NewLine(self.app)
         self.input = pyggel.gui.Input(self.app, callback=self.send_netMessage, font_color=(1,1,1,1),
-                                      width=640)
+                                      width=630)
         pyggel.gui.NewLine(self.app)
         pyggel.gui.Button(self.app, "Menu", callbacks=[self.stop])
         self.scene.add_2d(self.app)

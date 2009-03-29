@@ -18,7 +18,7 @@
     "text":"label...",
     "background-image":"base.png",
     "font-color":(1,1,1,1),
-    "font-color-inactive":(1,1,1,.5),
+    "font-color-inactive":(1,1,1,1),
     "font-underline":False,
     "font-italic":False,
     "font-bold":False
@@ -52,7 +52,7 @@
     "option-background-image":"check_open.png",
     "option-check-image":"check_closed.png",
     "font-color":(1,1,1,1),
-    "font-color-inactive":(1,1,1,.5),
+    "font-color-inactive":(1,1,1,1),
     "font-underline":False,
     "font-italic":False,
     "font-bold":False
@@ -63,7 +63,7 @@
     "option-background-image":"check_open.png",
     "option-check-image":"check_closed.png",
     "font-color":(1,1,1,1),
-    "font-color-inactive":(1,1,1,.5),
+    "font-color-inactive":(1,1,1,1),
     "font-underline":False,
     "font-italic":False,
     "font-bold":False
@@ -74,7 +74,7 @@
     "width":100,
     "background-image":"base.png",
     "font-color":(1,1,1,1),
-    "font-color-inactive":(1,1,1,.5),
+    "font-color-inactive":(1,1,1,1),
     "font-underline":False,
     "font-italic":False,
     "font-bold":False
@@ -82,7 +82,7 @@
 "MoveBar":{
     "font":"default",
     "font-color":(1,1,1,1),
-    "font-color-inactive":(1,1,1,.5),
+    "font-color-inactive":(1,1,1,1),
     "font-underline":False,
     "font-italic":False,
     "font-bold":False,
@@ -93,7 +93,7 @@
 "Window":{
     "font":"default",
     "font-color":(1,1,1,1),
-    "font-color-inactive":(1,1,1,.5),
+    "font-color-inactive":(1,1,1,1),
     "font-underline":False,
     "font-italic":False,
     "font-bold":False,
