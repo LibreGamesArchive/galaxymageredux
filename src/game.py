@@ -15,7 +15,6 @@ def load_config():
 
 class Game(net.Client):
     def __init__(self):
-        net.Client.__init__(self, "localhost", 44444, "test!")
         self.config = load_config()
         pyggel.init(screen_size=self.config["resolution"],
                     screen_size_2d=(640, 480)) #keep 2d at 640x480
@@ -24,37 +23,17 @@ class Game(net.Client):
             pyggel.view.toggle_fullscreen()
         pyggel.view.set_title(self.config["name"])
 
-        self.event_handler = pyggel.event.Handler()
-        self.scene = pyggel.scene.Scene()
-        self.app = pyggel.gui.App(self.event_handler)
-        self.message_frame = ui.MessageBox(self.app, size=(640, 400))
-        pyggel.gui.NewLine(self.app)
-        self.input = pyggel.gui.Input(self.app, callback=self.input_received, font_color=(1,1,1,1),
-                                      width=640)
-        self.scene.add_2d(self.app)
+        self.game_state = ui.Root(self)
 
-    def input_received(self, line):
+        net.Client.__init__(self, "localhost", 44444, "test!")
+
+    def sendMessage(self, line):
         """Callback for sending out a finished line of input."""
-        if line == "q":
-            self.close()
-        elif len(line) > 0:
+        if len(line) > 0:
             self.avatar.callRemote("sendMessage", line)
-        self.get_input = True
 
     def update(self):
-        if not self.input.key_active:
-            self.input.key_active = True #make sure the input always takes, well, input...
-
-        self.event_handler.update()
-        if self.event_handler.quit:
-            self.close()
-            pyggel.quit()
-            return None
-
-        pyggel.view.clear_screen()
-        self.scene.render()
-        pyggel.view.refresh_screen()
-        
+        self.game_state.update()        
 
     def errHandler(self, failure):
         e = failure.trap(error.ConnectionRefusedError)
@@ -68,8 +47,8 @@ class Game(net.Client):
             self.shutdown(failure)
 
     def remote_getMessage(self, message):
-        self.message_frame.add_message(message)
+        self.game_state.get_netMessage(message)
 
 def play():
     g = Game()
-    g.connect()
+##    g.connect()

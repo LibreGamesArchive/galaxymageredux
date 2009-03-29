@@ -16,8 +16,11 @@ class UsernameChecker(object):
 
     def requestAvatarId(self, cred):
         username = cred.username
-        while username in self.usernames:
-            username = username + "_"
+        if username in self.usernames:
+            num = 1
+            while username+str(num) in self.usernames:
+                num += 1
+            username += str(num)
         self.usernames.append(username)
         return defer.succeed(username)
 
@@ -57,8 +60,8 @@ class Server(object):
         self.users = 0
 
     def join(self, avatar):
-        self.remoteAll("getMessage", "%s joined the server" % avatar.name)
         self.avatars.append(avatar)
+        self.remoteAll("getMessage", "%s joined the server" % avatar.name)
 
     def leave(self, avatar):
         self.avatars.remove(avatar)
@@ -71,7 +74,10 @@ class Server(object):
     def remoteAll(self, action, *args):
         dfs = []
         for avatar in self.avatars:
-            dfs.append(self.remote(avatar, action, *args))
+            try:
+                dfs.append(self.remote(avatar, action, *args))
+            except:
+                pass
         return dfs
 
     def requestNewAvatar(self):
@@ -90,10 +96,10 @@ class Server(object):
 
     def PA_sendMessage(self, avatar, message):
         #server methods that are available do NOT have to be preceeded with eithe rremote_ or perspective_
-        self.remoteAll("getMessage", "player " + avatar.name + " " + message)
+        self.remoteAll("getMessage", "player: " + avatar.name + ": " + message)
 
     def CA_sendMessage(self, avatar, message):
-        self.remoteAll("getMessage", "creator " + avatar.name + " " + message)
+        self.remoteAll("getMessage", "creator: " + avatar.name + ": " + message)
 
     def start(self, port):
         self.realm = Realm(port, self)
@@ -139,21 +145,30 @@ class Client(pb.Referenceable):
         self.username = username
         self.avatar = None
 
+        self._connected = False
         self.running = True
+
+        self.run_updater()
+        reactor.run()
+
+        self.connection = None
 
     def connect(self):
         f = pb.PBClientFactory()
-        reactor.connectTCP(self.hostname, self.port, f)
+        self.connection = reactor.connectTCP(self.hostname, self.port, f)
         cred = credentials.UsernamePassword(self.username, self.username)
         d = f.login(cred, self)
         d.addCallback(self.connected)
         d.addErrback(self.errHandler)
-        reactor.run()
+
+    def disconnect(self):
+        if self.connection:
+            self.connection.disconnect()
+            self.connection = None
         
     def connected(self, avatar):
         self.avatar = avatar
-        self.running = True
-        self.run_updater()
+        self._connected = True
 
     def run_updater(self):
         self.update()
@@ -165,6 +180,8 @@ class Client(pb.Referenceable):
 
     def shutdown(self, result):
         print result
+        self._connected = False
+        self.running = False
         reactor.stop()
 
     def errHandler(self, result):
@@ -173,6 +190,7 @@ class Client(pb.Referenceable):
     def close(self):
         reactor.stop()
         self.running = False
+        self._connected = False
 
     # Methods callable by the server
     def remote_getMessage(self, message):
