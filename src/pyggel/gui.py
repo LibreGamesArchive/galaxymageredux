@@ -1383,15 +1383,17 @@ class Input(Widget):
             for i in g2:
                 w2 += i.get_width()
 
-            tp = tx + self.xwidth - w1 + self.tshift[0]
+            tp = tx + self.xwidth - w1 + self.tsize[0]
             if tp > self.pos[0]:
                 tp = self.pos[0]
 
             cp = tp + w1
 
-            self.wpos, self.tpos = (cp+self.cwidth, ty+self.tshift[1]), (tp+self.cwidth*2, ty+self.tshift[1])
+            self.wpos, self.tpos = (cp+self.cwidth+self.tsize[0], ty+self.tsize[1]),\
+                                   (tp+self.cwidth*2+self.tsize[0], ty+self.tsize[1])
         else:
-            self.wpos, self.tpos = (tx+self.tshift[0]-self.cwidth, ty+self.tshift[1]), (tx+self.cwidth*2, ty+self.tshift[1])
+            self.wpos, self.tpos = (tx+self.tsize[0]-self.cwidth, ty+self.tsize[1]),\
+                                   (tx+self.cwidth*2+self.tsize[0], ty+self.tsize[1])
 
     def focus(self):
         Widget.focus(self)

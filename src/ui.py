@@ -64,6 +64,7 @@ class MainMenu(GameState):
         self.event_handler = pyggel.event.Handler()
         self.scene = pyggel.scene.Scene()
         self.app = pyggel.gui.App(self.event_handler)
+        self.app.theme.load("data/gui/theme.py")
         self.app.packer.packtype="center"
         pyggel.gui.Button(self.app, "Chat!", callbacks=[lambda:self.goto("chat")])
         self.scene.add_2d(self.app)
@@ -91,6 +92,7 @@ class ChatWindow(GameState):
         self.app = pyggel.gui.App(self.event_handler)
         self.message_frame = MessageBox(self.app, size=(640, 400))
         pyggel.gui.NewLine(self.app)
+        self.app.theme.load("data/gui/theme.py")
         self.input = pyggel.gui.Input(self.app, callback=self.send_netMessage, font_color=(1,1,1,1),
                                       width=640)
         pyggel.gui.NewLine(self.app)
