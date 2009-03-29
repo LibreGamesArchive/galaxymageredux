@@ -24,8 +24,8 @@ class MessageBox(pyggel.gui.Frame):
             i.force_pos_update(pos)
         self.widgets.reverse()
 
-    def add_message(self, message):
-        x = pyggel.gui.Label(self, message)
+    def add_message(self, message, color=(1,1,1,1)):
+        x = pyggel.gui.Label(self, message, font_color=color, font_color_inactive=color)
         self._messages.append(x)
         if len(self.widgets) > self.num_messages:
             x = self._messages[0]
@@ -132,4 +132,4 @@ class ChatWindow(GameState):
     
     def get_errorMessage(self, message):
         GameState.get_netMessage(self, message)
-        self.message_frame.add_message(message) #TODO: color red
+        self.message_frame.add_message(message, color=(1,.1,.1,1))
