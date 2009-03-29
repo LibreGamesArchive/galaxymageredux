@@ -2,7 +2,7 @@ import pyggel
 from pyggel import *
 
 class MessageBox(pyggel.gui.Frame):
-    def __init__(self, app, num_messages=20, **kwargs):
+    def __init__(self, app, num_messages=15, **kwargs):
         pyggel.gui.Frame.__init__(self, app, **kwargs)
         self.num_messages = num_messages
 
@@ -97,10 +97,10 @@ class ChatWindow(GameState):
         self.scene = pyggel.scene.Scene()
         self.app = pyggel.gui.App(self.event_handler)
         self.app.theme.load("data/gui/theme.py")
-        self.message_frame = MessageBox(self.app, size=(630, 400)) #640-10 for tile size
+        self.message_frame = MessageBox(self.app, size=(200, 200))
         pyggel.gui.NewLine(self.app)
         self.input = pyggel.gui.Input(self.app, callback=self.send_netMessage, font_color=(1,1,1,1),
-                                      width=630)
+                                      width=200)
         pyggel.gui.NewLine(self.app)
         pyggel.gui.Button(self.app, "Menu", callbacks=[self.stop])
         self.scene.add_2d(self.app)
