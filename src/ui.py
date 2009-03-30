@@ -1,6 +1,8 @@
 import pyggel
 from pyggel import *
 
+import objects
+
 class MessageBox(pyggel.gui.Frame):
     def __init__(self, app, num_messages=15, **kwargs):
         pyggel.gui.Frame.__init__(self, app, **kwargs)
@@ -65,7 +67,8 @@ class GameState(object):
 class MainMenu(GameState):
     def __init__(self, game, parent=None):
         GameState.__init__(self, game)
-        self.children = {"chat":ChatWindow}
+        self.children = {"chat":ChatWindow,
+                         "test_map":TestMap}
 
         self.event_handler = pyggel.event.Handler()
         self.scene = pyggel.scene.Scene()
@@ -73,6 +76,7 @@ class MainMenu(GameState):
         self.app.theme.load("data/gui/theme.py")
         self.app.packer.packtype="center"
         pyggel.gui.Button(self.app, "Chat!", callbacks=[lambda:self.goto("chat")])
+        pyggel.gui.Button(self.app, "Test Map!", callbacks=[lambda:self.goto("test_map")])
         self.scene.add_2d(self.app)
 
     def update(self):
@@ -133,3 +137,47 @@ class ChatWindow(GameState):
     def get_errorMessage(self, message):
         GameState.get_netMessage(self, message)
         self.message_frame.add_message(message, color=(1,.1,.1,1))
+
+class TestMap(GameState):
+    def __init__(self, game, parent=None):
+        GameState.__init__(self, game, parent)
+
+        self.event_handler = pyggel.event.Handler()
+        self.scene = pyggel.scene.Scene()
+        self.app = pyggel.gui.App(self.event_handler)
+        self.app.theme.load("data/gui/theme.py")
+        pyggel.gui.Button(self.app, "Menu", callbacks=[self.goback])
+        self.scene.add_2d(self.app)
+
+        tiles = objects.parse_map("data/core/map/test_map.py")
+        self.scene.add_3d(tiles)
+
+        self.camera = pyggel.camera.LookAtCamera((0,0,0), distance=15)
+
+        light = pyggel.light.Light((2,100,2), (1,1,1,1),
+                                  (1,1,1,1), (50,50,50,50),
+                                  (0,0,0), True)
+        self.scene.add_light(light)
+
+    def update(self):
+        GameState.update(self)
+
+        self.event_handler.update()
+        if self.event_handler.quit:
+            self.game.close()
+            self.game.running = False
+            pyggel.quit()
+            return None
+
+        if K_LEFT in self.event_handler.keyboard.active:
+            self.camera.roty -= 1
+        if K_RIGHT in self.event_handler.keyboard.active:
+            self.camera.roty += 1
+        if K_UP in self.event_handler.keyboard.active:
+            self.camera.rotx -= 1
+        if K_DOWN in self.event_handler.keyboard.active:
+            self.camera.rotx += 1
+
+        pyggel.view.clear_screen()
+        self.scene.render(self.camera)
+        pyggel.view.refresh_screen()

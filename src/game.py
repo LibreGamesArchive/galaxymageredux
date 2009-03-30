@@ -8,7 +8,7 @@ import ui
 
 def load_config():
     if pyggel.misc.test_safe("data/config.txt")[0]:
-        exec open("data/config.txt")
+        exec open("data/config.txt", "rU")
         return locals()
     else:
         raise ImportWarning("Warning, config file is not safe! Make sure no function calls or importing are present!!!")

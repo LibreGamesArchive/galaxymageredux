@@ -3,10 +3,8 @@ image("grass1","tile_example.png")
 
 terrain_type(name="grass",
              image_top="grass1",
-             image_sides=("grass1", "grass1",
-                          "grass1", "grass1"),
-             color=(0,1,0,1), color_deviation=(0, 0.1, 0, 0),
-             hitpoints=50, armor={})
+             image_side="grass1",
+             color=(0,1,0,1), color_deviation=(0, 0.1, 0, 0))
 
 
 map_tile(x=0, y=0, bottom=0, height=5,
