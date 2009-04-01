@@ -187,8 +187,15 @@ class TestMap(GameState):
 
         pyggel.view.clear_screen()
         touching = self.scene.pick(pyggel.view.screen.get_mouse_pos(), self.camera)
+        if isinstance(touching, objects.Unit):
+            touching = touching.tile
+        if touching:
+            _col = touching.colorize
+            touching.colorize = (1,0,0,1)
         if "left" in self.event_handler.mouse.hit:
-            if touching and isinstance(touching, objects.Tile):
+            if isinstance(touching, objects.Tile):
                 self.unit.tile = touching
         self.scene.render(self.camera)
+        if touching:
+            touching.colorize = _col
         pyggel.view.refresh_screen()
