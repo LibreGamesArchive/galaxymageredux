@@ -249,7 +249,7 @@ class Tile(object):
 
 class Unit(object):
     font = None
-    def __init__(self, tiles, pos=(0,0),
+    def __init__(self, tile, pos=(0,0),
                  image=None, #change to/allow meshes later
                  colorize=(1,1,1,1)):
         if not self.font:
@@ -258,7 +258,7 @@ class Unit(object):
         self.image.pos = pos[0], 0, pos[1]
         self.image.colorize = colorize
 
-        self.tiles = tiles
+        self.tile = tile
 
         self.text = self.font.make_text_image("HP: 20/20", color=(1,0,0,.5))
 
@@ -266,25 +266,10 @@ class Unit(object):
         self.max_hp = 20
         self.visible = True
 
-    def get_on_tile(self):
-        x, y, z = self.image.pos
-        x = int(x) *2
-        z = int(z) *2
-
-        for i in self.tiles:
-            _x, _y, _z = i.pos
-            if int(abs(_x-x)) == 0 and\
-               int(abs(_z-z)) == 0:
-                return i
-        return None
-
     def update_pos(self):
-        x, y, z = self.image.pos
-
-        tile = self.get_on_tile()
-        if tile:
-            y = tile.pos[1] + tile.height+0.5 #so we are correct height ;)
-        self.image.pos = (x,y,z)
+        x, y, z = self.tile.pos
+        y = self.tile.pos[1] + self.tile.height+.5 #so we are correct height ;)
+        self.image.pos = (x*2,y,z*2)
 
     def render(self, camera=None):
         self.update_pos()

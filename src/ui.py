@@ -161,7 +161,8 @@ class TestMap(GameState):
 
         _image = pyggel.image.Image3D("data/core/image/unit_example.png")
 
-        self.unit = objects.Unit(tiles, pos=(0,0),
+        self.unit = objects.Unit(tiles[1],#lets see how that works ;)
+                                 pos=(0,0),
                                  image=_image, colorize=(1,1,1,1))
         self.scene.add_3d(self.unit)
 
@@ -185,5 +186,9 @@ class TestMap(GameState):
             self.camera.rotx += 1
 
         pyggel.view.clear_screen()
+        touching = self.scene.pick(pyggel.view.screen.get_mouse_pos(), self.camera)
+        if "left" in self.event_handler.mouse.hit:
+            if touching and isinstance(touching, objects.Tile):
+                self.unit.tile = touching
         self.scene.render(self.camera)
         pyggel.view.refresh_screen()
