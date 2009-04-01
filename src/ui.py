@@ -159,6 +159,12 @@ class TestMap(GameState):
                                   (0,0,0), True)
         self.scene.add_light(light)
 
+        _image = pyggel.image.Image3D("data/core/image/unit_example.png")
+
+        self.unit = objects.Unit(tiles, pos=(0,0),
+                                 image=_image, colorize=(1,1,1,1))
+        self.scene.add_3d(self.unit)
+
     def update(self):
         GameState.update(self)
 

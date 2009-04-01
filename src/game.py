@@ -18,6 +18,7 @@ class Game(net.Client):
         self.config = load_config()
         pyggel.init(screen_size=self.config["resolution"],
                     screen_size_2d=(640, 480)) #keep 2d at 640x480
+        pyggel.view.set_background_color((.75,.75,.75))
 
         if self.config["fullscreen"]:
             pyggel.view.toggle_fullscreen()
