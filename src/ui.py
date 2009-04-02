@@ -243,6 +243,7 @@ class TestMap(GameState):
 
         self.event_handler = pyggel.event.Handler()
         self.scene = pyggel.scene.Scene()
+        self.scene.pick = True
         self.app = pyggel.gui.App(self.event_handler)
         self.app.theme.load("data/gui/theme.py")
         pyggel.gui.Button(self.app, "Menu", callbacks=[self.goback])
@@ -265,6 +266,8 @@ class TestMap(GameState):
                                  image=_image, colorize=(1,1,1,1))
         self.scene.add_3d(self.unit)
 
+        self.last_touching = (None, None)
+
     def update(self):
         GameState.update(self)
 
@@ -285,16 +288,14 @@ class TestMap(GameState):
             self.camera.rotx += 1
 
         pyggel.view.clear_screen()
-        touching = self.scene.pick(pyggel.view.screen.get_mouse_pos(), self.camera)
-        if isinstance(touching, objects.Unit):
-            touching = touching.tile
+        touching = self.scene.render(self.camera)
+        if self.last_touching[0]:
+            self.last_touching[0].colorize = self.last_touching[1]
         if touching:
-            _col = touching.colorize
+            if isinstance(touching, objects.Unit):
+                touching = touching.tile
+            self.last_touching = (touching, touching.colorize)
             touching.colorize = (1,0,0,1)
-        if "left" in self.event_handler.mouse.hit:
-            if isinstance(touching, objects.Tile):
-                self.unit.tile = touching
-        self.scene.render(self.camera)
-        if touching:
-            touching.colorize = _col
+        else:
+            self.last_touching = (None, None)
         pyggel.view.refresh_screen()
