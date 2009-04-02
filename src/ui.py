@@ -90,8 +90,11 @@ class MainMenu(GameState):
         pyggel.gui.NewLine(self.app)
         pyggel.gui.Button(self.app, "Options", callbacks=[self.settings_app.activate])
         pyggel.gui.NewLine(self.app)
-        pyggel.gui.Button(self.app, "Exit", callbacks=[lambda:self.exit()])
+        pyggel.gui.Button(self.app, "Exit", callbacks=[self.force_quit])
         self.scene.add_2d(self.app)
+
+    def force_quit(self):
+        self.event_handler.quit = True
 
     def update(self):
         if self.active_child:
@@ -100,6 +103,7 @@ class MainMenu(GameState):
             self.event_handler.update()
             if self.event_handler.quit:
                 self.exit()
+                return None
             pyggel.view.clear_screen()
             self.scene.render()
             pyggel.view.refresh_screen()
@@ -108,7 +112,6 @@ class MainMenu(GameState):
         self.game.close()
         self.game.running = False
         pyggel.quit()
-        return None
 
 class ChatWindow(GameState):
     def __init__(self, game, parent=None):
