@@ -84,18 +84,30 @@ class MainMenu(GameState):
         self.checks = pyggel.gui.MultiChoiceRadio(frame, options=["FPS",
                                                                   "sound",
                                                                   "fullscreen",
-                                                                  "verbose logging"])
+                                                                  "verbose_logging"])
+        for i in self.checks.options:
+            name, check, label, state = i
+            state = int(self.game.config[name])
+            check.state = state
+            i[0], i[1], i[2], i[3] = name, check, label, state
         self.resolution = pyggel.gui.Radio(frame, options=["640x480",
                                                            "800x600",
                                                            "1024x768",
                                                            "1680x1050"])
         x = "%sx%s"%self.game.config["resolution"]
         if x in self.resolution.states:
-            for i in self.resolution.states:
-                self.resolution.states[i] = 0
-            self.resolution.states[x] = 1
+            for i in self.resolution.options:
+                name, check, label, state = i
+                if name == x:
+                    state = 1
+                    check.state = 1
+                else:
+                    state = 0
+                    check.state = 0
+                i[0], i[1], i[2], i[3] = name, check, label, state
         else:
             pass
+
         pyggel.gui.NewLine(frame)
         pyggel.gui.Button(frame, "Save Changes", callbacks=[self.save_options])
         pyggel.gui.Button(frame, "Back", callbacks=[self.app.activate])
@@ -124,7 +136,7 @@ class MainMenu(GameState):
             bool(self.checks.states["FPS"]),
             bool(self.checks.states["sound"]),
             bool(self.checks.states["fullscreen"]),
-            bool(self.checks.states["verbose logging"]),
+            bool(self.checks.states["verbose_logging"]),
             self.get_option_resolution()))
         fobj.close()
 

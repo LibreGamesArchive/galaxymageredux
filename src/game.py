@@ -19,11 +19,10 @@ class Game(net.Client):
                        "fullscreen":False, "resolution":(640,480)}
         self.config.update(load_config())
         pyggel.init(screen_size=self.config["resolution"],
-                    screen_size_2d=(640, 480)) #keep 2d at 640x480
+                    screen_size_2d=(640, 480), #keep 2d at 640x480
+                    fullscreen=self.config["fullscreen"])
         pyggel.view.set_background_color((.75,.75,.75))
 
-        if self.config["fullscreen"]:
-            pyggel.view.toggle_fullscreen()
         pyggel.view.set_title(self.config["name"])
 
         self.game_state = ui.MainMenu(self)
