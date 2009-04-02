@@ -68,17 +68,28 @@ class MainMenu(GameState):
     def __init__(self, game, parent=None):
         GameState.__init__(self, game)
         self.children = {"chat":ChatWindow,
-                         "test_map":TestMap,
-                         "config":SettingsWindow}
+                         "test_map":TestMap}
 
         self.event_handler = pyggel.event.Handler()
         self.scene = pyggel.scene.Scene()
         self.app = pyggel.gui.App(self.event_handler)
         self.app.theme.load("data/gui/theme.py")
         self.app.packer.packtype="center"
+        self.settings_app = pyggel.gui.App(self.event_handler)
+        self.settings_app.theme = self.app.theme
+        self.settings_app.packer.packtype="center"
+
+        pyggel.gui.Frame(self.settings_app, size=(400,300))
+        #TODO: add widgets to swap back!!!
+        self.scene.add_2d(self.settings_app)
+        self.app.activate()
+
         pyggel.gui.Button(self.app, "Single Player", callbacks=[lambda:self.goto("test_map")])
+        pyggel.gui.NewLine(self.app)
         pyggel.gui.Button(self.app, "Multiplayer", callbacks=[lambda:self.goto("chat")])
-        pyggel.gui.Button(self.app, "Options", callbacks=[lambda:self.goto("config")])
+        pyggel.gui.NewLine(self.app)
+        pyggel.gui.Button(self.app, "Options", callbacks=[self.settings_app.activate])
+        pyggel.gui.NewLine(self.app)
         pyggel.gui.Button(self.app, "Exit", callbacks=[lambda:self.exit()])
         self.scene.add_2d(self.app)
 
@@ -204,7 +215,3 @@ class TestMap(GameState):
         if touching:
             touching.colorize = _col
         pyggel.view.refresh_screen()
-
-class SettingsWindow(pyggel.gui.Window):
-    def __init__(self):
-        self.title = "Settings"
