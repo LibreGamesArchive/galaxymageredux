@@ -15,7 +15,9 @@ def load_config():
 
 class Game(net.Client):
     def __init__(self):
-        self.config = load_config()
+        self.config = {"FPS":False, "name":"reduxian", "sound":True, "verbose_logging":False,
+                       "fullscreen":False, "resolution":(640,480)}
+        self.config.update(load_config())
         pyggel.init(screen_size=self.config["resolution"],
                     screen_size_2d=(640, 480)) #keep 2d at 640x480
         pyggel.view.set_background_color((.75,.75,.75))
@@ -25,6 +27,7 @@ class Game(net.Client):
         pyggel.view.set_title(self.config["name"])
 
         self.game_state = ui.MainMenu(self)
+        self.clock = pygame.time.Clock()
 
         net.Client.__init__(self, "localhost", 44444, "test!")
 
@@ -34,6 +37,9 @@ class Game(net.Client):
             self.avatar.callRemote("sendMessage", line)
 
     def update(self):
+        self.clock.tick(999) #TODOL make 60 fps!!!
+        if self.config["FPS"]:
+            pyggel.view.set_title(self.config["name"]+" FPS: %s"%self.clock.get_fps())
         self.game_state.update()        
 
     def errHandler(self, failure):

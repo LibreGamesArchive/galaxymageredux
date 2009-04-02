@@ -1,6 +1,6 @@
-name = 'reduxian'
-fps = True
-sound = True
-fullscreen = False
-resolution = (800,600)
-verbose_logging = False
+name='reduxian'
+FPS=True
+sound=False
+fullscreen=False
+verbose_logging=False
+resolution=(640, 480)

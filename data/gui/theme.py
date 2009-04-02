@@ -43,14 +43,14 @@
     "font-bold-click":False
     },
 "Checkbox":{
-    "background-image":"check_open.png",
-    "check-image":"check_closed.png"
+    "background-image":None,
+    "check-image":None
     },
 "Radio":{
     "font":"default",
     "background-image":"base.png",
-    "option-background-image":"check_open.png",
-    "option-check-image":"check_closed.png",
+    "option-background-image":None,
+    "option-check-image":None,
     "font-color":(1,1,1,1),
     "font-color-inactive":(1,1,1,1),
     "font-underline":False,
@@ -60,8 +60,8 @@
 "MultiChoiceRadio":{
     "font":"default",
     "background-image":"base.png",
-    "option-background-image":"check_open.png",
-    "option-check-image":"check_closed.png",
+    "option-background-image":None,
+    "option-check-image":None,
     "font-color":(1,1,1,1),
     "font-color-inactive":(1,1,1,1),
     "font-underline":False,

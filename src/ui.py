@@ -79,8 +79,26 @@ class MainMenu(GameState):
         self.settings_app.theme = self.app.theme
         self.settings_app.packer.packtype="center"
 
-        pyggel.gui.Frame(self.settings_app, size=(400,300))
+        frame = pyggel.gui.Frame(self.settings_app, size=(400,200))
         #TODO: add widgets to swap back!!!
+        self.checks = pyggel.gui.MultiChoiceRadio(frame, options=["FPS",
+                                                                  "sound",
+                                                                  "fullscreen",
+                                                                  "verbose logging"])
+        self.resolution = pyggel.gui.Radio(frame, options=["640x480",
+                                                           "800x600",
+                                                           "1024x768",
+                                                           "1680x1050"])
+        x = "%sx%s"%self.game.config["resolution"]
+        if x in self.resolution.states:
+            for i in self.resolution.states:
+                self.resolution.states[i] = 0
+            self.resolution.states[x] = 1
+        else:
+            pass
+        pyggel.gui.NewLine(frame)
+        pyggel.gui.Button(frame, "Save Changes", callbacks=[self.save_options])
+        pyggel.gui.Button(frame, "Back", callbacks=[self.app.activate])
         self.scene.add_2d(self.settings_app)
         self.app.activate()
 
@@ -92,6 +110,23 @@ class MainMenu(GameState):
         pyggel.gui.NewLine(self.app)
         pyggel.gui.Button(self.app, "Exit", callbacks=[self.force_quit])
         self.scene.add_2d(self.app)
+
+    def get_option_resolution(self):
+        r = "640x480"
+        for i in self.resolution.states:
+            if self.resolution.states[i]: r = i
+        a, b = r.split("x")
+        return (int(a), int(b))
+
+    def save_options(self):
+        fobj = open("data/config.txt", "w")
+        fobj.write("name='reduxian'\nFPS=%s\nsound=%s\nfullscreen=%s\nverbose_logging=%s\nresolution=%s"%(
+            bool(self.checks.states["FPS"]),
+            bool(self.checks.states["sound"]),
+            bool(self.checks.states["fullscreen"]),
+            bool(self.checks.states["verbose logging"]),
+            self.get_option_resolution()))
+        fobj.close()
 
     def force_quit(self):
         self.event_handler.quit = True
