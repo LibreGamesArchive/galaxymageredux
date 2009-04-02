@@ -8,10 +8,11 @@ class MessageBox(pyggel.gui.Frame):
         pyggel.gui.Frame.__init__(self, app, **kwargs)
         self.num_messages = num_messages
 
-        self.theme = pyggel.gui.Theme(self)
-        self.theme.load("data/gui/theme.py")
-        l = self.theme.theme["Label"]
-        l["background-image"] = None
+##        self.theme = pyggel.gui.Theme(self)
+##        self.theme.load("data/gui/theme.py")
+        self.theme = self.app.theme
+        self.theme.theme = dict(self.theme.theme)
+        self.theme.theme["Label"]["background-image"] = None
 
         self.packer.pack_upwards = self.pack_upwards
         self.packer.packtype = "upwards"
@@ -76,24 +77,55 @@ class MainMenu(GameState):
         self.app.theme.load("data/gui/theme.py")
         self.app.packer.packtype="center"
         self.settings_app = pyggel.gui.App(self.event_handler)
-        self.settings_app.theme = self.app.theme
+        self.settings_app.theme.load("data/gui/theme.py")
         self.settings_app.packer.packtype="center"
 
-        frame = pyggel.gui.Frame(self.settings_app, size=(400,200))
+        frame = pyggel.gui.Frame(self.settings_app, size=(350,125))
         #TODO: add widgets to swap back!!!
         self.checks = pyggel.gui.MultiChoiceRadio(frame, options=["FPS",
                                                                   "sound",
                                                                   "fullscreen",
                                                                   "verbose_logging"])
+        self.checks.dispatch.bind("change", self.need_restart)
+        self.resolution = pyggel.gui.Radio(frame, options=["640x480",
+                                                           "800x600",
+                                                           "1024x768",
+                                                           "1680x1050"])
+        self.resolution.dispatch.bind("change", self.need_restart)
+
+        self.alert_quit_window = pyggel.gui.Frame(self.settings_app, size=(135, 50), pos=(0,0))
+        self.alert_quit_window.packer.packtype="center"
+        self.alert_quit_window.visible = False
+        pyggel.gui.Button(self.alert_quit_window, "Quit Now", callbacks=[self.force_quit])
+        pyggel.gui.Button(self.alert_quit_window, "Later...", callbacks=[self.toggle_alert_quit_window])
+
+        pyggel.gui.NewLine(frame)
+        pyggel.gui.Button(frame, "Save Changes", callbacks=[self.save_options])
+        pyggel.gui.Button(frame, "Back", callbacks=[self.app.activate])
+        self.alert_label = pyggel.gui.Label(frame, "Game must be restarted before\nchanges will take effect!",
+                                            font_color=(1,0,0,1), font_color_inactive=(1,0,0,1),
+                                            background_image=None)
+        self.alert_label.visible = False
+        self.scene.add_2d(self.settings_app)
+        self.app.activate()
+
+        pyggel.gui.Button(self.app, "Single Player", callbacks=[lambda:self.goto("test_map")])
+        pyggel.gui.NewLine(self.app)
+        pyggel.gui.Button(self.app, "Multiplayer", callbacks=[lambda:self.goto("chat")])
+        pyggel.gui.NewLine(self.app)
+        pyggel.gui.Button(self.app, "Options", callbacks=[self.run_options])
+        pyggel.gui.NewLine(self.app)
+        pyggel.gui.Button(self.app, "Exit", callbacks=[self.force_quit])
+        self.scene.add_2d(self.app)
+
+    def run_options(self):
+        self.settings_app.activate()
         for i in self.checks.options:
             name, check, label, state = i
             state = int(self.game.config[name])
             check.state = state
             i[0], i[1], i[2], i[3] = name, check, label, state
-        self.resolution = pyggel.gui.Radio(frame, options=["640x480",
-                                                           "800x600",
-                                                           "1024x768",
-                                                           "1680x1050"])
+
         x = "%sx%s"%self.game.config["resolution"]
         if x in self.resolution.states:
             for i in self.resolution.options:
@@ -107,21 +139,20 @@ class MainMenu(GameState):
                 i[0], i[1], i[2], i[3] = name, check, label, state
         else:
             pass
+        self.alert_label.visible = False
 
-        pyggel.gui.NewLine(frame)
-        pyggel.gui.Button(frame, "Save Changes", callbacks=[self.save_options])
-        pyggel.gui.Button(frame, "Back", callbacks=[self.app.activate])
-        self.scene.add_2d(self.settings_app)
-        self.app.activate()
+    def need_restart(self, state):
+        if bool(self.checks.states["fullscreen"]) != self.game.config["fullscreen"]:
+            self.alert_label.visible = True
+        elif self.get_option_resolution() != self.game.config["resolution"]:
+            self.alert_label.visible = True
+        else:
+            self.alert_label.visible = False
 
-        pyggel.gui.Button(self.app, "Single Player", callbacks=[lambda:self.goto("test_map")])
-        pyggel.gui.NewLine(self.app)
-        pyggel.gui.Button(self.app, "Multiplayer", callbacks=[lambda:self.goto("chat")])
-        pyggel.gui.NewLine(self.app)
-        pyggel.gui.Button(self.app, "Options", callbacks=[self.settings_app.activate])
-        pyggel.gui.NewLine(self.app)
-        pyggel.gui.Button(self.app, "Exit", callbacks=[self.force_quit])
-        self.scene.add_2d(self.app)
+    def toggle_alert_quit_window(self):
+        self.alert_quit_window.visible = not self.alert_quit_window.visible
+        self.alert_quit_window.focus()
+        self.alert_quit_window.pos = self.alert_quit_window.app.get_mouse_pos()
 
     def get_option_resolution(self):
         r = "640x480"
@@ -139,6 +170,8 @@ class MainMenu(GameState):
             bool(self.checks.states["verbose_logging"]),
             self.get_option_resolution()))
         fobj.close()
+        if self.alert_label.visible:
+            self.toggle_alert_quit_window()
 
     def force_quit(self):
         self.event_handler.quit = True
