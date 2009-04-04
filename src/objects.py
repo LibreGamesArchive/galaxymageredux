@@ -31,7 +31,7 @@ def map_tile(x=0, y=0, bottom=0, height=1,
         t_iside = _images[t_iside]
     if t_itop:
         t_itop = _images[t_itop]
-    pos = (x, bottom, y)
+    pos = (x, bottom, -y)
     corners = (tl_add, tr_add, bl_add, br_add)
     r, g, b, a = t_col
     r2, g2, b2, a2 = t_coldev
