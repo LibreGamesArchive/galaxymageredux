@@ -1,4 +1,4 @@
-image("grass1","tile_example.png")
+image("grass1",None)#"tile_example.png")
 
 
 terrain_type(name="grass",

@@ -16,7 +16,10 @@ _terrain_types = {}
 _tiles = []
 
 def image(name, fn):
-    _images[name] = pyggel.data.Texture("data/core/image/"+fn)
+    if fn:
+        _images[name] = pyggel.data.Texture("data/core/image/"+fn)
+    else:
+        _images[name] = None
 def terrain_type(name="", image_top=None,
                  image_side=None,
                  color=(1,1,1,1),
