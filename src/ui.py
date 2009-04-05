@@ -254,8 +254,8 @@ class TestMap(GameState):
 
         self.camera = pyggel.camera.LookAtCamera((0,0,0), distance=15)
 
-        light = pyggel.light.Light((2,100,2), (1,1,1,1),
-                                  (1,1,1,1), (0,0,0,0),
+        light = pyggel.light.Light((0,25,0), (1,1,1,1),
+                                  (1,1,1,1), (0,0,0,100),
                                   (0,0,0), True)
         self.scene.add_light(light)
 

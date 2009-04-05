@@ -38,10 +38,10 @@ def map_tile(x=0, y=0, bottom=0, height=1,
     corners = (tl_add, tr_add, bl_add, br_add)
     r, g, b, a = t_col
     r2, g2, b2, a2 = t_coldev
-    r += bind_range(randfloat(-r2, r2))
-    g += bind_range(randfloat(-g2, g2))
-    b += bind_range(randfloat(-b2, b2))
-    a += bind_range(randfloat(-a2, a2))
+    r += bind_range(randfloat(-r2, r2, 2))
+    g += bind_range(randfloat(-g2, g2, 2))
+    b += bind_range(randfloat(-b2, b2, 2))
+    a += bind_range(randfloat(-a2, a2, 2))
     color = (r,g,b,a)
     side_texture = t_iside
     top_texture = t_itop
@@ -102,7 +102,7 @@ class Tile(object):
         a = math3d.Vector((-1,0,-1))
         b = math3d.Vector((1,0,-1))
         c = math3d.Vector((1,0,1))
-        n = (a-b) * (c-b)
+        n = a.cross(b).normalize()
         glNormal3f(n.x, n.y, n.z)
         glTexCoord2f(0,0) #backleft
         glVertex3f(-1, 0, -1)
@@ -118,7 +118,7 @@ class Tile(object):
         a = math3d.Vector((-1,0,-1))
         b = math3d.Vector((-1,1,-1))
         c = math3d.Vector((-1,1,1))
-        n = (a-b) * (c-b)
+        n = a.cross(b).normalize()
         glNormal3f(n.x, n.y, n.z)
         glTexCoord2f(0,0) #backbottom
         glVertex3f(-1, 0, -1)
@@ -134,7 +134,7 @@ class Tile(object):
         a = math3d.Vector((1,0,-1))
         b = math3d.Vector((1,1,-1))
         c = math3d.Vector((1,1,1))
-        n = (a-b) * (c-b)
+        n = a.cross(b).normalize()
         glNormal3f(n.x, n.y, n.z)
         glTexCoord2f(0,0) #backbottom
         glVertex3f(1, 0, -1)
@@ -150,7 +150,7 @@ class Tile(object):
         a = math3d.Vector((-1,0,1))
         b = math3d.Vector((-1,1,1))
         c = math3d.Vector((1,1,1))
-        n = (a-b) * (c-b)
+        n = a.cross(b).normalize()
         glNormal3f(n.x, n.y, n.z)
         glTexCoord2f(0,0) #backbottom
         glVertex3f(-1, 0, 1)
@@ -166,7 +166,7 @@ class Tile(object):
         a = math3d.Vector((-1,0,-1))
         b = math3d.Vector((-1,1,-1))
         c = math3d.Vector((1,1,-1))
-        n = (a-b) * (c-b)
+        n = a.cross(b).normalize()
         glNormal3f(n.x, n.y, n.z)
         glTexCoord2f(0,0) #backbottom
         glVertex3f(-1, 0, -1)
@@ -183,10 +183,10 @@ class Tile(object):
         self.top_texture.bind()
         glBegin(GL_TRIANGLES)
         #render left face first:
-        a = math3d.Vector((-1,bl,1))
-        b = math3d.Vector((-1,tl,-1))
+        a = math3d.Vector((-1,tl,-1))
+        b = math3d.Vector((-1,bl,1))
         c = math3d.Vector((0,mid,0))
-        n = ((a-b) * (c-b))#.normalize()
+        n = (a-b).cross(b-c).normalize()
         glNormal3f(n.x, n.y, n.z)
         glTexCoord2f(0, 1)
         glVertex3f(-1, bl, 1)
@@ -196,10 +196,10 @@ class Tile(object):
         glVertex3f(0, mid, 0)
 
         #render top face second:
-        a = math3d.Vector((-1,tl,-1))
-        b = math3d.Vector((1,tr,-1))
+        a = math3d.Vector((1,tr,-1))
+        b = math3d.Vector((-1,tl,-1))
         c = math3d.Vector((0,mid,0))
-        n = ((a-b) * (c-b))#.normalize()
+        n = (a-b).cross(b-c).normalize()
         glNormal3f(n.x, n.y, n.z)
         glTexCoord2f(0, 0)
         glVertex3f(-1, tl, -1)
@@ -210,10 +210,10 @@ class Tile(object):
 
 
         #render right face third:
-        a = math3d.Vector((1,tr,-1))
-        b = math3d.Vector((1,br,1))
+        a = math3d.Vector((1,br,1))
+        b = math3d.Vector((1,tr,-1))
         c = math3d.Vector((0,mid,0))
-        n = ((a-b) * (c-b))#.normalize()
+        n = (a-b).cross(b-c).normalize()
         glNormal3f(n.x, n.y, n.z)
         glTexCoord2f(1, 0)
         glVertex3f(1, tr, -1)
@@ -226,7 +226,7 @@ class Tile(object):
         a = math3d.Vector((-1,bl,1))
         b = math3d.Vector((1,br,1))
         c = math3d.Vector((0,mid,0))
-        n = ((a-b) * (c-b))#.normalize()
+        n = (a-b).cross(b-c).normalize()
         glNormal3f(n.x, n.y, n.z)
         glTexCoord2f(0, 1)
         glVertex3f(-1, bl, 1)
@@ -243,7 +243,7 @@ class Tile(object):
         glPushMatrix()
         x, y, z = self.pos
         glTranslatef(x*2, y, -z*2)
-        glColor(*self.colorize)
+        glColor4f(.5,.5,.5,1)
         self.display_list.render()
         glPopMatrix()
 
