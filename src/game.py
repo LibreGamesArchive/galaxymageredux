@@ -25,8 +25,6 @@ class Game(net.Client):
 
         pyggel.view.set_title(self.config["name"])
 
-        glShadeModel(GL_FLAT)
-
         self.game_state = ui.MainMenu(self)
         self.clock = pygame.time.Clock()
 

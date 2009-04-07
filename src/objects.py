@@ -99,11 +99,9 @@ class Tile(object):
 
         glBegin(GL_QUADS)
         #bottom first
-        a = math3d.Vector((-1,0,-1))
-        b = math3d.Vector((1,0,-1))
-        c = math3d.Vector((1,0,1))
-        n = a.cross(b).normalize()
-        glNormal3f(n.x, n.y, n.z)
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,1),
+                                              (1,0,-1),
+                                              (1,0,1)))
         glTexCoord2f(0,0) #backleft
         glVertex3f(-1, 0, -1)
         glTexCoord2f(1,0) #backright
@@ -115,11 +113,9 @@ class Tile(object):
         glVertex3f(-1, 0, 1)
 
         #left
-        a = math3d.Vector((-1,0,-1))
-        b = math3d.Vector((-1,1,-1))
-        c = math3d.Vector((-1,1,1))
-        n = a.cross(b).normalize()
-        glNormal3f(n.x, n.y, n.z)
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,-1),
+                                              (-1,1,-1),
+                                              (-1,1,1)))
         glTexCoord2f(0,0) #backbottom
         glVertex3f(-1, 0, -1)
         glTexCoord2f(1,0) #backtop
@@ -131,11 +127,9 @@ class Tile(object):
         glVertex3f(-1, 0, 1)
 
         #right
-        a = math3d.Vector((1,0,-1))
-        b = math3d.Vector((1,1,-1))
-        c = math3d.Vector((1,1,1))
-        n = a.cross(b).normalize()
-        glNormal3f(n.x, n.y, n.z)
+        glNormal3f(*pyggel.math3d.calcTriNormal((1,0,-1),
+                                              (1,1,-1),
+                                              (1,1,1)))
         glTexCoord2f(0,0) #backbottom
         glVertex3f(1, 0, -1)
         glTexCoord2f(1,0) #backtop
@@ -147,11 +141,9 @@ class Tile(object):
         glVertex3f(1, 0, 1)
 
         #front
-        a = math3d.Vector((-1,0,1))
-        b = math3d.Vector((-1,1,1))
-        c = math3d.Vector((1,1,1))
-        n = a.cross(b).normalize()
-        glNormal3f(n.x, n.y, n.z)
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,1),
+                                              (-1,1,1),
+                                              (1,1,1)))
         glTexCoord2f(0,0) #backbottom
         glVertex3f(-1, 0, 1)
         glTexCoord2f(1,0) #backtop
@@ -163,11 +155,9 @@ class Tile(object):
         glVertex3f(1, 0, 1)
 
         #back
-        a = math3d.Vector((-1,0,-1))
-        b = math3d.Vector((-1,1,-1))
-        c = math3d.Vector((1,1,-1))
-        n = a.cross(b).normalize()
-        glNormal3f(n.x, n.y, n.z)
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,-1),
+                                              (-1,1,-1),
+                                              (1,1,-1)))
         glTexCoord2f(0,0) #backbottom
         glVertex3f(-1, 0, -1)
         glTexCoord2f(1,0) #backtop
@@ -183,11 +173,9 @@ class Tile(object):
         self.top_texture.bind()
         glBegin(GL_TRIANGLES)
         #render left face first:
-        a = math3d.Vector((-1,tl,-1))
-        b = math3d.Vector((-1,bl,1))
-        c = math3d.Vector((0,mid,0))
-        n = (a-b).cross(b-c).normalize()
-        glNormal3f(n.x, n.y, n.z)
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,tl,-1),
+                                              (-1,bl,1),
+                                              (0,mid,0)))
         glTexCoord2f(0, 1)
         glVertex3f(-1, bl, 1)
         glTexCoord2f(0, 0)
@@ -196,11 +184,9 @@ class Tile(object):
         glVertex3f(0, mid, 0)
 
         #render top face second:
-        a = math3d.Vector((1,tr,-1))
-        b = math3d.Vector((-1,tl,-1))
-        c = math3d.Vector((0,mid,0))
-        n = (a-b).cross(b-c).normalize()
-        glNormal3f(n.x, n.y, n.z)
+        glNormal3f(*pyggel.math3d.calcTriNormal((1,tr,-1),
+                                              (-1,tl,-1),
+                                              (0,mid,0)))
         glTexCoord2f(0, 0)
         glVertex3f(-1, tl, -1)
         glTexCoord2f(1, 0)
@@ -210,11 +196,9 @@ class Tile(object):
 
 
         #render right face third:
-        a = math3d.Vector((1,br,1))
-        b = math3d.Vector((1,tr,-1))
-        c = math3d.Vector((0,mid,0))
-        n = (a-b).cross(b-c).normalize()
-        glNormal3f(n.x, n.y, n.z)
+        glNormal3f(*pyggel.math3d.calcTriNormal((1,br,1),
+                                              (1,tr,-1),
+                                              (0,mid,0)))
         glTexCoord2f(1, 0)
         glVertex3f(1, tr, -1)
         glTexCoord2f(1, 1)
@@ -223,11 +207,9 @@ class Tile(object):
         glVertex3f(0, mid, 0)
 
         #render bottom face last:
-        a = math3d.Vector((-1,bl,1))
-        b = math3d.Vector((1,br,1))
-        c = math3d.Vector((0,mid,0))
-        n = (a-b).cross(b-c).normalize()
-        glNormal3f(n.x, n.y, n.z)
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,bl,1),
+                                              (1,br,1),
+                                              (0,mid,0)))
         glTexCoord2f(0, 1)
         glVertex3f(-1, bl, 1)
         glTexCoord2f(1, 1)
