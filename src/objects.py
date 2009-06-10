@@ -69,11 +69,12 @@ class Tile(object):
         self.pos = pos
         self.rotation = (0,0,0)
         self.visible = True
+        self.pickable = True
 
         if not side_texture:
-            side_texture = pyggel.data.blank_texture
+            side_texture = pyggel.data.BlankTexture()
         if not top_texture:
-            top_texture = pyggel.data.blank_texture
+            top_texture = pyggel.data.BlankTexture()
         self.side_texture = side_texture
         self.top_texture = top_texture
 
@@ -355,6 +356,7 @@ class Unit(object):
         self.hp = 20
         self.max_hp = 20
         self.visible = True
+        self.pickable = True
 
     def update_pos(self):
         x, y, z = self.tile.pos
