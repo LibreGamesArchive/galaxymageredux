@@ -3,4 +3,4 @@ FPS=True
 sound=False
 fullscreen=False
 verbose_logging=False
-resolution=(640, 480)
+resolution=(800, 600)
