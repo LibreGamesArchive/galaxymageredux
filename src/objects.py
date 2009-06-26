@@ -28,7 +28,7 @@ def terrain_type(name="", image_top=None,
                             color, color_deviation)
 def map_tile(x=0, y=0, bottom=0, height=1,
              terrain="", tl_add=0, tr_add=0,
-             bl_add=0, br_add=0, mx=0, my=0):
+             bl_add=0, br_add=0):
     t_itop, t_iside, t_col, t_coldev = _terrain_types[terrain]
     if t_iside:
         t_iside = _images[t_iside]
@@ -36,7 +36,6 @@ def map_tile(x=0, y=0, bottom=0, height=1,
         t_itop = _images[t_itop]
     pos = (x, bottom, -y)
     corners = (tl_add, tr_add, bl_add, br_add)
-    slopes = (mx, my)
     r, g, b, a = t_col
     r2, g2, b2, a2 = t_coldev
     r += bind_range(randfloat(-r2, r2, 2))
@@ -46,14 +45,8 @@ def map_tile(x=0, y=0, bottom=0, height=1,
     color = (r,g,b,a)
     side_texture = t_iside
     top_texture = t_itop
-    if tl_add != 0 or tr_add != 0 or bl_add != 0 or br_add != 0:
-        _tiles.append(AdjustedTile(pos, height, corners, color,
+    _tiles.append(Tile(pos, height, corners, color,
                        side_texture, top_texture))
-    elif mx != 0 or my != 0:
-        _tiles.append(SlopedTile(pos, height, slopes, color,
-                       side_texture, top_texture))
-    else:
-        _tiles.append(Tile(pos, height, color, side_texture, top_texture))
 
 def parse_map(filename):
     if pyggel.misc.test_safe(filename, ["image", "terrain_type", "map_tile"])[0]:
@@ -62,10 +55,11 @@ def parse_map(filename):
     else:
         raise ImportWarning("Warning, map file <%s> is not safe!"%filename)
 
-
 class Tile(object):
-    def __init__(self, pos=(0,0,0), height=1, colorize=(1,1,1,1),
+    def __init__(self, pos=(0,0,0), height=1,
+                 corners=(0,0,0,0), colorize=(1,1,1,1),
                  side_texture=None, top_texture=None):
+
         self.pos = pos
         self.rotation = (0,0,0)
         self.visible = True
@@ -79,6 +73,7 @@ class Tile(object):
         self.top_texture = top_texture
 
         self.colorize = colorize
+        self.corners = corners #topleft, topright, bottomleft, bottomright
         self.height = height
 
         self.display_list = pyggel.data.DisplayList()
@@ -86,157 +81,10 @@ class Tile(object):
         self._compile()
 
     def get_dimensions(self):
-         return 1, self.height, 1
+        return 1, max((self.height, self.height+max(self.corners))), 1
 
     def get_pos(self):
         return self.pos
-
-    def _compile(self):
-        self.display_list.begin()
-
-        mid = self.height
-        
-        
-        # Top Face
-        self.top_texture.bind()
-        glBegin(GL_QUADS)
-        glNormal3f( 0.0, 1.0, 0.0)
-        glTexCoord2f(0.0, 1.0); glVertex3f(-1.0, mid, -1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f(-1.0, mid,  1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f( 1.0, mid,  1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f( 1.0, mid, -1.0)    # Top Right Of The Texture and Quad
-        glEnd()
-
-        self.side_texture.bind()
-        glBegin(GL_QUADS)
-        # Front Face (note that the texture's corners have to match the quad's corners)
-        glNormal3f( 0.0, 0.0, 1.0)
-        glTexCoord2f(0.0, 0.0); glVertex3f(-1.0,   0,  1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f( 1.0,   0,  1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f( 1.0, mid,  1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f(-1.0, mid,  1.0)    # Top Left Of The Texture and Quad
-
-        # Back Face
-        glNormal3f( 0.0, 0.0,-1.0);
-        glTexCoord2f(1.0, 0.0); glVertex3f(-1.0,   0, -1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f(-1.0, mid, -1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f( 1.0, mid, -1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f( 1.0,   0, -1.0)    # Bottom Left Of The Texture and Quad
-
-        # Bottom Face
-        glNormal3f( 0.0,-1.0, 0.0)
-        glTexCoord2f(1.0, 1.0); glVertex3f(-1.0, 0, -1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f( 1.0, 0, -1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f( 1.0, 0,  1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f(-1.0, 0,  1.0)    # Bottom Right Of The Texture and Quad
-
-        # Right face
-        glNormal3f( 1.0, 0.0, 0.0)
-        glTexCoord2f(1.0, 0.0); glVertex3f( 1.0,   0, -1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f( 1.0, mid, -1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f( 1.0, mid,  1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f( 1.0,   0,  1.0)    # Bottom Left Of The Texture and Quad
-
-        # Left Face
-        glNormal3f(-1.0, 0.0, 0.0)
-        glTexCoord2f(0.0, 0.0); glVertex3f(-1.0,   0, -1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f(-1.0,   0,  1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f(-1.0, mid,  1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f(-1.0, mid, -1.0)    # Top Left Of The Texture and Quad
-        glEnd()
-        self.display_list.end()
-
-    def render(self, camera=None):
-        glPushMatrix()
-        x, y, z = self.pos
-        glTranslatef(x*2, y, -z*2)
-        glColor4f(.5,.5,.5,1)
-        self.display_list.render()
-        glPopMatrix()
-
-    def get_scale(self):
-        return 1,1,1
-
-class SlopedTile(Tile):
-    def __init__(self, pos=(0,0,0), height=1,
-                 slopes=(0,0), colorize=(1,1,1,1),
-                 side_texture=None, top_texture=None):
-        self.slopes = slopes #x/z, y/z
-        Tile.__init__(self, pos, height, colorize, side_texture,
-                       top_texture)
-
-    def _compile(self):
-        self.display_list.begin()
-
-        self.side_texture.bind()
-
-        mid = self.height
-        tl, tr, bl, br = mid, mid, mid, mid
-        mx, my = self.slopes
-        mx /= 2.0
-        my /= 2.0
-        tl -= (mx + my)
-        tr += (mx - my)
-        bl -= (mx - my) 
-        br += mx + my
-
-        glBegin(GL_QUADS)
-        # Front Face (note that the texture's corners have to match the quad's corners)
-        glNormal3f( 0.0, 0.0, 1.0)
-        glTexCoord2f(0.0, 0.0); glVertex3f(-1.0,   0,  1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f( 1.0,   0,  1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f( 1.0,  br,  1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f(-1.0,  bl,  1.0)    # Top Left Of The Texture and Quad
-
-        # Back Face
-        glNormal3f( 0.0, 0.0,-1.0);
-        glTexCoord2f(1.0, 0.0); glVertex3f(-1.0,   0, -1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f(-1.0,  tl, -1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f( 1.0,  tr, -1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f( 1.0,   0, -1.0)    # Bottom Left Of The Texture and Quad
-
-        # Bottom Face
-        glNormal3f( 0.0,-1.0, 0.0)
-        glTexCoord2f(1.0, 1.0); glVertex3f(-1.0, 0, -1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f( 1.0, 0, -1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f( 1.0, 0,  1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f(-1.0, 0,  1.0)    # Bottom Right Of The Texture and Quad
-
-        # Right face
-        glNormal3f( 1.0, 0.0, 0.0)
-        glTexCoord2f(1.0, 0.0); glVertex3f( 1.0,   0, -1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f( 1.0,  tr, -1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f( 1.0,  br,  1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f( 1.0,   0,  1.0)    # Bottom Left Of The Texture and Quad
-
-        # Left Face
-        glNormal3f(-1.0, 0.0, 0.0)
-        glTexCoord2f(0.0, 0.0); glVertex3f(-1.0,   0, -1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f(-1.0,   0,  1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f(-1.0,  bl,  1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f(-1.0,  tl, -1.0)    # Top Left Of The Texture and Quad
-        glEnd()
-        
-        # Top Face
-        self.top_texture.bind()
-        glBegin(GL_QUADS)
-        glNormal3f(*pyggel.math3d.calcTriNormal((-1,tl,-1),
-                                                (-1,bl,1),
-                                                (1,br,1)))
-        glTexCoord2f(0.0, 1.0); glVertex3f(-1.0, tl, -1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f(-1.0, bl,  1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f( 1.0, br,  1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f( 1.0, tr, -1.0)    # Top Right Of The Texture and Quad
-        glEnd()
-        self.display_list.end()
-
-class AdjustedTile(Tile):
-    def __init__(self, pos=(0,0,0), height=1,
-                 corners=(0,0,0,0), colorize=(1,1,1,1),
-                 side_texture=None, top_texture=None):
-        self.corners = corners #topleft, topright, bottomleft, bottomright
-        Tile.__init__(self, pos, height, colorize, side_texture,
-                       top_texture)
 
     def _compile(self):
         self.display_list.begin()
@@ -251,42 +99,78 @@ class AdjustedTile(Tile):
         br += mid
 
         glBegin(GL_QUADS)
-        # Front Face (note that the texture's corners have to match the quad's corners)
-        glNormal3f( 0.0, 0.0, 1.0)
-        glTexCoord2f(0.0, 0.0); glVertex3f(-1.0,   0,  1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f( 1.0,   0,  1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f( 1.0,  br,  1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f(-1.0,  bl,  1.0)    # Top Left Of The Texture and Quad
+        #bottom first
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,1),
+                                              (1,0,-1),
+                                              (1,0,1)))
+        glTexCoord2f(0,0) #backleft
+        glVertex3f(-1, 0, -1)
+        glTexCoord2f(1,0) #backright
+        glVertex3f(1, 0, -1)
 
-        # Back Face
-        glNormal3f( 0.0, 0.0,-1.0);
-        glTexCoord2f(1.0, 0.0); glVertex3f(-1.0,   0, -1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f(-1.0,  tl, -1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f( 1.0,  tr, -1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f( 1.0,   0, -1.0)    # Bottom Left Of The Texture and Quad
+        glTexCoord2f(1,1) #frontright
+        glVertex3f(1, 0, 1)
+        glTexCoord2f(0,1) #frontleft
+        glVertex3f(-1, 0, 1)
 
-        # Bottom Face
-        glNormal3f( 0.0,-1.0, 0.0)
-        glTexCoord2f(1.0, 1.0); glVertex3f(-1.0, 0, -1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f( 1.0, 0, -1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f( 1.0, 0,  1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f(-1.0, 0,  1.0)    # Bottom Right Of The Texture and Quad
+        #left
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,-1),
+                                              (-1,1,-1),
+                                              (-1,1,1)))
+        glTexCoord2f(0,0) #backbottom
+        glVertex3f(-1, 0, -1)
+        glTexCoord2f(1,0) #backtop
+        glVertex3f(-1, tl, -1)
 
-        # Right face
-        glNormal3f( 1.0, 0.0, 0.0)
-        glTexCoord2f(1.0, 0.0); glVertex3f( 1.0,   0, -1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f( 1.0,  tr, -1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f( 1.0,  br,  1.0)    # Top Left Of The Texture and Quad
-        glTexCoord2f(0.0, 0.0); glVertex3f( 1.0,   0,  1.0)    # Bottom Left Of The Texture and Quad
+        glTexCoord2f(1,1) #fronttop
+        glVertex3f(-1, bl, 1)
+        glTexCoord2f(0,1) #frontbottom
+        glVertex3f(-1, 0, 1)
 
-        # Left Face
-        glNormal3f(-1.0, 0.0, 0.0)
-        glTexCoord2f(0.0, 0.0); glVertex3f(-1.0,   0, -1.0)    # Bottom Left Of The Texture and Quad
-        glTexCoord2f(1.0, 0.0); glVertex3f(-1.0,   0,  1.0)    # Bottom Right Of The Texture and Quad
-        glTexCoord2f(1.0, 1.0); glVertex3f(-1.0,  bl,  1.0)    # Top Right Of The Texture and Quad
-        glTexCoord2f(0.0, 1.0); glVertex3f(-1.0,  tl, -1.0)    # Top Left Of The Texture and Quad
+        #right
+        glNormal3f(*pyggel.math3d.calcTriNormal((1,0,-1),
+                                              (1,1,-1),
+                                              (1,1,1)))
+        glTexCoord2f(0,0) #backbottom
+        glVertex3f(1, 0, -1)
+        glTexCoord2f(1,0) #backtop
+        glVertex3f(1, tr, -1)
+
+        glTexCoord2f(1,1) #fronttop
+        glVertex3f(1, br, 1)
+        glTexCoord2f(0,1) #frontbottom
+        glVertex3f(1, 0, 1)
+
+        #front
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,1),
+                                              (-1,1,1),
+                                              (1,1,1)))
+        glTexCoord2f(0,0) #backbottom
+        glVertex3f(-1, 0, 1)
+        glTexCoord2f(1,0) #backtop
+        glVertex3f(-1, bl, 1)
+
+        glTexCoord2f(1,1) #fronttop
+        glVertex3f(1, br, 1)
+        glTexCoord2f(0,1) #frontbottom
+        glVertex3f(1, 0, 1)
+
+        #back
+        glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,-1),
+                                              (-1,1,-1),
+                                              (1,1,-1)))
+        glTexCoord2f(0,0) #backbottom
+        glVertex3f(-1, 0, -1)
+        glTexCoord2f(1,0) #backtop
+        glVertex3f(-1, tl, -1)
+
+        glTexCoord2f(1,1) #fronttop
+        glVertex3f(1, tr, -1)
+        glTexCoord2f(0,1) #frontbottom
+        glVertex3f(1, 0, -1)
+
         glEnd()
-        
+
         self.top_texture.bind()
         glBegin(GL_TRIANGLES)
         #render left face first:
@@ -338,6 +222,17 @@ class AdjustedTile(Tile):
 
         self.display_list.end()
 
+    def render(self, camera=None):
+        glPushMatrix()
+        x, y, z = self.pos
+        glTranslatef(x*2, y, -z*2)
+        glColor4f(.5,.5,.5,1)
+        self.display_list.render()
+        glPopMatrix()
+
+    def get_scale(self):
+        return 1,1,1
+
 class Unit(object):
     font = None
     def __init__(self, tile, pos=(0,0),
@@ -348,6 +243,7 @@ class Unit(object):
         self.image = image.copy()
         self.image.pos = pos[0], 0, pos[1]
         self.image.colorize = colorize
+        self.pickable = True
 
         self.tile = tile
 
@@ -356,7 +252,6 @@ class Unit(object):
         self.hp = 20
         self.max_hp = 20
         self.visible = True
-        self.pickable = True
 
     def update_pos(self):
         x, y, z = self.tile.pos
