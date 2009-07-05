@@ -107,7 +107,6 @@ class Tile(object):
         glVertex3f(-1, 0, -1)
         glTexCoord2f(1,0) #backright
         glVertex3f(1, 0, -1)
-
         glTexCoord2f(1,1) #frontright
         glVertex3f(1, 0, 1)
         glTexCoord2f(0,1) #frontleft
@@ -117,15 +116,14 @@ class Tile(object):
         glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,-1),
                                               (-1,1,-1),
                                               (-1,1,1)))
-        glTexCoord2f(0,0) #backbottom
-        glVertex3f(-1, 0, -1)
         glTexCoord2f(1,0) #backtop
         glVertex3f(-1, tl, -1)
-
-        glTexCoord2f(1,1) #fronttop
-        glVertex3f(-1, bl, 1)
+        glTexCoord2f(0,0) #backbottom
+        glVertex3f(-1, 0, -1)
         glTexCoord2f(0,1) #frontbottom
         glVertex3f(-1, 0, 1)
+        glTexCoord2f(1,1) #fronttop
+        glVertex3f(-1, bl, 1)
 
         #right
         glNormal3f(*pyggel.math3d.calcTriNormal((1,0,-1),
@@ -135,7 +133,6 @@ class Tile(object):
         glVertex3f(1, 0, -1)
         glTexCoord2f(1,0) #backtop
         glVertex3f(1, tr, -1)
-
         glTexCoord2f(1,1) #fronttop
         glVertex3f(1, br, 1)
         glTexCoord2f(0,1) #frontbottom
@@ -145,15 +142,14 @@ class Tile(object):
         glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,1),
                                               (-1,1,1),
                                               (1,1,1)))
-        glTexCoord2f(0,0) #backbottom
-        glVertex3f(-1, 0, 1)
         glTexCoord2f(1,0) #backtop
         glVertex3f(-1, bl, 1)
-
-        glTexCoord2f(1,1) #fronttop
-        glVertex3f(1, br, 1)
+        glTexCoord2f(0,0) #backbottom
+        glVertex3f(-1, 0, 1)
         glTexCoord2f(0,1) #frontbottom
         glVertex3f(1, 0, 1)
+        glTexCoord2f(1,1) #fronttop
+        glVertex3f(1, br, 1)
 
         #back
         glNormal3f(*pyggel.math3d.calcTriNormal((-1,0,-1),
@@ -163,7 +159,6 @@ class Tile(object):
         glVertex3f(-1, 0, -1)
         glTexCoord2f(1,0) #backtop
         glVertex3f(-1, tl, -1)
-
         glTexCoord2f(1,1) #fronttop
         glVertex3f(1, tr, -1)
         glTexCoord2f(0,1) #frontbottom
@@ -178,9 +173,9 @@ class Tile(object):
                                               (-1,bl,1),
                                               (0,mid,0)))
         glTexCoord2f(0, 1)
-        glVertex3f(-1, bl, 1)
-        glTexCoord2f(0, 0)
         glVertex3f(-1, tl, -1)
+        glTexCoord2f(0, 0)
+        glVertex3f(-1, bl, 1)
         glTexCoord2f(0.5, 0.5)
         glVertex3f(0, mid, 0)
 
@@ -189,9 +184,9 @@ class Tile(object):
                                               (-1,tl,-1),
                                               (0,mid,0)))
         glTexCoord2f(0, 0)
-        glVertex3f(-1, tl, -1)
-        glTexCoord2f(1, 0)
         glVertex3f(1, tr, -1)
+        glTexCoord2f(1, 0)
+        glVertex3f(-1, tl, -1)
         glTexCoord2f(0.5, 0.5)
         glVertex3f(0, mid, 0)
 
@@ -201,9 +196,9 @@ class Tile(object):
                                               (1,tr,-1),
                                               (0,mid,0)))
         glTexCoord2f(1, 0)
-        glVertex3f(1, tr, -1)
-        glTexCoord2f(1, 1)
         glVertex3f(1, br, 1)
+        glTexCoord2f(1, 1)
+        glVertex3f(1, tr, -1)
         glTexCoord2f(0.5, 0.5)
         glVertex3f(0, mid, 0)
 
