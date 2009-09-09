@@ -3,6 +3,7 @@ import pyggel, os
 from pyggel import *
 
 from pyggel.misc import randfloat
+from pyggel.scene import BaseSceneObject
 
 def bind_range(val, range=(0,1)):
     if val < range[0]:
@@ -55,11 +56,12 @@ def parse_map(filename):
     else:
         raise ImportWarning("Warning, map file <%s> is not safe!"%filename)
 
-class Tile(object):
+class Tile(BaseSceneObject):
     def __init__(self, pos=(0,0,0), height=1,
                  corners=(0,0,0,0), colorize=(1,1,1,1),
                  side_texture=None, top_texture=None):
-
+        
+        BaseSceneObject.__init__(self)
         self.pos = pos
         self.rotation = (0,0,0)
         self.visible = True
@@ -228,11 +230,13 @@ class Tile(object):
     def get_scale(self):
         return 1,1,1
 
-class Unit(object):
+class Unit(BaseSceneObject):
     font = None
     def __init__(self, tile, pos=(0,0),
                  image=None, #change to/allow meshes later
                  colorize=(1,1,1,1)):
+                 
+        BaseSceneObject.__init__(self)
         if not self.font:
             self.font = pyggel.font.Font3D(size=20)
         self.image = image.copy()
