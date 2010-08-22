@@ -205,6 +205,8 @@ class Widget(object):
             for i in self.parent.widgets:
                 if not i == self:
                     i._mhover = False
+            if self._mhold:
+                self.dispatch.fire("press-return")
         elif n == True and self._mhover == False:
             self.dispatch.fire("unhover")
         return self._mhover
@@ -348,3 +350,53 @@ class Container(Widget, App):
         App.render(self)
 
         screen.blit(self.screen, self.pos)
+
+class Button(Widget):
+    def __init__(self, parent, pos, text):
+        Widget.__init__(self, parent)
+
+        self.pos = pos
+        self.text = text
+
+        self.bg_image = None
+        self.bg_color = (255,255,255,255)
+
+        self.size = self.get_size()
+
+        self.text_color = (0,0,0)
+        self.text_reg_color = (0,0,0)
+        self.text_hover_color = (255,0,0)
+        self.text_click_color = (255,100,100)
+
+        self.dispatch.bind('hover', lambda: self.swap_text_color(self.text_hover_color))
+        self.dispatch.bind('click', lambda: self.swap_text_color(self.text_hover_color))
+        self.dispatch.bind('press', lambda: self.swap_text_color(self.text_click_color))
+        self.dispatch.bind('press-return', lambda: self.swap_text_color(self.text_click_color))
+        self.dispatch.bind('unhover', lambda: self.swap_text_color(self.text_reg_color))
+
+    def swap_text_color(self, new):
+        self.text_color = new
+
+    def get_size(self):
+        if self.bg_image:
+            width, height = self.bg_image.get_size()
+        else:
+            width, height = self.font.size(self.text)
+        return width, height
+
+    def render(self):
+        self.size = self.get_size()
+        if self.bg_image:
+            self.parent.screen.blit(self.bg_image, self.pos)
+            i = self.font.render(self.text, 1, self.text_color)
+            r = i.get_rect()
+            w,h = self.size
+            r.centerx = self.pos[0]+w/2
+            r.centery = self.pos[1]+h/2
+            self.parent.screen.blit(i, r)
+        else:
+            i = self.font.render(self.text, 1, self.text_color)
+            r = i.get_rect()
+            r.topleft = self.pos
+            self.parent.screen.subsurface(r).fill(self.bg_color)
+            self.parent.screen.blit(i, r)

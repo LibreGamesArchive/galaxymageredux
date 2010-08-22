@@ -14,6 +14,8 @@ def main():
     some_cont = gui.Container(main_app, (300,100), (50,50))
     some_cont.bg_color = (255,255,255, 150)
 
+    butt = gui.Button(some_cont, (5,5), "test")
+
     while 1:
         event_handler.update()
 
