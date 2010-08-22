@@ -1,8 +1,8 @@
 import pygame
 from pygame.locals import *
 
-import event
-import gui
+from lib import event, gui
+import random
 
 def main():
     pygame.init()
@@ -15,6 +15,12 @@ def main():
     some_cont.bg_color = (255,255,255, 150)
 
     butt = gui.Button(some_cont, (5,5), "test")
+    text_box = gui.MessageBox(main_app, (300,100), (50, 200))
+    text_box.bg_color = (255,0,0,150)
+
+    butt.dispatch.bind('click', lambda: text_box.add_line('test'+str(random.randint(0,45))))
+
+    inp = gui.Input(some_cont, 290, (5,25))
 
     while 1:
         event_handler.update()
