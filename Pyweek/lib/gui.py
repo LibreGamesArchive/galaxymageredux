@@ -165,6 +165,10 @@ class Widget(object):
 
         self.no_events = False
 
+    def destroy(self):
+        if self in self.parent.widgets:
+            self.parent.widgets.remove(self)
+
     def get_root_app(self):
         return self.parent.get_root_app()
 
