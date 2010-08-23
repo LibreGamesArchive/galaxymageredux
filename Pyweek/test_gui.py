@@ -22,6 +22,9 @@ def main():
 
     inp = gui.Input(some_cont, 290, (5,25))
 
+    popup = gui.PopUp(butt, text="adds text to the message box below", width=100)
+    popup.bg_color = (255,255,255,100)
+
     while 1:
         event_handler.update()
 

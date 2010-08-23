@@ -18,6 +18,12 @@ class App(object):
         self.font = pygame.font.Font(None, 32)
         self.visible = True
 
+    def get_root_app(self):
+        return self
+
+    def focus(self):
+        pass
+
     def get_font(self):
         return self.font
 
@@ -136,11 +142,15 @@ class App(object):
         self.widgets.reverse()
 
 class Widget(object):
-    def __init__(self, parent):
+    def __init__(self, parent, pos):
         self.parent = parent
         self.parent.add_widget(self)
 
-        self.pos = 0,0
+        if type(pos) is type([]) or type(pos) is type((1,2)):
+            self.pos = AbsolutePos(pos)
+        else:
+            self.pos = pos
+        self.pos.parent = self.parent
         self.size = 0,0
         self.dispatch = event.Dispatcher()
 
@@ -153,8 +163,27 @@ class Widget(object):
         self.key_hold_lengths = {}
         self.khl = 200 #milliseconds to hold keys for repeat!
 
+        self.no_events = False
+
+    def get_root_app(self):
+        return self.parent.get_root_app()
+
+    def get_real_pos(self):
+        parents = []
+        i = self.parent
+        while not i == self.get_root_app():
+            parents.append(i)
+            i = i.parent
+
+        x = 0
+        y = 0
+        for i in parents:
+            x += i.pos.x
+            y += i.pos.y
+        return x+self.pos.x, y+self.pos.y
+
     def mouse_on_me(self):
-        return pygame.Rect(self.pos, self.size).collidepoint(self.parent.get_mouse_pos())
+        return pygame.Rect(self.pos.get_pos(), self.size).collidepoint(self.parent.get_mouse_pos())
 
     def focus(self):
         """Focus this widget so it is at the top of rendering and event calls."""
@@ -162,6 +191,7 @@ class Widget(object):
         self.key_active = True
         self.dispatch.fire("focus")
         self._mhover = self.mouse_on_me()
+        self.parent.focus()
 
     def unfocus(self):
         """Remove the widget's focus."""
@@ -173,6 +203,8 @@ class Widget(object):
 
     def handle_mousedown(self, button, name):
         """Handle a mouse down event from the App."""
+        if self.no_events:
+            return False
         self._mhover = self.mouse_on_me()
         if name == "left":
             if self._mhover:
@@ -184,6 +216,8 @@ class Widget(object):
 
     def handle_mouseup(self, button, name):
         """Handle a mouse release event from the App."""
+        if self.no_events:
+            return False
         self._mhover = self.mouse_on_me()
         if name == "left":
             if self._mhold and self._mhover:
@@ -193,31 +227,42 @@ class Widget(object):
 
     def handle_mousehold(self, button, name):
         """Handle a mouse hold event from the App."""
+        if self.no_events:
+            return False
         if name == "left":
             if self._mhold:
                 return True
 
     def handle_mousemotion(self, change):
         """Handle a mouse motion event from the App."""
+        if self.no_events:
+            return False
         n = self._mhover
         self._mhover = self.mouse_on_me()
         if n == False and self._mhover == True:
             self.dispatch.fire("hover")
             for i in self.parent.widgets:
                 if not i == self:
+                    n = i._mhover
                     i._mhover = False
+                    if n == True:
+                        i.dispatch.fire("unhover")
             if self._mhold:
                 self.dispatch.fire("press-return")
-        elif n == True and self._mhover == False:
+        if n == True and self._mhover == False:
             self.dispatch.fire("unhover")
         return self._mhover
 
     def can_handle_key(self, key, string):
         """Return whether key/string is used by this widget."""
+        if self.no_events:
+            return False
         return False
 
     def handle_keydown(self, key, string):
         """Handle a key down event from the App."""
+        if self.no_events:
+            return False
         if self.can_handle_key(key, string):
             if self.key_active:
                 self.dispatch.fire("keypress", key, string)
@@ -225,6 +270,8 @@ class Widget(object):
 
     def handle_keyhold(self, key, string):
         """Handle a key hold event from the App."""
+        if self.no_events:
+            return False
         if self.can_handle_key(key, string):
             if self.key_active:
                 if key in self.key_hold_lengths:
@@ -237,6 +284,8 @@ class Widget(object):
 
     def handle_keyup(self, key, string):
         """Handle a key release event from the App."""
+        if self.no_events:
+            return False
         if self.can_handle_key(key, string):
             if self.key_active:
                 if key in self.key_hold_lengths:
@@ -245,6 +294,8 @@ class Widget(object):
 
     def handle_uncaught_event(self, event):
         """Handle any non mouse or key event from the App."""
+        if self.no_events:
+            return False
         pass
 
     def render(self):
@@ -258,9 +309,8 @@ class Widget(object):
 
 class Container(Widget, App):
     def __init__(self, parent, size, pos, background_image=None):
-        Widget.__init__(self, parent)
+        Widget.__init__(self, parent, pos)
         self.size = size
-        self.pos = pos
         self.widgets = []
 
         self.dispatch = event.Dispatcher()
@@ -272,6 +322,14 @@ class Container(Widget, App):
         self.background_image = background_image
 
         self.clear_screen()
+        self.dispatch.bind("unhover", self.unhover_all_widgets)
+
+    def unhover_all_widgets(self):
+        for i in self.widgets:
+            n = i._mhover
+            i._mhover = False
+            if n == True:
+                i.dispatch.fire("unhover")
 
     def clear_screen(self):
         if self.background_image:
@@ -281,8 +339,8 @@ class Container(Widget, App):
 
     def get_mouse_pos(self):
         x,y = self.parent.get_mouse_pos()
-        x = x - self.pos[0]
-        y = y - self.pos[1]
+        x = x - self.pos.x
+        y = y - self.pos.y
         return x,y
 
     def handle_mousedown(self, button, name):
@@ -356,25 +414,23 @@ class Container(Widget, App):
 
         App.render(self)
 
-        screen.blit(self.screen, self.pos)
+        screen.blit(self.screen, self.pos.get_pos())
 
 class Icon(Widget):
     def __init__(self, parent, pos, image):
-        Widget.__init__(self, parent)
+        Widget.__init__(self, parent, pos)
 
-        self.pos = pos
         self.image = image
 
         self.size = self.image.get_size()
 
     def render(self):
-        self.parent.screen.blit(self.image, self.pos)
+        self.parent.screen.blit(self.image, self.pos.get_pos())
 
 class Label(Widget):
     def __init__(self, parent, pos, text):
-        Widget.__init__(self, parent)
+        Widget.__init__(self, parent, pos)
 
-        self.pos = pos
         self.text = text
 
         self.bg_image = None
@@ -394,26 +450,25 @@ class Label(Widget):
     def render(self):
         self.size = self.get_size()
         if self.bg_image:
-            self.parent.screen.blit(self.bg_image, self.pos)
+            self.parent.screen.blit(self.bg_image, self.pos.get_pos())
             i = self.font.render(self.text, 1, self.text_color)
             r = i.get_rect()
             w,h = self.size
-            r.centerx = self.pos[0]+w/2
-            r.centery = self.pos[1]+h/2
+            r.centerx = self.pos.x+w/2
+            r.centery = self.pos.y+h/2
             self.parent.screen.blit(i, r)
         else:
             i = self.font.render(self.text, 1, self.text_color)
             r = i.get_rect()
-            r.topleft = self.pos
+            r.topleft = self.pos.get_pos()
             if self.bg_color:
                 self.draw_rect(self.parent.screen, r, self.bg_color)
             self.parent.screen.blit(i, r)
 
 class Button(Widget):
     def __init__(self, parent, pos, text):
-        Widget.__init__(self, parent)
+        Widget.__init__(self, parent, pos)
 
-        self.pos = pos
         self.text = text
 
         self.bg_image = None
@@ -445,26 +500,25 @@ class Button(Widget):
     def render(self):
         self.size = self.get_size()
         if self.bg_image:
-            self.parent.screen.blit(self.bg_image, self.pos)
+            self.parent.screen.blit(self.bg_image, self.pos.get_pos())
             i = self.font.render(self.text, 1, self.text_color)
             r = i.get_rect()
             w,h = self.size
-            r.centerx = self.pos[0]+w/2
-            r.centery = self.pos[1]+h/2
+            r.centerx = self.pos.x+w/2
+            r.centery = self.pos.y+h/2
             self.parent.screen.blit(i, r)
         else:
             i = self.font.render(self.text, 1, self.text_color)
             r = i.get_rect()
-            r.topleft = self.pos
+            r.topleft = self.pos.get_pos()
             if self.bg_color:
                 self.draw_rect(self.parent.screen, r, self.bg_color)
             self.parent.screen.blit(i, r)
 
 class MessageBoxLabel(Widget):
     def __init__(self, parent, text):
-        Widget.__init__(self, parent)
+        Widget.__init__(self, parent, (0,0))
 
-        self.pos = (0,0)
         self.text = text
 
         self.size = self.get_size()
@@ -474,7 +528,7 @@ class MessageBoxLabel(Widget):
 
     def render(self):
         self.size = self.get_size()
-        self.parent.screen.blit(self.font.render(self.text, 1, self.parent.text_color), self.pos)
+        self.parent.screen.blit(self.font.render(self.text, 1, self.parent.text_color), self.pos.get_pos())
 
 class MessageBox(Container):
     def __init__(self, parent, size, pos, background_image=None, max_lines=10):
@@ -490,16 +544,15 @@ class MessageBox(Container):
 
         lasty = self.size[1] - height
         for i in self.widgets:
-            i.pos = (0,lasty)
+            i.pos.y = lasty
             lasty -= height
 
         self.widgets = self.widgets[0:self.max_lines]
 
 class Input(Widget):
     def __init__(self, parent, width, pos, background_image=None, max_chars=50):
-        Widget.__init__(self, parent)
+        Widget.__init__(self, parent, pos)
 
-        self.pos = pos
         self.text = ""
         self.cursor_pos = 0
 
@@ -570,7 +623,12 @@ class Input(Widget):
 
         x, shift = self.get_cursor_real_x()
 
-        self.parent.screen.subsurface(self.pos, self.size).blit(
+        if self.bg_image:
+            self.parent.screen.blit(self.bg_image, self.pos.get_pos())
+        else:
+            self.draw_rect(self.parent.screen, pygame.Rect(self.pos.get_pos(), self.size), self.bg_color)
+
+        self.parent.screen.subsurface(self.pos.get_pos(), self.size).blit(
             self.font.render(self.text, 1, self.text_color), (-shift, 0))
 
         if time.time() - self.flash_timer > self.flash_space:
@@ -580,5 +638,122 @@ class Input(Widget):
         if self.key_active and self.flashed:
             surf = pygame.Surface((3,self.size[1])).convert_alpha()
             surf.fill((255,255,255))
-            self.parent.screen.subsurface(self.pos, self.size).blit(
+            self.parent.screen.subsurface(self.pos.get_pos(), self.size).blit(
                 surf, (x-shift, 0))
+
+class RelativePos(object):
+    """makes a position relative to the parent"""
+    def __init__(self, x="left", y="bottom"):
+        self.x = x
+        self.y = y
+        self.parent = None
+
+    def get_pos(self):
+        if self.x == "left":
+            x = self.parent.pos.x
+        elif self.x == "center":
+            x = self.parent.pos.x + int(self.parent.size[0]*0.5)
+        else:
+            x = self.parent.pos.x + self.parent.size[0]
+
+        if self.y == "top":
+            y = self.parent.pos.y
+        elif self.x == "center":
+            y = self.parent.pos.y + int(self.parent.size[1]*0.5)
+        else:
+            y = self.parent.pos.y + self.parent.size[1]
+
+        return x, y
+
+    def get_real_pos(self):
+        px, py = self.parent.get_real_pos()
+        if self.x == "left":
+            x = px
+        elif self.x == "center":
+            x = px + int(self.parent.size[0]*0.5)
+        else:
+            x = px + self.parent.size[0]
+
+        if self.y == "top":
+            y = py
+        elif self.x == "center":
+            y = py + int(self.parent.size[1]*0.5)
+        else:
+            y = py + self.parent.size[1]
+
+        return x, y
+
+class AbsolutePos(object):
+    def __init__(self, pos):
+        self.x, self.y = pos
+
+    def get_pos(self):
+        return self.x, self.y
+
+class PopUp(Widget):
+    """Shows up on hover over parent"""
+    def __init__(self, parent, pos=RelativePos("left", "bottom"), text="", width=150):
+        Widget.__init__(self, parent.get_root_app(), pos)
+        self.no_events = True
+
+        self.attached_to = parent
+        self.pos.parent = self.attached_to
+        self.text = text
+        self.text_color = (0,0,0)
+
+        self.width = width
+        self.size = self.get_size()
+
+        self.bg_image = None
+        self.bg_color = None
+        self.visible = False
+
+        self.attached_to.dispatch.bind("hover", self.turn_on)
+        self.attached_to.dispatch.bind("unhover", self.turn_off)
+
+    def turn_on(self):
+        self.visible = True
+    def turn_off(self):
+        self.visible = False
+
+    def unfocus(self):
+        Widget.unfocus(self)
+        if self.visible:
+            self.parent.set_top_widget(self)
+
+    def compile_text(self):
+        lines = []
+        words = self.text.split(" ")
+
+        cur_line = words[0]
+        words.pop(0)
+        while words:
+            if self.font.size(cur_line+" "+words[0])[0] > self.width:
+                if cur_line: lines.append(cur_line)
+                cur_line = words[0]
+            else:
+                cur_line += " " + words[0]
+
+            words.pop(0)
+
+        self.comp_text = lines
+
+    def get_size(self):
+        self.compile_text()
+        x = self.width
+        y = self.font.get_height() * len(self.comp_text)
+
+        return x, y
+
+    def render(self):
+        self.size = self.get_size()
+        pos = self.pos.get_real_pos()
+        if self.bg_image:
+            self.parent.screen.blit(self.bg_image, pos)
+        elif self.bg_color:
+            self.draw_rect(self.parent.screen, pygame.Rect(pos, self.size), self.bg_color)
+
+        down = 0
+        for line in self.comp_text:
+            self.parent.screen.blit(self.font.render(line, 1, self.text_color), (pos[0], pos[1]+down))
+            down += self.font.get_height()
