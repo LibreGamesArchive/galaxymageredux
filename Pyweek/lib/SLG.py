@@ -6,17 +6,12 @@ import net, urllib
 main_server_host = 'localhost' #change to real server later!
 main_server_port = 54321
 
-def get_my_server_ip():
-    f = urllib.urlopen("http://checkip.dyndns.com")
-    s = f.read()
-    f.close()
-
-    return s[s.find('<body>')+6:s.find('</body>')].split(":")[1].strip()
-
 class Game(object):
     def __init__(self, name):
         self.name = name
         self.scenario = "" #todo - make base scenario
+
+        self.players = []
 
 class Server(net.Server):
     def __init__(self):
@@ -32,6 +27,8 @@ class Server(net.Server):
 
     def requestNewAvatar(self):
         return SLGAvatar
+
+    def getGameList(self
 
     def registerGameServer(self, avatar, name, port, ip):
         self.server_list[avatar] = (name, port, ip)
