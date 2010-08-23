@@ -18,7 +18,7 @@ select game to play by double-clicking or selecting/hitting join
 Grey out full/running rooms?
 If try to join a room with a scenario player doesn't have, refuse/popup:
 	You don't have scenario <name>
-Create Room button - popup container with:
+Create Game button - popup container with:
 	name - input
 	scenario - dropdown
 	make room - button
@@ -28,13 +28,14 @@ Game lobby:
 display scenario name, max_players
 show cur players/team (all enemies)
 Show master
-For master show add ai button by empty teams
-For master show kick player button next to all players/ai
+//For master show add ai button by empty teams
+AI auto-fills empty places
+For master show kick player button next to all players
 Display chat box/input box/button
 For all users display switch team button next to empty teams
 If change scenario:
 	If too many players - kick ai first, then kick newest players (with a prompt saying why)
-	assign people to teams based on join time
+	assign people to teams based on join order
 For all users display ready button
 For master display Start Game button (instead of ready) (all users must be ready - ai alwats ready)
 If user doesn't have scenario
@@ -55,3 +56,7 @@ Startup:
 	Once you have your units you can place them in your start area (highlighted)
 
 Once the game is going it should be simply each unit doing actions, and teams ending turn...
+
+AI:
+owning played controls the AI players...
+If owner leaves, everyone should already have their own copy of each player, so the next one can just become the owner...
