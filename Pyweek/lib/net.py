@@ -6,6 +6,10 @@ from zope.interface import implements
 
 #high level stuff we shouldn't have to deal with further...
 
+main_server_hostname = ''
+main_client_hostname = 'localhost'
+main_server_port = 44444
+
 class UsernameChecker(object):
     implements(checkers.ICredentialsChecker)
     credentialInterfaces = (credentials.IUsernamePassword,
@@ -26,15 +30,16 @@ class UsernameChecker(object):
 
 class Realm(object):
     implements(portal.IRealm)
-    def __init__(self, port, server):
-        self.port = port
+    def __init__(self, server):
+        self.port = main_server_port
+        self.hostname = main_server_hostname
         self.server = server
 
     def start(self):
         c = UsernameChecker()
         p = portal.Portal(self)
         p.registerChecker(c)
-        reactor.listenTCP(self.port, pb.PBServerFactory(p))
+        reactor.listenTCP(self.port, pb.PBServerFactory(p), interface=self.hostname)
         self.server.run_updater()
         reactor.run()
 
@@ -101,8 +106,8 @@ class Server(object):
     def CA_sendMessage(self, avatar, message):
         self.remoteAll("getMessage", "creator", avatar.name, message)
 
-    def start(self, port):
-        self.realm = Realm(port, self)
+    def start(self):
+        self.realm = Realm(self)
         self.realm.start()
 
 
@@ -139,9 +144,9 @@ class Client(pb.Referenceable):
     #self.avatar.callRemote("Name", *args, **kwargs) - where "Name" is the method
     #   name from the avatar, preceeded by "perspective_" - so "perspective_Name"
     #a method that is accessible by the server is preceeded with the "remote_" name
-    def __init__(self, hostname, port, username):
-        self.hostname = hostname
-        self.port = port
+    def __init__(self, username):
+        self.hostname = main_client_hostname
+        self.port = main_server_port
         self.username = username
         self.avatar = None
 

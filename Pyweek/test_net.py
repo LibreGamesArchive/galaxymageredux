@@ -30,7 +30,7 @@ class Engine(net.Client):
         self.conn_button = gui.Button(self.main_app, (self.input_button.size[0]+315, 110), "Connect")
         self.conn_button.dispatch.bind("click", lambda:(self.connect(), self.conn_button.destroy()))
 
-        net.Client.__init__(self, "localhost", 44444, "test!")
+        net.Client.__init__(self, "test!")
 
     def handle_input(self, *args, **kwargs):
         text = self.input_box.text
