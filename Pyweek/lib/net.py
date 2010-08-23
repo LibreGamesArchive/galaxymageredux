@@ -4,11 +4,12 @@ from twisted.cred import checkers, portal, credentials
 
 from zope.interface import implements
 
+import time
+
 #high level stuff we shouldn't have to deal with further...
 
-main_server_hostname = ''
-main_client_hostname = 'localhost'
-main_server_port = 44444
+main_server_hostname = 'localhost' #'70.160.16.217'
+main_server_port = 54321
 
 class UsernameChecker(object):
     implements(checkers.ICredentialsChecker)
@@ -30,8 +31,8 @@ class UsernameChecker(object):
 
 class Realm(object):
     implements(portal.IRealm)
-    def __init__(self, server):
-        self.port = main_server_port
+    def __init__(self, port, server):
+        self.port = port
         self.hostname = main_server_hostname
         self.server = server
 
@@ -39,7 +40,7 @@ class Realm(object):
         c = UsernameChecker()
         p = portal.Portal(self)
         p.registerChecker(c)
-        reactor.listenTCP(self.port, pb.PBServerFactory(p), interface=self.hostname)
+        reactor.listenTCP(self.port, pb.PBServerFactory(p))
         self.server.run_updater()
         reactor.run()
 
@@ -62,15 +63,15 @@ class Server(object):
         self.type = ''
         self.running = True
 
-        self.users = 0
+        self.update_timer = 0.01 #how long to wait before updating again....
 
     def join(self, avatar):
         self.avatars.append(avatar)
-        self.remoteAll("getMessage", "server", "<server>", "%s joined the server" % avatar.name)
+##        self.remoteAll("getMessage", "server", "<server>", "%s joined the server" % avatar.name)
 
     def leave(self, avatar):
         self.avatars.remove(avatar)
-        self.remoteAll("getMessage", "server", "<server>", "%s left the server" % avatar.name)
+##        self.remoteAll("getMessage", "server", "<server>", "%s left the server" % avatar.name)
 
     def remote(self, avatar, action, *args):
         df = avatar.client.callRemote(action, *args)
@@ -86,28 +87,28 @@ class Server(object):
         return dfs
 
     def requestNewAvatar(self):
-        self.users += 1
-        if self.users == 1:
-            return CreatorAvatar
-        return PlayerAvatar
+        return BaseAvatar
+##        if self.users == 1:
+##            return CreatorAvatar
+##        return PlayerAvatar
 
     def run_updater(self):
         self.update()
         if self.running:
-            reactor.callLater(0, self.run_updater)
+            reactor.callLater(self.update_timer, self.run_updater)
 
     def update(self):
         pass
 
-    def PA_sendMessage(self, avatar, message):
-        #server methods that are available do NOT have to be preceeded with either remote_ or perspective_
-        self.remoteAll("getMessage", "player", avatar.name, message)
+##    def PA_sendMessage(self, avatar, message):
+##        #server methods that are available do NOT have to be preceeded with either remote_ or perspective_
+##        self.remoteAll("getMessage", "player", avatar.name, message)
+##
+##    def CA_sendMessage(self, avatar, message):
+##        self.remoteAll("getMessage", "creator", avatar.name, message)
 
-    def CA_sendMessage(self, avatar, message):
-        self.remoteAll("getMessage", "creator", avatar.name, message)
-
-    def start(self):
-        self.realm = Realm(self)
+    def start(self, port):
+        self.realm = Realm(port, self)
         self.realm.start()
 
 
@@ -129,13 +130,13 @@ class BaseAvatar(pb.Avatar):
         self.server = None
         self.client = None
 
-class PlayerAvatar(BaseAvatar):
-    def perspective_sendMessage(self, message):
-        self.server.PA_sendMessage(self, message)
-
-class CreatorAvatar(BaseAvatar):
-    def perspective_sendMessage(self, message):
-        self.server.CA_sendMessage(self, message)
+##class PlayerAvatar(BaseAvatar):
+##    def perspective_sendMessage(self, message):
+##        self.server.PA_sendMessage(self, message)
+##
+##class CreatorAvatar(BaseAvatar):
+##    def perspective_sendMessage(self, message):
+##        self.server.CA_sendMessage(self, message)
 
 
 class Client(pb.Referenceable):
@@ -144,15 +145,17 @@ class Client(pb.Referenceable):
     #self.avatar.callRemote("Name", *args, **kwargs) - where "Name" is the method
     #   name from the avatar, preceeded by "perspective_" - so "perspective_Name"
     #a method that is accessible by the server is preceeded with the "remote_" name
-    def __init__(self, username):
-        self.hostname = main_client_hostname
-        self.port = main_server_port
+    def __init__(self, username, host, port):
+        self.hostname = host
+        self.port = port
         self.username = username
         self.avatar = None
 
         self._connected = False
         self.running = True
         self.connection = None
+
+        self.update_timer = 0.01 #how long to wait before updating again....
 
         self.run_updater()
         reactor.run()
@@ -175,9 +178,13 @@ class Client(pb.Referenceable):
         self._connected = True
 
     def run_updater(self):
+        if self._connected:
+            if self.connection.state == "disconnected":
+                self._connected = False
+                self.disconnected()
         self.update()
         if self.running:
-            reactor.callLater(0, self.run_updater)
+            reactor.callLater(self.update_timer, self.run_updater)
 
     def update(self):
         pass
@@ -195,6 +202,9 @@ class Client(pb.Referenceable):
         reactor.stop()
         self.running = False
         self._connected = False
+
+    def disconnected(self):
+        print "disconnected!"
 
     # Methods callable by the server
 ##    def remote_getMessage(self, message):

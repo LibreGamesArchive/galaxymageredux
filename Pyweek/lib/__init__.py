@@ -1,1 +1,1 @@
-import event, gui, GIFImage, net
+import event, gui, GIFImage, net, SLS, SLG

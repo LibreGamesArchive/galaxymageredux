@@ -18,6 +18,9 @@ class App(object):
         self.font = pygame.font.Font(None, 32)
         self.visible = True
 
+    def activate(self):
+        self.event_handler.gui = self
+
     def get_root_app(self):
         return self
 
@@ -442,7 +445,7 @@ class Label(Widget):
 
         self.size = self.get_size()
 
-        self.text_color = None
+        self.text_color = (0,0,0)
 
     def get_size(self):
         if self.bg_image:
@@ -723,7 +726,11 @@ class PopUp(Widget):
     def unfocus(self):
         Widget.unfocus(self)
         if self.visible:
+            a,b,c,d = (self.attached_to.key_active, self.attached_to.key_hold_lengths,
+                       self.attached_to._mhold, self.attached_to._mhover)
             self.parent.set_top_widget(self)
+            self.attached_to.key_active, self.attached_to.key_hold_lengths = a,b
+            self.attached_to._mhold, self.attached_to._mhover = c,d
 
     def compile_text(self):
         lines = []

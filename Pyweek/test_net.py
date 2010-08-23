@@ -30,7 +30,7 @@ class Engine(net.Client):
         self.conn_button = gui.Button(self.main_app, (self.input_button.size[0]+315, 110), "Connect")
         self.conn_button.dispatch.bind("click", lambda:(self.connect(), self.conn_button.destroy()))
 
-        net.Client.__init__(self, "test!")
+        net.Client.__init__(self, "test!", net.main_server_hostname, net.main_server_port)
 
     def handle_input(self, *args, **kwargs):
         text = self.input_box.text
@@ -51,6 +51,9 @@ class Engine(net.Client):
         self.screen.fill((0,0,0))
         self.main_app.render()
         pygame.display.flip()
+
+    def disconnected(self):
+        self.close()
 
     def remote_getMessage(self, user_type, name, message):
         self.message_box.add_line(name+': '+message)
