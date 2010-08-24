@@ -104,8 +104,10 @@ class Engine(SLG.Client):
         self.game_list_select = gui.Menu(self.game_list_cont, (0,0), padding=(2,2))
         self.game_list_select.entry_bg_color = (200,75,75)
         self.game_list_select.dispatch.bind('select', self.handle_game_list_select)
-        self.game_list_list = []
+
+        self.game_list_list = {}
         self.game_list_page = 0
+        self.game_list_id = {}
 
         game_list_ppage = gui.Button(self.server_lobby_app, gui.RelativePos(to=self.game_list_cont, y='bottom', pady=5, padx=50), 'Last Page')
         game_list_ppage.dispatch.bind('click', lambda: self.view_game_page(self.game_list_page-1))

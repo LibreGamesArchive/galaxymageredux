@@ -114,6 +114,7 @@ class Server(net.Server):
                 if not i.game:
                     self.getLobbyUsersList(i)
                     self.getGameList(i)
+            self.last_push_update = time.time()
 
     def requestJoinGame(self, avatar, game_id):
         game = self.games_list[game_id]
