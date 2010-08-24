@@ -42,6 +42,7 @@ class Realm(object):
         p.registerChecker(c)
         reactor.listenTCP(self.port, pb.PBServerFactory(p))
         self.server.run_updater()
+        reactor.callLater(0, self.server.started)
         reactor.run()
 
     def requestAvatar(self, name, clientRef, *interfaces):
@@ -67,11 +68,9 @@ class Server(object):
 
     def join(self, avatar):
         self.avatars.append(avatar)
-##        self.remoteAll("getMessage", "server", "<server>", "%s joined the server" % avatar.name)
 
     def leave(self, avatar):
         self.avatars.remove(avatar)
-##        self.remoteAll("getMessage", "server", "<server>", "%s left the server" % avatar.name)
 
     def remote(self, avatar, action, *args):
         df = avatar.client.callRemote(action, *args)
@@ -88,9 +87,6 @@ class Server(object):
 
     def requestNewAvatar(self):
         return BaseAvatar
-##        if self.users == 1:
-##            return CreatorAvatar
-##        return PlayerAvatar
 
     def run_updater(self):
         self.update()
@@ -100,16 +96,13 @@ class Server(object):
     def update(self):
         pass
 
-##    def PA_sendMessage(self, avatar, message):
-##        #server methods that are available do NOT have to be preceeded with either remote_ or perspective_
-##        self.remoteAll("getMessage", "player", avatar.name, message)
-##
-##    def CA_sendMessage(self, avatar, message):
-##        self.remoteAll("getMessage", "creator", avatar.name, message)
-
     def start(self, port):
         self.realm = Realm(port, self)
         self.realm.start()
+
+    def started(self):
+        print
+        print 'Server running'
 
 
 #########Client stuff!
@@ -129,15 +122,6 @@ class BaseAvatar(pb.Avatar):
         self.server.leave(self)
         self.server = None
         self.client = None
-
-##class PlayerAvatar(BaseAvatar):
-##    def perspective_sendMessage(self, message):
-##        self.server.PA_sendMessage(self, message)
-##
-##class CreatorAvatar(BaseAvatar):
-##    def perspective_sendMessage(self, message):
-##        self.server.CA_sendMessage(self, message)
-
 
 class Client(pb.Referenceable):
     #the client is the low level connection class - anything we want the server to be able to contact needs to be here.
@@ -205,7 +189,3 @@ class Client(pb.Referenceable):
 
     def disconnected(self):
         print "disconnected!"
-
-    # Methods callable by the server
-##    def remote_getMessage(self, message):
-##        print 'Got "', message, '" from server'

@@ -170,7 +170,7 @@ class Widget(object):
         self._mhover = False
         self.key_active = False
         self.key_hold_lengths = {}
-        self.khl = 100 #milliseconds to hold keys for repeat!
+        self.khl = 150 #milliseconds to hold keys for repeat!
 
         self.no_events = False
 
@@ -603,7 +603,7 @@ class Input(Widget):
             self.text = self.text[0:self.cursor_pos] + string + self.text[self.cursor_pos::]
             self.cursor_pos += 1
 
-            if len(self.text) >= self.max_chars:
+            if self.max_chars >= 0 and len(self.text) >= self.max_chars:
                 self.text = self.text[0:self.max_chars]
                 self.cursor_pos = self.max_chars
         self.flash_timer = time.time()
@@ -636,10 +636,10 @@ class Input(Widget):
             self.flashed = not self.flashed
 
         if self.key_active and self.flashed:
-            surf = pygame.Surface((3,self.size[1])).convert_alpha()
-            surf.fill((255,255,255))
+            surf = pygame.Surface((2,self.size[1]-2)).convert_alpha()
+            surf.fill(self.text_color)
             self.parent.screen.subsurface(self.pos.get_pos(), self.size).blit(
-                surf, (x-shift, 0))
+                surf, (x-shift, 1))
 
 class RelativePos(object):
     """makes a position relative to the parent"""
@@ -717,8 +717,10 @@ class PopUp(Widget):
 
     def turn_on(self):
         self.visible = True
+        self.parent.add_widget(self)
     def turn_off(self):
         self.visible = False
+        self.destroy()
 
     def unfocus(self):
         Widget.unfocus(self)
@@ -781,8 +783,10 @@ class DropDown(Button):
 
     def turn_off(self):
         self.child.visible = False
+        self.child.destroy()
     def turn_on(self):
         self.child.visible = True
+        self.parent.add_widget(self.child)
 
 
 class MenuEntry(Widget):

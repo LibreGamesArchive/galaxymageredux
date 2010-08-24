@@ -14,13 +14,68 @@ class Engine(SLG.Client):
 
         ####GUI stuff!####
 
+        lil_font = pygame.font.Font(None, 20)
+        small_font = pygame.font.Font(None, 25)
+
         #pre connection login/etc.
         self.pre_conn_app = gui.App(self.screen, self.event_handler)
-        gui.Label(self.pre_conn_app, (5,5), 'Username:')
-        self.get_username = gui.Input(self.pre_conn_app,
-                                      300, (5,55),
+        x=gui.Label(self.pre_conn_app, (5,75), 'Connect to a server!')
+        x.bg_color = (0,0,0,0)
+        x.text_color = (255,255,255)
+
+        cont = gui.Container(self.pre_conn_app, (300, 200), gui.RelativePos(to=x, pady=5))
+        cont.bg_color = (100,100,255,100)
+        cont.font = small_font
+
+        x=gui.Label(cont, (5,5), 'Username:')
+        x.bg_color = (0,0,0,0)
+        x.text_color = (100,100,100)
+
+        self.get_username = gui.Input(cont,
+                                      210, gui.RelativePos(to=x, pady=5, padx=5),
                                       max_chars=20)
-        self.connect_button = gui.Button(self.pre_conn_app, (310, 55), 'Connect')
+        self.get_username.always_active=False
+        self.get_username.bg_color = (200,200,200)
+        self.get_username.text_color = (100,100,100)
+
+        x=gui.Label(cont, gui.RelativePos(to=self.get_username, pady=5, padx=-5), "Server:")
+        x.bg_color = (0,0,0,0)
+        x.text_color = (100,100,100)
+
+        self.connect_server_drop = gui.DropDownMenu(cont, gui.RelativePos(to=x, pady=5, padx=5),
+                                                    'main', ['main', 'local', 'other'])
+        self.connect_server_drop.bg_color=(100,100,100)
+        self.connect_server_serv = gui.Input(cont,
+                                             200,
+                                             gui.RelativePos(to=self.connect_server_drop, x='right', y='top',padx=5),
+                                             -1)
+        self.connect_server_serv.bg_color = (200,200,200)
+        self.connect_server_serv.text_color = (100,100,100)
+        self.connect_server_serv.always_active = False
+        self.connect_server_serv.visible = False
+        self.connect_server_serv.text = str(SLG.main_server_host)
+        self.connect_server_drop.dispatch.bind('select', self.handle_server_sel)
+
+        x=gui.Label(cont, gui.RelativePos(to=self.connect_server_drop, pady=5, padx=-5), "Port:")
+        x.bg_color = (0,0,0,0)
+        x.text_color = (100,100,100)
+
+        self.connect_port_drop = gui.DropDownMenu(cont, gui.RelativePos(to=x, pady=5, padx=5),
+                                                  'default', ['default', 'other'])
+        self.connect_port_drop.bg_color = (100,100,100)
+        self.connect_port_serv = gui.Input(cont,
+                                             200,
+                                             gui.RelativePos(to=self.connect_port_drop, x='right', y='top',padx=5),
+                                             -1)
+        self.connect_port_serv.bg_color = (200,200,200)
+        self.connect_port_serv.text_color = (100,100,100)
+        self.connect_port_serv.always_active = False
+        self.connect_port_serv.visible = False
+        self.connect_port_serv.text=str(SLG.main_server_port)
+        self.connect_port_drop.dispatch.bind('select', self.handle_port_sel)
+
+        self.connect_button = gui.Button(cont, gui.RelativePos(to=self.connect_port_drop, pady=5, padx=-5), 'Connect')
+        self.connect_button.font = self.pre_conn_app.font
         self.connect_button.bg_color = (255,0,0)
         self.connect_button.text_hover_color = (100,100,100)
         self.connect_button.text_click_color = (200,200,200)
@@ -33,7 +88,6 @@ class Engine(SLG.Client):
 
         #server lobby view
         self.server_lobby_app = gui.App(self.screen, self.event_handler)
-        lil_font = pygame.font.Font(None, 20)
 
         gamel = gui.Label(self.server_lobby_app, (5,75), 'Games:')
         gamel.text_color = (200,200,200)
@@ -115,10 +169,10 @@ class Engine(SLG.Client):
         if len(text)>=4:
             self.username = text
             self.connect()
-            self.server_lobby_app.activate()
 
     def connected(self, avatar):
         SLG.Client.connected(self, avatar)
+        self.server_lobby_app.activate()
         self.avatar.callRemote('getGameList')
 
     def disconnected(self):
@@ -131,6 +185,34 @@ class Engine(SLG.Client):
             self.server_lobby_messages.add_line('%s: %s'%(player, message))
 
     ####End core net functions
+
+
+    ###Pre conn gui functions
+    def set_default_input(self, widg, inp):
+        widg.text = inp
+        widg.cursor_pos = len(inp)
+    def handle_server_sel(self, value):
+        if value == 'main':
+            self.connect_server_serv.text = SLG.main_server_host
+            self.connect_server_serv.visible = False
+        elif value == 'local':
+            self.connect_server_serv.text = 'localhost'
+            self.connect_server_serv.visible = False
+        elif value == 'other':
+            self.connect_server_serv.text = SLG.main_server_host
+            self.connect_server_serv.visible = True
+            self.connect_server_serv.cursor_pos = len(SLG.main_server_host)
+        self.connect_server_drop.text = value
+    def handle_port_sel(self, value):
+        if value == 'default':
+            self.connect_port_serv.text = str(SLG.main_server_port)
+            self.connect_port_serv.visible = False
+        elif value == 'other':
+            self.connect_port_serv.text = str(SLG.main_server_port)
+            self.connect_port_serv.visible = True
+            self.connect_port_serv.cursor_pos = len(SLG.main_server_host)
+        self.connect_port_drop.text = value
+    ###End pre conn functions
 
 
     #game lobby view functions#
