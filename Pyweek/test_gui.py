@@ -28,6 +28,9 @@ def main():
     drop = gui.DropDown(main_app, (5, 5), "press me!")
     drop.setChild(gui.Label(main_app, (0,0), 'woah!'))
 
+    test = gui.Menu(main_app, gui.RelativePos(to=text_box), ['abc', '123', 'come on now!'])
+    test2 = gui.DropDownMenu(main_app, gui.RelativePos(x="right", y="top", to=test), 'clickme!', ['abc', '123', 'come on now!'])
+
     while 1:
         event_handler.update()
 

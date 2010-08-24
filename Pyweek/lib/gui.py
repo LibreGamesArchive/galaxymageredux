@@ -197,9 +197,11 @@ class Widget(object):
         x = 0
         y = 0
         for i in parents:
-            x += i.pos.x
-            y += i.pos.y
-        return x+self.pos.x, y+self.pos.y
+            ix, iy = i.pos.get_pos()
+            x += ix
+            y += iy
+        sx, sy = self.pos.get_pos()
+        return x+sx, y+sy
 
     def mouse_on_me(self):
         return pygame.Rect(self.pos.get_pos(), self.size).collidepoint(self.parent.get_mouse_pos())
@@ -327,7 +329,7 @@ class Widget(object):
 
 
 class Container(Widget, App):
-    def __init__(self, parent, size, pos, background_image=None):
+    def __init__(self, parent, size, pos):
         Widget.__init__(self, parent, pos)
         self.size = size
         self.widgets = []
@@ -338,7 +340,6 @@ class Container(Widget, App):
 
         self.screen = pygame.Surface(size).convert_alpha()
         self.bg_color = (0,0,0,0)
-        self.background_image = background_image
 
         self.clear_screen()
         self.dispatch.bind("unhover", self.unhover_all_widgets)
@@ -351,15 +352,13 @@ class Container(Widget, App):
                 i.dispatch.fire("unhover")
 
     def clear_screen(self):
-        if self.background_image:
-            self.screen = self.background_image.copy()
-        else:
-            self.screen.fill(self.bg_color)
+        self.screen.fill(self.bg_color)
 
     def get_mouse_pos(self):
         x,y = self.parent.get_mouse_pos()
-        x = x - self.pos.x
-        y = y - self.pos.y
+        xx, yy = self.pos.get_pos()
+        x = x - xx
+        y = y - yy
         return x,y
 
     def handle_mousedown(self, button, name):
@@ -452,7 +451,6 @@ class Label(Widget):
 
         self.text = text
 
-        self.bg_image = None
         self.bg_color = (255,255,255,255)
 
         self.size = self.get_size()
@@ -460,29 +458,17 @@ class Label(Widget):
         self.text_color = (0,0,0)
 
     def get_size(self):
-        if self.bg_image:
-            width, height = self.bg_image.get_size()
-        else:
-            width, height = self.font.size(self.text)
+        width, height = self.font.size(self.text)
         return width, height
 
     def render(self):
         self.size = self.get_size()
-        if self.bg_image:
-            self.parent.screen.blit(self.bg_image, self.pos.get_pos())
-            i = self.font.render(self.text, 1, self.text_color)
-            r = i.get_rect()
-            w,h = self.size
-            r.centerx = self.pos.x+w/2
-            r.centery = self.pos.y+h/2
-            self.parent.screen.blit(i, r)
-        else:
-            i = self.font.render(self.text, 1, self.text_color)
-            r = i.get_rect()
-            r.topleft = self.pos.get_pos()
-            if self.bg_color:
-                self.draw_rect(self.parent.screen, r, self.bg_color)
-            self.parent.screen.blit(i, r)
+        i = self.font.render(self.text, 1, self.text_color)
+        r = i.get_rect()
+        r.topleft = self.pos.get_pos()
+        if self.bg_color:
+            self.draw_rect(self.parent.screen, r, self.bg_color)
+        self.parent.screen.blit(i, r)
 
 class Button(Widget):
     def __init__(self, parent, pos, text):
@@ -490,7 +476,6 @@ class Button(Widget):
 
         self.text = text
 
-        self.bg_image = None
         self.bg_color = (255,255,255,255)
 
         self.size = self.get_size()
@@ -510,29 +495,17 @@ class Button(Widget):
         self.text_color = new
 
     def get_size(self):
-        if self.bg_image:
-            width, height = self.bg_image.get_size()
-        else:
-            width, height = self.font.size(self.text)
+        width, height = self.font.size(self.text)
         return width, height
 
     def render(self):
         self.size = self.get_size()
-        if self.bg_image:
-            self.parent.screen.blit(self.bg_image, self.pos.get_pos())
-            i = self.font.render(self.text, 1, self.text_color)
-            r = i.get_rect()
-            w,h = self.size
-            r.centerx = self.pos.x+w/2
-            r.centery = self.pos.y+h/2
-            self.parent.screen.blit(i, r)
-        else:
-            i = self.font.render(self.text, 1, self.text_color)
-            r = i.get_rect()
-            r.topleft = self.pos.get_pos()
-            if self.bg_color:
-                self.draw_rect(self.parent.screen, r, self.bg_color)
-            self.parent.screen.blit(i, r)
+        i = self.font.render(self.text, 1, self.text_color)
+        r = i.get_rect()
+        r.topleft = self.pos.get_pos()
+        if self.bg_color:
+            self.draw_rect(self.parent.screen, r, self.bg_color)
+        self.parent.screen.blit(i, r)
 
 class MessageBoxLabel(Widget):
     def __init__(self, parent, text):
@@ -550,8 +523,8 @@ class MessageBoxLabel(Widget):
         self.parent.screen.blit(self.font.render(self.text, 1, self.parent.text_color), self.pos.get_pos())
 
 class MessageBox(Container):
-    def __init__(self, parent, size, pos, background_image=None, max_lines=10):
-        Container.__init__(self, parent, size, pos, background_image)
+    def __init__(self, parent, size, pos, max_lines=10):
+        Container.__init__(self, parent, size, pos)
 
         self.max_lines = max_lines
         self.text_color = (0,0,0)
@@ -569,7 +542,7 @@ class MessageBox(Container):
         self.widgets = self.widgets[0:self.max_lines]
 
 class Input(Widget):
-    def __init__(self, parent, width, pos, background_image=None, max_chars=50):
+    def __init__(self, parent, width, pos, max_chars=50):
         Widget.__init__(self, parent, pos)
 
         self.text = ""
@@ -579,7 +552,6 @@ class Input(Widget):
         self.max_chars = max_chars
         self.size = self.get_size()
 
-        self.bg_image = background_image
         self.bg_color = (100,100,100)
         self.text_color = (255,0,0)
 
@@ -642,10 +614,7 @@ class Input(Widget):
 
         x, shift = self.get_cursor_real_x()
 
-        if self.bg_image:
-            self.parent.screen.blit(self.bg_image, self.pos.get_pos())
-        else:
-            self.draw_rect(self.parent.screen, pygame.Rect(self.pos.get_pos(), self.size), self.bg_color)
+        self.draw_rect(self.parent.screen, pygame.Rect(self.pos.get_pos(), self.size), self.bg_color)
 
         self.parent.screen.subsurface(self.pos.get_pos(), self.size).blit(
             self.font.render(self.text, 1, self.text_color), (-shift, 0))
@@ -669,19 +638,20 @@ class RelativePos(object):
 
     def get_pos(self):
         rel = self.to
+        relx, rely = rel.pos.get_pos()
         if self.x == "left":
-            x = rel.pos.x
+            x = relx
         elif self.x == "center":
-            x = rel.pos.x + int(rel.size[0]*0.5)
+            x = relx + int(rel.size[0]*0.5)
         else:
-            x = rel.pos.x + rel.size[0]
+            x = relx + rel.size[0]
 
         if self.y == "top":
-            y = rel.pos.y
+            y = rely
         elif self.x == "center":
-            y = rel.pos.y + int(rel.size[1]*0.5)
+            y = rely + int(rel.size[1]*0.5)
         else:
-            y = rel.pos.y + rel.size[1]
+            y = rely + rel.size[1]
 
         return x, y
 
@@ -725,7 +695,6 @@ class PopUp(Widget):
         self.width = width
         self.size = self.get_size()
 
-        self.bg_image = None
         self.bg_color = None
         self.visible = False
 
@@ -773,10 +742,7 @@ class PopUp(Widget):
     def render(self):
         self.size = self.get_size()
         pos = self.pos.get_real_pos()
-        if self.bg_image:
-            self.parent.screen.blit(self.bg_image, pos)
-        elif self.bg_color:
-            self.draw_rect(self.parent.screen, pygame.Rect(pos, self.size), self.bg_color)
+        self.draw_rect(self.parent.screen, pygame.Rect(pos, self.size), self.bg_color)
 
         down = 0
         for line in self.comp_text:
@@ -785,7 +751,7 @@ class PopUp(Widget):
 
 
 class DropDown(Button):
-    def __init__(self, parent, pos, text='', child=None):
+    def __init__(self, parent, pos, text, child=None):
         Button.__init__(self, parent, pos, text)
 
         self.child = None
@@ -803,3 +769,79 @@ class DropDown(Button):
         self.child.visible = False
     def turn_on(self):
         self.child.visible = True
+
+
+class MenuEntry(Widget):
+    def __init__(self, parent, pos, text):
+        Widget.__init__(self, parent, pos)
+
+        self.text = text
+
+        self.size = self.get_size()
+
+        self.text_color = self.parent.entry_text_reg_color
+
+        self.dispatch.bind('hover', lambda: self.swap_text_color(self.parent.entry_text_hover_color))
+        self.dispatch.bind('click', lambda: self.swap_text_color(self.parent.entry_text_hover_color))
+        self.dispatch.bind('press', lambda: self.swap_text_color(self.parent.entry_text_click_color))
+        self.dispatch.bind('press-return', lambda: self.swap_text_color(self.parent.entry_text_click_color))
+        self.dispatch.bind('unhover', lambda: self.swap_text_color(self.parent.entry_text_reg_color))
+        self.dispatch.bind('unhover', self.keep_off_held_if_unhover)
+
+    def swap_text_color(self, new):
+        self.text_color = new
+    def keep_off_held_if_unhover(self):
+        self._mhold = False
+
+    def get_size(self):
+        width, height = self.parent.font.size(self.text)
+        return width, height
+
+    def render(self):
+        i = self.parent.font.render(self.text, 1, self.text_color)
+        r = pygame.rect.Rect(self.pos.get_pos(), self.size)
+        if self.parent.entry_bg_color:
+            self.draw_rect(self.parent.screen, r, self.parent.entry_bg_color)
+        self.parent.screen.blit(i, r)
+
+class Menu(Container):
+    def __init__(self, parent, pos, options=[]):
+        Container.__init__(self, parent, (1,1), pos)
+
+        self.entry_text_reg_color = (0,0,0)
+        self.entry_text_hover_color = (100,100,100)
+        self.entry_text_click_color = (255,0,0)
+        self.entry_bg_color = (255,255,255)
+
+        width = 0
+        height = 0
+
+        for opt in options:
+            if self.widgets:
+                pos = RelativePos(to=self.widgets[0])
+            else:
+                pos = AbsolutePos((0,0))
+            new = MenuEntry(self, pos, opt)
+            new.dispatch.bind('click', lambda:self.dispatch.fire('select-%s'%opt))
+
+            width = max(width, new.get_size()[0])
+            height = new.pos.get_pos()[1]+new.get_size()[1]
+
+        for i in self.widgets:
+            i.size = width, i.size[1]
+
+        self.size = width, height
+        self.screen = pygame.transform.scale(self.screen, self.size)
+
+class DropDownMenu(DropDown):
+    def __init__(self, parent, pos, text, options=[]):
+        child = Menu(parent, RelativePos(to=self), options)
+
+        DropDown.__init__(self, parent, pos, text, child)
+
+        for i in self.child.widgets:
+            self.child.dispatch.bind('select-%s'%i.text, lambda: self.fire_event(i.text))
+
+    def fire_event(self, item):
+        self.dispatch.fire('select-%s'%item)
+        self.turn_off()
