@@ -1,7 +1,7 @@
 """Server and client for the server-game-server"""
 
 
-import net, urllib
+import net, urllib, time
 
 main_server_host = 'localhost' #change to real server later!
 main_server_port = 54321
@@ -67,6 +67,9 @@ class Server(net.Server):
             self.games_list['test'+str(i)] = DummyGame('test'+str(i))
         self.games_list['test'+str(i)] = DummyGame('test'+str(i), 'test2!!!!!')
 
+        self.last_push_update = time.time()
+        self.push_update_delay = 5 #seconds
+
     def join(self, avatar):
         self.avatars.append(avatar)
         self.sendServerMessage('%s has joined the server'%avatar.name)
@@ -104,17 +107,25 @@ class Server(net.Server):
         new.players.append(avatar)
         avatar.game = new
 
-    def joinGame(self, avatar, game_id):
+    def update(self):
+        #basically, every 15 seconds, make every client reget the server info to keep it updated...
+        if time.time() - self.last_push_update > self.push_update_delay:
+            for i in self.avatars:
+                if not i.game:
+                    self.getLobbyUsersList(i)
+                    self.getGameList(i)
+
+    def requestJoinGame(self, avatar, game_id):
         game = self.games_list[game_id]
         if game.playing:
-            return False
+            self.remote(avatar, 'cannotJoinGame')
         if len(game.players) >= game.max_players:
-            return False
+            self.remote(avatar, 'cannotJoinGame')
         if not game.scenario in avatar.available_scenarios:
-            return False
+            self.remote(avatar, 'cannotJoinGame')
 
         game.add_player(avatar)
-        return True
+        self.remote(avatar, 'joinedGame')
 
     def sendMessage(self, avatar, message):
         if avatar.game:
@@ -128,6 +139,23 @@ class Server(net.Server):
         for av in self.avatars:
             if not av.game:
                 self.remote(av, "getMessage", '<server>', message)
+
+    def getLobbyUsersList(self, avatar):
+        users = []
+        for i in self.avatars:
+            if not i.game:
+                users.append(i.name)
+        self.remote(avatar, 'sendLobbyUsersList', users)
+
+    def silentHandleFail(self, result):
+        if 'twisted.spread.pb.PBConnectionLost' in result.parents:
+            pass
+        else:
+            print result
+
+    def remote(self, avatar, action, *args):
+        d = avatar.client.callRemote(action, *args)
+        d.addErrback(self.silentHandleFail)
 
 class SLGAvatar(net.BaseAvatar):
     def __init__(self, name, server, clientRef):
@@ -153,4 +181,6 @@ class Client(net.Client):
     def remote_sendGameList(self, games):
         pass
     def remote_getMessage(self, player, message):
+        pass
+    def remote_sendLobbyUsersList(self, users):
         pass

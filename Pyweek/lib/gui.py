@@ -789,6 +789,59 @@ class DropDown(Button):
         self.parent.add_widget(self.child)
 
 
+class ListEntry(Widget):
+    def __init__(self, parent, pos, text):
+        Widget.__init__(self, parent, pos)
+
+        self.text = text
+
+        self.size = self.get_size()
+
+    def get_size(self):
+        width, height = self.parent.font.size(self.text)
+        return width, height
+
+    def render(self):
+        i = self.parent.font.render(self.text, 1, self.parent.entry_text_color)
+        r = pygame.rect.Rect(self.pos.get_pos(), self.size)
+        if self.parent.entry_bg_color:
+            self.draw_rect(self.parent.screen, r, self.parent.entry_bg_color)
+        self.parent.screen.blit(i, r)
+
+class List(Container):
+    def __init__(self, parent, pos, entries=[], padding=(0,0)):
+        Container.__init__(self, parent, (1,1), pos)
+
+        self.entry_text_color = (0,0,0)
+        self.entry_bg_color = (255,255,255)
+
+        self.entries = entries
+        self.padding = padding
+
+        self.build_entries()
+
+    def build_entries(self):
+        self.widgets = []
+        width = 0
+        height = 0
+
+        for opt in self.entries:
+            if self.widgets:
+                pos = RelativePos(to=self.widgets[0], pady=self.padding[1])
+            else:
+                pos = AbsolutePos(self.padding)
+            new = ListEntry(self, pos, opt)
+
+            width = max(width, new.get_size()[0]+self.padding[0])
+            height = new.pos.get_pos()[1]+new.get_size()[1]
+
+
+        for i in self.widgets:
+            i.size = width, i.size[1]
+
+        self.change_size((width, height))
+
+
 class MenuEntry(Widget):
     def __init__(self, parent, pos, text):
         Widget.__init__(self, parent, pos)

@@ -140,6 +140,16 @@ class Engine(SLG.Client):
         self.server_lobby_binput.bg_color=(200,200,200)
         self.server_lobby_input.dispatch.bind('input-submit', self.lobby_submit_message)
         self.server_lobby_binput.dispatch.bind('click', self.lobby_submit_message)
+
+        cont = gui.Container(self.server_lobby_app, (185, 470), (450, 5))
+        cont.bg_color = (100,100,255,100)
+        l = gui.Label(cont, (5, 5), 'Users in Lobby:')
+        l.bg_color=(0,0,0,0)
+        l.text_color=(100,100,100)
+
+        self.server_lobby_users = gui.List(cont, gui.RelativePos(to=l, pady=5))
+        self.server_lobby_users.font = lil_font
+        self.server_lobby_users.entry_bg_color = (0,0,0,0)
         #end server lobby view
 
 
@@ -176,7 +186,8 @@ class Engine(SLG.Client):
         self.avatar.callRemote('getGameList')
 
     def disconnected(self):
-        self.close()
+        self.pre_conn_app.activate()
+##        self.close()
 
     def remote_getMessage(self, player, message):
         if self.playing:
@@ -274,6 +285,10 @@ class Engine(SLG.Client):
             self.game_list_list[l] = game
 
         self.view_game_page(self.game_list_page)
+
+    def remote_sendLobbyUsersList(self, users):
+        self.server_lobby_users.entries = users
+        self.server_lobby_users.build_entries()
 
     #end game lobby view
 
