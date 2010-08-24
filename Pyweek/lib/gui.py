@@ -168,6 +168,18 @@ class Widget(object):
 
         self.no_events = False
 
+        self.last_click = None
+        self.double_click_dur = 0.1 #max seconds between clicks to register!
+        self.dispatch.bind('click', self.test_double_click)
+
+    def test_double_click(self):
+        if self.last_click:
+            if time.time() - self.last_click < self.double_click_dur:
+                self.dispatch.fire('double-click')
+                self.last_click = None
+                return
+        self.last_click = time.time()
+
     def destroy(self):
         if self in self.parent.widgets:
             self.parent.widgets.remove(self)
@@ -650,43 +662,45 @@ class Input(Widget):
 
 class RelativePos(object):
     """makes a position relative to the parent"""
-    def __init__(self, x="left", y="bottom"):
+    def __init__(self, x="left", y="bottom", to=None):
         self.x = x
         self.y = y
-        self.parent = None
+        self.to = to
 
     def get_pos(self):
+        rel = self.to
         if self.x == "left":
-            x = self.parent.pos.x
+            x = rel.pos.x
         elif self.x == "center":
-            x = self.parent.pos.x + int(self.parent.size[0]*0.5)
+            x = rel.pos.x + int(rel.size[0]*0.5)
         else:
-            x = self.parent.pos.x + self.parent.size[0]
+            x = rel.pos.x + rel.size[0]
 
         if self.y == "top":
-            y = self.parent.pos.y
+            y = rel.pos.y
         elif self.x == "center":
-            y = self.parent.pos.y + int(self.parent.size[1]*0.5)
+            y = rel.pos.y + int(rel.size[1]*0.5)
         else:
-            y = self.parent.pos.y + self.parent.size[1]
+            y = rel.pos.y + rel.size[1]
 
         return x, y
 
     def get_real_pos(self):
-        px, py = self.parent.get_real_pos()
+        rel = self.to
+        px, py = rel.get_real_pos()
         if self.x == "left":
             x = px
         elif self.x == "center":
-            x = px + int(self.parent.size[0]*0.5)
+            x = px + int(rel.size[0]*0.5)
         else:
-            x = px + self.parent.size[0]
+            x = px + rel.size[0]
 
         if self.y == "top":
             y = py
         elif self.x == "center":
-            y = py + int(self.parent.size[1]*0.5)
+            y = py + int(rel.size[1]*0.5)
         else:
-            y = py + self.parent.size[1]
+            y = py + rel.size[1]
 
         return x, y
 
@@ -704,7 +718,7 @@ class PopUp(Widget):
         self.no_events = True
 
         self.attached_to = parent
-        self.pos.parent = self.attached_to
+        self.pos.to = self.attached_to
         self.text = text
         self.text_color = (0,0,0)
 
@@ -768,3 +782,24 @@ class PopUp(Widget):
         for line in self.comp_text:
             self.parent.screen.blit(self.font.render(line, 1, self.text_color), (pos[0], pos[1]+down))
             down += self.font.get_height()
+
+
+class DropDown(Button):
+    def __init__(self, parent, pos, text='', child=None):
+        Button.__init__(self, parent, pos, text)
+
+        self.child = None
+        if child:
+            self.setChild(child)
+        self.dispatch.bind('click', self.turn_on)
+
+    def setChild(self, child):
+        self.child = child
+        child.pos = RelativePos(to=self)
+        child.dispatch.bind('unfocus', self.turn_off)
+        self.turn_off()
+
+    def turn_off(self):
+        self.child.visible = False
+    def turn_on(self):
+        self.child.visible = True

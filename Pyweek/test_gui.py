@@ -25,6 +25,9 @@ def main():
     popup = gui.PopUp(butt, text="adds text to the message box below", width=100)
     popup.bg_color = (255,255,255,100)
 
+    drop = gui.DropDown(main_app, (5, 5), "press me!")
+    drop.setChild(gui.Label(main_app, (0,0), 'woah!'))
+
     while 1:
         event_handler.update()
 
