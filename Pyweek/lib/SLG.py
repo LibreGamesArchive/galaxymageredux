@@ -13,6 +13,8 @@ class Game(object):
         self.scenario = scenario
         self.game_id = None
 
+        self.abs_max = 10 #no more players than that! Period!
+
         self.players = []
         self.teams = []
         #TODO: build teams based on scenario, assign players to them in add_player
@@ -67,6 +69,7 @@ class Server(net.Server):
 
     def join(self, avatar):
         self.avatars.append(avatar)
+        self.sendServerMessage('%s has joined the server'%avatar.name)
 
     def leave(self, avatar):
         self.avatars.remove(avatar)
@@ -77,6 +80,8 @@ class Server(net.Server):
             avatar.game.players.remove(avatar)
             if avatar.game.players == []:
                 del self.games_list[avatar.game]
+        else:
+            self.sendServerMessage('%s has left the server'%avatar.name)
 
     def requestNewAvatar(self):
         return SLGAvatar
@@ -111,6 +116,19 @@ class Server(net.Server):
         game.add_player(avatar)
         return True
 
+    def sendMessage(self, avatar, message):
+        if avatar.game:
+            pass #send to people in game room!
+        else:
+            for av in self.avatars:
+                if not av.game:
+                    self.remote(av, "getMessage", avatar.name, message)
+
+    def sendServerMessage(self, message):
+        for av in self.avatars:
+            if not av.game:
+                self.remote(av, "getMessage", '<server>', message)
+
 class SLGAvatar(net.BaseAvatar):
     def __init__(self, name, server, clientRef):
         net.BaseAvatar.__init__(self, name, server, clientRef)
@@ -128,6 +146,11 @@ class SLGAvatar(net.BaseAvatar):
         if not self.game:
             a = self.server.joinGame(self, game_id)
 
+    def perspective_sendMessage(self, message):
+        self.server.sendMessage(self, message)
+
 class Client(net.Client):
     def remote_sendGameList(self, games):
+        pass
+    def remote_getMessage(self, player, message):
         pass

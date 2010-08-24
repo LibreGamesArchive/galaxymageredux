@@ -4,14 +4,18 @@ from pygame.locals import *
 import event
 import time
 
+printable_chars = "abcdefghijklmnopqrstuvwxyz`1234567890-=[]\\;',./ "+'ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}|:"<>?'
+
 class App(object):
-    def __init__(self, screen, event_handler):
+    def __init__(self, screen, event_handler, bg_image=None):
 
         self.screen = screen
         self.event_handler = event_handler
         self.event_handler.gui = self
         self.event_handler.all_guis.append(self)
         self.widgets = []
+
+        self.bg_image = bg_image
 
         #self.dispatch = event.Dispatcher()
 
@@ -139,6 +143,8 @@ class App(object):
                     i.unfocus()
 
     def render(self):
+        if self.bg_image:
+            self.screen.blit(self.bg_image, (0,0))
         self.widgets.reverse()
         for i in self.widgets:
             if i.visible: i.render()
@@ -164,7 +170,7 @@ class Widget(object):
         self._mhover = False
         self.key_active = False
         self.key_hold_lengths = {}
-        self.khl = 200 #milliseconds to hold keys for repeat!
+        self.khl = 100 #milliseconds to hold keys for repeat!
 
         self.no_events = False
 
@@ -335,6 +341,7 @@ class Container(Widget, App):
         self.widgets = []
 
         self.dispatch = event.Dispatcher()
+        self.bg_image = None
 
         self.font = self.parent.get_font()
 
@@ -592,12 +599,13 @@ class Input(Widget):
                 self.cursor_pos -= 1
         elif key == K_RETURN:
             self.dispatch.fire("input-submit", self.text)
-        else:
+        elif string and string in printable_chars:
             self.text = self.text[0:self.cursor_pos] + string + self.text[self.cursor_pos::]
             self.cursor_pos += 1
 
             if len(self.text) >= self.max_chars:
                 self.text = self.text[0:self.max_chars]
+                self.cursor_pos = self.max_chars
         self.flash_timer = time.time()
         self.flashed = True
         return True
