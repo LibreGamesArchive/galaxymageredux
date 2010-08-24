@@ -11,6 +11,8 @@ class Engine(SLG.Client):
 
         self.event_handler = event.Handler()
 
+
+        ####GUI stuff!####
         self.pre_conn_app = gui.App(self.screen, self.event_handler)
         gui.Label(self.pre_conn_app, (5,5), 'Username:')
         self.get_username = gui.Input(self.pre_conn_app,
@@ -44,6 +46,7 @@ class Engine(SLG.Client):
 
         self.game_list_select = gui.Menu(self.game_list_cont, (0,0), padding=(2,2))
         self.game_list_select.entry_bg_color = (200,75,75)
+        self.game_list_select.dispatch.bind('select', self.handle_game_list_select)
         self.game_list_list = []
         self.game_list_page = 0
 
@@ -55,7 +58,22 @@ class Engine(SLG.Client):
         game_list_npage = gui.Button(self.main_app, gui.RelativePos(to=self.game_list_lpage, x='right', y='top', padx=5), 'Next Page')
         game_list_npage.dispatch.bind('click', lambda: self.view_game_page(self.game_list_page+1))
 
+        self.popup_bads_cont = gui.Container(self.main_app, (5,5), (0,0))
+        self.popup_bads_cont.visible = False
+        self.popup_bads_cont.bg_color = (255,255,255,175)
+        popup_bads_label = gui.Label(self.popup_bads_cont, (5,15), "You don't have the required scenario to play this game!")
+        popup_bads_label.bg_color=(0,0,0,0)
+        popup_bads_label.font = lil_font
+        w,h = popup_bads_label.get_size()
+        self.popup_bads_cont.change_size((w+10, h+30))
+        self.popup_bads_cont.dispatch.bind('unfocus', lambda:self.turn_off_widget(self.popup_bads_cont))
+
         self.pre_conn_app.activate()
+
+        ###END GUI STUFF###
+
+        self.scenario_list = ['test']
+
         SLG.Client.__init__(self, "changeme", SLG.main_server_host, SLG.main_server_port)
 
     def handle_connect(self, *args, **kwargs):
@@ -65,6 +83,23 @@ class Engine(SLG.Client):
             self.username = text
             self.connect()
             self.main_app.activate()
+
+    def turn_off_widget(self, widg):
+        widg.visible = False
+    def turn_on_widget(self, widg):
+        widg.visible = True
+
+    def handle_game_list_select(self, value):
+        game = self.game_list_list[value]
+        game_id, name, scenario, master, players, max_players, in_game = game
+
+        if not scenario in self.scenario_list:
+            self.turn_on_widget(self.popup_bads_cont)
+            self.popup_bads_cont.pos.x = 5
+            self.popup_bads_cont.pos.y = pygame.mouse.get_pos()[1]
+            self.popup_bads_cont.focus()
+        else:
+            print value
 
     def connected(self, avatar):
         SLG.Client.connected(self, avatar)

@@ -4,6 +4,9 @@ from pygame.locals import *
 from lib import event, gui
 import random
 
+def print_val(val):
+    print val
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((640,480))
@@ -30,6 +33,7 @@ def main():
 
     test = gui.Menu(main_app, gui.RelativePos(to=text_box), ['abc', '123', 'come on now!'])
     test2 = gui.DropDownMenu(main_app, gui.RelativePos(x="right", y="top", to=test), 'clickme!', ['abc', '123', 'come on now!'])
+    test.dispatch.bind('select', print_val)
 
     while 1:
         event_handler.update()

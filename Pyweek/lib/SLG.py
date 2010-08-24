@@ -30,9 +30,9 @@ class Game(object):
         self.players.append(avatar)
 
 class DummyGame(object):
-    def __init__(self, name):
+    def __init__(self, name, scen='test'):
         self.name = name
-        self.scenario = "test"
+        self.scenario = scen
         self.game_id = id(self)
 
         self.players = [DummyPlayer()]
@@ -63,6 +63,7 @@ class Server(net.Server):
 
         for i in xrange(27):
             self.games_list['test'+str(i)] = DummyGame('test'+str(i))
+        self.games_list['test'+str(i)] = DummyGame('test'+str(i), 'test2!!!!!')
 
     def join(self, avatar):
         self.avatars.append(avatar)

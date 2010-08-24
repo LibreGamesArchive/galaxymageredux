@@ -835,7 +835,7 @@ class Menu(Container):
             else:
                 pos = AbsolutePos(self.padding)
             new = MenuEntry(self, pos, opt)
-            new.dispatch.bind('click', lambda:self.dispatch.fire('select', opt))
+            new.dispatch.bind('click', lambda:self.dispatch.fire('select', self.widgets[0].text))
 
             width = max(width, new.get_size()[0]+self.padding[0])
             height = new.pos.get_pos()[1]+new.get_size()[1]
