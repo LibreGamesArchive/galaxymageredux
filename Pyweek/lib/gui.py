@@ -344,6 +344,10 @@ class Container(Widget, App):
         self.clear_screen()
         self.dispatch.bind("unhover", self.unhover_all_widgets)
 
+    def change_size(self, new):
+        self.size = new
+        self.screen = pygame.Surface(new).convert_alpha()
+
     def unhover_all_widgets(self):
         for i in self.widgets:
             n = i._mhover
@@ -631,9 +635,11 @@ class Input(Widget):
 
 class RelativePos(object):
     """makes a position relative to the parent"""
-    def __init__(self, x="left", y="bottom", to=None):
+    def __init__(self, x="left", y="bottom", to=None, padx=0, pady=0):
         self.x = x
         self.y = y
+        self.padx = padx
+        self.pady = pady
         self.to = to
 
     def get_pos(self):
@@ -648,12 +654,12 @@ class RelativePos(object):
 
         if self.y == "top":
             y = rely
-        elif self.x == "center":
+        elif self.y == "center":
             y = rely + int(rel.size[1]*0.5)
         else:
             y = rely + rel.size[1]
 
-        return x, y
+        return x+self.padx, y+self.pady
 
     def get_real_pos(self):
         rel = self.to
@@ -672,7 +678,7 @@ class RelativePos(object):
         else:
             y = py + rel.size[1]
 
-        return x, y
+        return x+self.padx, y+self.pady
 
 class AbsolutePos(object):
     def __init__(self, pos):
@@ -805,43 +811,49 @@ class MenuEntry(Widget):
         self.parent.screen.blit(i, r)
 
 class Menu(Container):
-    def __init__(self, parent, pos, options=[]):
+    def __init__(self, parent, pos, options=[], padding=(0,0)):
         Container.__init__(self, parent, (1,1), pos)
 
         self.entry_text_reg_color = (0,0,0)
-        self.entry_text_hover_color = (100,100,100)
-        self.entry_text_click_color = (255,0,0)
+        self.entry_text_hover_color = (75,75,75)
+        self.entry_text_click_color = (150,150,150)
         self.entry_bg_color = (255,255,255)
 
+        self.options = options
+        self.padding = padding
+
+        self.build_options()
+
+    def build_options(self):
+        self.widgets = []
         width = 0
         height = 0
 
-        for opt in options:
+        for opt in self.options:
             if self.widgets:
-                pos = RelativePos(to=self.widgets[0])
+                pos = RelativePos(to=self.widgets[0], pady=self.padding[1])
             else:
-                pos = AbsolutePos((0,0))
+                pos = AbsolutePos(self.padding)
             new = MenuEntry(self, pos, opt)
-            new.dispatch.bind('click', lambda:self.dispatch.fire('select-%s'%opt))
+            new.dispatch.bind('click', lambda:self.dispatch.fire('select', opt))
 
-            width = max(width, new.get_size()[0])
+            width = max(width, new.get_size()[0]+self.padding[0])
             height = new.pos.get_pos()[1]+new.get_size()[1]
+
 
         for i in self.widgets:
             i.size = width, i.size[1]
 
-        self.size = width, height
-        self.screen = pygame.transform.scale(self.screen, self.size)
+        self.change_size((width, height))
 
 class DropDownMenu(DropDown):
-    def __init__(self, parent, pos, text, options=[]):
-        child = Menu(parent, RelativePos(to=self), options)
+    def __init__(self, parent, pos, text, options=[], padding=(0,0)):
+        child = Menu(parent, RelativePos(to=self), options, padding)
 
         DropDown.__init__(self, parent, pos, text, child)
 
-        for i in self.child.widgets:
-            self.child.dispatch.bind('select-%s'%i.text, lambda: self.fire_event(i.text))
+        self.child.dispatch.bind('select', self.fire_event)
 
     def fire_event(self, item):
-        self.dispatch.fire('select-%s'%item)
+        self.dispatch.fire('select', item)
         self.turn_off()

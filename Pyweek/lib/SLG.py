@@ -61,7 +61,7 @@ class Server(net.Server):
 
         self.games_list = {}
 
-        for i in xrange(10):
+        for i in xrange(27):
             self.games_list['test'+str(i)] = DummyGame('test'+str(i))
 
     def join(self, avatar):
@@ -126,7 +126,6 @@ class SLGAvatar(net.BaseAvatar):
     def perspective_joinGame(self, game_id):
         if not self.game:
             a = self.server.joinGame(self, game_id)
-            print a, a.__dict__
 
 class Client(net.Client):
     def remote_sendGameList(self, games):
