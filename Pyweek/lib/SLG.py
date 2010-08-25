@@ -37,11 +37,11 @@ class Game(object):
     def add_player(self, avatar):
         avatar.game = self
         self.players.append(avatar)
-        if self.is_master(avatar):
-            self.make_master()
         name = self.get_free_names()[0]
         self.picked_names.append(name)
         self.server.remote(avatar, 'joinedGame', self.scenario, name)
+        if self.is_master(avatar):
+            self.make_master()
 
     def set_scen_data(self, name, maxp, teams):
         self.scenario = name
@@ -72,6 +72,9 @@ class Game(object):
     def getGameScenarioInfo(self, avatar, config):
         if self.is_master(avatar):
             self.set_scen_data(config['name'], config['maxp'], config['teams'])
+
+    def get_command(self, avatar, command, args):
+        getattr(self, command)(avatar, args)
 
 class Server(net.Server):
     def __init__(self):
@@ -166,9 +169,9 @@ class Server(net.Server):
         d = avatar.client.callRemote(action, *args)
         d.addErrback(self.silentHandleFail)
 
-    def getGameScenarioInfo(self, avatar, data):
+    def talkToGame(self, avatar, command, args):
         if avatar.game:
-            avatar.game.getGameScenarioInfo(avatar, data)
+            avatar.game.get_command(avatar, command, args)
 
 class SLGAvatar(net.BaseAvatar):
     def __init__(self, name, server, clientRef):
@@ -190,8 +193,8 @@ class SLGAvatar(net.BaseAvatar):
     def perspective_sendMessage(self, message):
         self.server.sendMessage(self, message)
 
-    def perspective_getGameScenarioInfo(self, config):
-        self.server.getGameScenarioInfo(self, config)
+    def perspective_talkToGame(self, command, args):
+        self.server.talkToGame(self, command, args)
 
 class Client(net.Client):
     def remote_sendGameList(self, games):

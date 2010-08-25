@@ -1,7 +1,7 @@
 
 import pygame
 from pygame.locals import *
-from lib import SLG, event, gui, test_safe_file
+from lib import SLG, event, gui, test_safe_file, client_game_engine
 
 class Engine(SLG.Client):
     def __init__(self):
@@ -16,10 +16,6 @@ class Engine(SLG.Client):
         self.cur_game = None #this will hold a game engine class that stores all info about game! Kinda like a database
 
         self.scenario_list = self.get_scenarios()
-
-        self.game_scenario = 'main'
-        self.game_am_master = False
-        self.game_team = ""
         ####End game controls####
 
 
@@ -357,20 +353,22 @@ class Engine(SLG.Client):
     def get_scenarios(self):
         return ['main']
     def game_master_submit_scenario_data(self):
-        path = 'data/scenarios/%s/config.py'%self.game_scenario
+        path = 'data/scenarios/%s/config.py'%self.cur_game.scenario
         safe, why = test_safe_file(path)
         if safe:
             exec open(path, 'rU').read()
-            self.avatar.callRemote('getGameScenarioInfo', {'name':name, 'maxp':num_players, 'teams':teams})
+            #self.avatar.callRemote('getGameScenarioInfo', {'name':name, 'maxp':num_players, 'teams':teams})
+            self.cur_game.talkToServer('getGameScenarioInfo', {'name':name, 'maxp':num_players, 'teams':teams})
     def remote_joinedGame(self, scenario, team):
         print scenario, team
-        self.game_scenario = scenario
-        self.game_team = team
-        self.game_am_master = False
+        self.cur_game = client_game_engine.Engine(self.avatar)
+        self.cur_game.scenario = scenario
+        self.cur_game.my_team = team
+        self.cur_game.am_master = False
     def remote_youAreNowMaster(self):
         print 'yeah I dah man'
         self.game_master_submit_scenario_data()
-        self.game_am_master = True
+        self.cur_game.am_master = True
     #end gameplay functions
 
     #main update loop
