@@ -3,7 +3,7 @@ from pygame.locals import *
 import glob, os
 
 import GIFImage
-from make_safe_exec import test_safe_file2
+from make_safe_exec import test_safe_file3
 
 tile_size = (32,32)
 
@@ -93,17 +93,11 @@ class MapHandler(object):
         return MapEntity(self, image, pos, name)
 
     def load_map_file(self, path):
-        ban = ['test_safe_file2', #private stuff we don't want accessed!
-               'glob',
-               'os']
-        safe, why = test_safe_file2(path, ban)
+        safe, why = test_safe_file3(path)
         if safe:
-            engine = self
-            tiles = {}
-            map_grid = []
-            exec open(path, 'rU').read()
-            self.tiles = tiles
-            self.map_grid = map_grid
+            access = {"game":self.engine.client,
+                      'gfx_engine':self.engine}
+            eval(compile(open(path, 'rU').read(), '<map>', 'exec'), access, {})
         else:
             print why
             self.engine.failed = True
@@ -179,9 +173,10 @@ class Camera(object):
         self.pos = (x,y)
 
 class GFXEngine(object):
-    def __init__(self, screen, scenario):
+    def __init__(self, screen, scenario, client=None):
         self.screen = screen
         self.scenario = scenario
+        self.client = client
         self.failed = False
         self.load_images()
         self.camera = Camera()

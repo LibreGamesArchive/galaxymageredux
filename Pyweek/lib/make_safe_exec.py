@@ -137,3 +137,35 @@ def test_safe_file2(filename, ban_vars=[]):
     if bad:
         return False, bad
     return True, []
+
+def test_safe_file3(filename):
+    text = open(filename, "rU").read()
+    text.replace("\r", "\n")
+    words = split_text_by_dels(text, (' ', '\n', '\r', '\r\n',
+                                      '(', ':', ')', ';', '[', ']',
+                                      '{', '}', ","))
+
+    words_no_strings = []
+    have_string1 = False
+    have_string2 = False
+    for i in words:
+        if i.startswith('"') and not have_string2:
+            have_string1 = True
+        if i.startswith("'") and not have_string1:
+            have_string2 = True
+        if not (have_string1 or have_string2):
+            words_no_strings.append(i)
+        if i.endswith('"') and have_string1:
+            have_string1 = False
+        if i.endswith("'") and have_string2:
+            have_string2 = False
+
+
+    bad = []
+    for i in words_no_strings:
+        if i in ('import', 'exec'):
+            bad.append(i)
+
+    if bad:
+        return False, bad
+    return True, []
