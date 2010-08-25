@@ -3,7 +3,7 @@ from pygame.locals import *
 import glob, os
 
 import GIFImage
-from make_safe_exec import test_safe_file
+from make_safe_exec import test_safe_file2
 
 tile_size = (32,32)
 
@@ -93,10 +93,10 @@ class MapHandler(object):
         return MapEntity(self, image, pos, name)
 
     def load_map_file(self, path):
-        ok = ['engine.make_entity',#ok things for file to call
-              'engine.set_camera_pos',
-              'engine.get_entities_on_tile']
-        safe, why = test_safe_file(path, ok)
+        ban = ['test_safe_file2', #private stuff we don't want accessed!
+               'glob',
+               'os']
+        safe, why = test_safe_file2(path, ban)
         if safe:
             engine = self
             tiles = {}
