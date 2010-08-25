@@ -1,15 +1,22 @@
 
 import pygame
 from pygame.locals import *
-from lib import SLG, event, gui
+from lib import SLG, event, gui, test_safe_file
 
 class Engine(SLG.Client):
     def __init__(self):
+        ####Game controls####
         pygame.init()
 
         self.screen = pygame.display.set_mode((640,480))
 
         self.event_handler = event.Handler()
+
+        self.playing = False
+        self.cur_game = None #this will hold a game engine class that stores all info about game! Kinda like a database
+
+        self.scenario_list = self.get_scenarios()
+        ####End game controls####
 
 
         ####GUI stuff!####
@@ -109,13 +116,18 @@ class Engine(SLG.Client):
         self.game_list_page = 0
         self.game_list_id = {}
 
-        game_list_ppage = gui.Button(self.server_lobby_app, gui.RelativePos(to=self.game_list_cont, y='bottom', pady=5, padx=50), 'Last Page')
+        game_list_ppage = gui.Button(self.server_lobby_app, gui.RelativePos(to=self.game_list_cont, pady=10, padx=5), 'Last')
         game_list_ppage.dispatch.bind('click', lambda: self.view_game_page(self.game_list_page-1))
 
         self.game_list_lpage = gui.Label(self.server_lobby_app, gui.RelativePos(to=game_list_ppage, x='right', y='top', padx=5), 'Page: 0')
+        self.game_list_lpage.bg_color = (0,0,0,0)
+        self.game_list_lpage.text_color = (100,100,100)
 
-        game_list_npage = gui.Button(self.server_lobby_app, gui.RelativePos(to=self.game_list_lpage, x='right', y='top', padx=5), 'Next Page')
+        game_list_npage = gui.Button(self.server_lobby_app, gui.RelativePos(to=self.game_list_lpage, x='right', y='top', padx=5), 'Next')
         game_list_npage.dispatch.bind('click', lambda: self.view_game_page(self.game_list_page+1))
+
+        game_list_ngame = gui.Button(self.server_lobby_app, gui.RelativePos(to=game_list_npage, x='right', y='top', padx=5), 'Create Game')
+        game_list_ngame.dispatch.bind('click', self.handle_lobby_create_game_room)
 
         self.popup_bads_cont = gui.Container(self.server_lobby_app, (5,5), (0,0))
         self.popup_bads_cont.visible = False
@@ -128,7 +140,7 @@ class Engine(SLG.Client):
         self.popup_bads_cont.dispatch.bind('unfocus', lambda:self.turn_off_widget(self.popup_bads_cont))
 
         self.server_lobby_messages = gui.MessageBox(self.server_lobby_app, (440, 100),
-                                                    gui.RelativePos(to=game_list_ppage, pady=15, padx=-50))
+                                                    gui.RelativePos(to=game_list_ppage, pady=30, padx=-5))
         self.server_lobby_messages.bg_color = (200,75,75)
         self.server_lobby_messages.font = lil_font
         self.server_lobby_input = gui.Input(self.server_lobby_app, 350, gui.RelativePos(to=self.server_lobby_messages, pady=5),
@@ -154,6 +166,40 @@ class Engine(SLG.Client):
         self.server_lobby_users.entry_bg_color = (0,0,0,0)
         #end server lobby view
 
+        #make game room view
+        self.game_room_make_app = gui.App(self.screen, self.event_handler)
+
+        x=gui.Label(self.game_room_make_app, (5,75), 'Make a Game')
+        x.bg_color = (0,0,0,0)
+        x.text_color = (255,255,255)
+
+        cont = gui.Container(self.game_room_make_app, (300, 200), gui.RelativePos(to=x, pady=5))
+        cont.bg_color = (100,100,255,100)
+        cont.font = small_font
+
+        x=gui.Label(cont, (5,5), 'Game name:')
+        x.bg_color = (0,0,0,0)
+        x.text_color = (255,255,255)
+
+        self.game_room_make_name = gui.Input(cont, 210, gui.RelativePos(to=x, padx=5, pady=5), max_chars=20)
+        self.game_room_make_name.always_active=False
+        self.game_room_make_name.bg_color = (200,200,200)
+        self.game_room_make_name.text_color = (100,100,100)
+
+        x=gui.Label(cont, gui.RelativePos(to=self.game_room_make_name, padx=-5, pady=5), 'Pick Scenario:')
+        x.bg_color = (0,0,0,0)
+        x.text_color = (255,255,255)
+
+        self.game_room_make_scen = gui.DropDownMenu(cont, gui.RelativePos(to=x, pady=5, padx=5), self.scenario_list[0],
+                                                    self.scenario_list)
+        self.game_room_make_scen.bg_color = (100,100,100)
+        self.game_room_make_scen.dispatch.bind('select', self.handle_game_scen_sel)
+
+        self.game_room_make_butt = gui.Button(cont, gui.RelativePos(to=self.game_room_make_scen, pady=5, padx=-5),
+                                              "Make Game")
+        self.game_room_make_butt.dispatch.bind('click', self.handle_game_make_room)
+        #end make game room view
+
 
         #game room lobby view
         self.game_room_lobby = gui.App(self.screen, self.event_handler)
@@ -161,14 +207,6 @@ class Engine(SLG.Client):
 
         self.pre_conn_app.activate()
         ###END GUI STUFF###
-
-
-        ####Game controls####
-        self.playing = False
-        self.cur_game = None #this will hold a game engine class that stores all info about game! Kinda like a database
-
-        self.scenario_list = ['test']
-        ####End game controls####
 
         #start the game loop!
         SLG.Client.__init__(self, "changeme", SLG.main_server_host, SLG.main_server_port)
@@ -189,7 +227,7 @@ class Engine(SLG.Client):
 
     def disconnected(self):
         self.pre_conn_app.activate()
-##        self.close()
+        #TODO: make some kind of message screen first!
 
     def remote_getMessage(self, player, message):
         if self.playing:
@@ -252,6 +290,9 @@ class Engine(SLG.Client):
         else:
             print value
 
+    def handle_lobby_create_game_room(self):
+        self.game_room_make_app.activate()
+
     def view_game_page(self, num):
         if num < 0:
             num = 0
@@ -260,9 +301,12 @@ class Engine(SLG.Client):
 
         self.game_list_page = num
         opts = []
-        for game in sorted(self.game_list_list.values())[num*10:(num+1)*10]:
-            game_id, name, scenario, master, players, max_players, in_game = game
-            l = str(name) + ' <' + str(scenario) + '> ' + '[' + str(master) + '] '
+        for game in sorted(self.game_list_list.keys())[num*10:(num+1)*10]:
+            game_id, name, scenario, master, players, max_players, in_game = self.game_list_list[game]
+            l = ''
+            if in_game:
+                l += '    '
+            l += str(name) + ' <' + str(scenario) + '> ' + '[' + str(master) + '] '
             l += '(' + str(players) + ' / ' + str(max_players) + ')'
             if in_game:
                 l+= ' -- CLOSED'
@@ -291,9 +335,26 @@ class Engine(SLG.Client):
     def remote_sendLobbyUsersList(self, users):
         self.server_lobby_users.entries = users
         self.server_lobby_users.build_entries()
-
     #end game lobby view
 
+    #game make view functions
+    def handle_game_scen_sel(self, value):
+        self.game_room_make_scen.text = value
+    def handle_game_make_room(self):
+        print 32
+        name = self.game_room_make_name.text
+        if len(name) < 4:
+            return None
+        scen = self.game_room_make_scen.text
+        self.avatar.callRemote('makeGame', name, scen)
+    #end game make view
+
+    #gameplay functions
+    def get_scenarios(self):
+        return ['main']
+    def game_master_submit_scenario_data(self):
+        safe, why = test_safe_file(
+    #end gameplay functions
 
     #main update loop
     def update(self):

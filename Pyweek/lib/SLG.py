@@ -19,17 +19,54 @@ class Game(object):
         self.teams = []
         #TODO: build teams based on scenario, assign players to them in add_player
         self.max_players = 2
+        self.scen_team_names = ['def1', 'def2']
+        self.picked_names = []
 
         self.playing = False
 
-    def is_owner(self, avatar):
+    def is_master(self, avatar):
         return avatar == self.players[0]
+
+    def make_master(self):
+        owner = self.players[0]
+        #todo: send a remote call to say - hey you it!
 
     def get_master(self):
         return self.players[0]
 
     def add_player(self, avatar):
+        print 32
+        avatar.game = self
         self.players.append(avatar)
+        if self.is_master(avatar):
+            self.make_master()
+        #todo send a remote call giving player scenario data
+        #todo send a remote call giving player their team name!
+
+    def set_scen_data(self, name, maxp, teams):
+        self.scenario = name
+        self.max_players = maxp
+        self.scen_team_names = teams
+        self.picked_names = []
+
+        #todo: inform players of new scenario
+        #todo: assign team names
+
+    def get_free_names(self):
+        n = []
+        for i in self.scen_team_names:
+            if not i in self.picked_names:
+                n.append(i)
+        return n
+
+    def player_leave(self, avatar):
+        master = self.get_master()
+        self.players.remove(avatar)
+        if self.players == []:
+            del self.server.games_list[self.game_id]
+        else:
+            if master == avatar:
+                self.make_master()
 
 class DummyGame(object):
     def __init__(self, name, scen='test'):
@@ -44,7 +81,7 @@ class DummyGame(object):
 
         self.playing = False
 
-    def is_owner(self, avatar):
+    def is_master(self, avatar):
         return avatar == self.players[0]
 
     def get_master(self):
@@ -77,12 +114,7 @@ class Server(net.Server):
     def leave(self, avatar):
         self.avatars.remove(avatar)
         if avatar.game:
-            if avatar.game.is_owner(avatar):
-                #set next player to owner!
-                pass
-            avatar.game.players.remove(avatar)
-            if avatar.game.players == []:
-                del self.games_list[avatar.game]
+            avatar.game.player_leave(avatar)
         else:
             self.sendServerMessage('%s has left the server'%avatar.name)
 
@@ -99,13 +131,14 @@ class Server(net.Server):
         self.remote(avatar, 'sendGameList', games)
 
     def makeGame(self, avatar, name, scenario):
+        if avatar.game:
+            return
         new = Game(self, name, scenario)
         new_id = id(new)
         new.game_id = new_id
         self.games_list[new_id] = new
 
-        new.players.append(avatar)
-        avatar.game = new
+        new.add_player(avatar)
 
     def update(self):
         #basically, every 15 seconds, make every client reget the server info to keep it updated...
