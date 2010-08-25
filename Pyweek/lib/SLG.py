@@ -29,19 +29,19 @@ class Game(object):
 
     def make_master(self):
         owner = self.players[0]
-        #todo: send a remote call to say - hey you it!
+        self.server.remote(owner, 'youAreNowMaster')
 
     def get_master(self):
         return self.players[0]
 
     def add_player(self, avatar):
-        print 32
         avatar.game = self
         self.players.append(avatar)
         if self.is_master(avatar):
             self.make_master()
-        #todo send a remote call giving player scenario data
-        #todo send a remote call giving player their team name!
+        name = self.get_free_names()[0]
+        self.picked_names.append(name)
+        self.server.remote(avatar, 'joinedGame', self.scenario, name)
 
     def set_scen_data(self, name, maxp, teams):
         self.scenario = name
@@ -51,6 +51,7 @@ class Game(object):
 
         #todo: inform players of new scenario
         #todo: assign team names
+        #todo: if too many players, kick oldest
 
     def get_free_names(self):
         n = []
@@ -68,41 +69,15 @@ class Game(object):
             if master == avatar:
                 self.make_master()
 
-class DummyGame(object):
-    def __init__(self, name, scen='test'):
-        self.name = name
-        self.scenario = scen
-        self.game_id = id(self)
-
-        self.players = [DummyPlayer()]
-        self.teams = []
-        #TODO: build teams based on scenario, assign players to them in add_player
-        self.max_players = 2
-
-        self.playing = False
-
-    def is_master(self, avatar):
-        return avatar == self.players[0]
-
-    def get_master(self):
-        return self.players[0]
-
-    def add_player(self, avatar):
-        self.players.append(avatar)
-
-class DummyPlayer(object):
-    def __init__(self):
-        self.name = "testmaster"
+    def getGameScenarioInfo(self, avatar, config):
+        if self.is_master(avatar):
+            self.set_scen_data(config['name'], config['maxp'], config['teams'])
 
 class Server(net.Server):
     def __init__(self):
         net.Server.__init__(self)
 
         self.games_list = {}
-
-        for i in xrange(27):
-            self.games_list['test'+str(i)] = DummyGame('test'+str(i))
-        self.games_list['test'+str(i)] = DummyGame('test'+str(i), 'test2!!!!!')
 
         self.last_push_update = time.time()
         self.push_update_delay = 5 #seconds
@@ -191,6 +166,10 @@ class Server(net.Server):
         d = avatar.client.callRemote(action, *args)
         d.addErrback(self.silentHandleFail)
 
+    def getGameScenarioInfo(self, avatar, data):
+        if avatar.game:
+            avatar.game.getGameScenarioInfo(avatar, data)
+
 class SLGAvatar(net.BaseAvatar):
     def __init__(self, name, server, clientRef):
         net.BaseAvatar.__init__(self, name, server, clientRef)
@@ -211,10 +190,17 @@ class SLGAvatar(net.BaseAvatar):
     def perspective_sendMessage(self, message):
         self.server.sendMessage(self, message)
 
+    def perspective_getGameScenarioInfo(self, config):
+        self.server.getGameScenarioInfo(self, config)
+
 class Client(net.Client):
     def remote_sendGameList(self, games):
         pass
     def remote_getMessage(self, player, message):
         pass
     def remote_sendLobbyUsersList(self, users):
+        pass
+    def remote_joinedGame(self, scenario, team):
+        pass
+    def remote_youAreNowMaster(self):
         pass
