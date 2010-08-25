@@ -44,6 +44,12 @@ class Engine(object):
         self.client.game_room_lobby_game_name.text = self.game_name
         self.client.game_room_lobby_players.set_players(
             self, self.players, self.free_teams)
+        if self.am_master:
+            self.client.game_room_lobby_sel_scenario.visible = True
+            self.client.game_room_lobby_start.visible = True
+        else:
+            self.client.game_room_lobby_sel_scenario.visible = False
+            self.client.game_room_lobby_start.visible = False
 
     def playerNamesTeams(self, args):
         self.players = args

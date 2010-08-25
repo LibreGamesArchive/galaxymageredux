@@ -220,7 +220,8 @@ class Engine(SLG.Client):
         self.game_room_lobby_sel_scenario = gui.DropDownMenu(self.game_room_lobby,
             gui.RelativePos(to=self.game_room_lobby_num_players,
                             x='right', y='top', padx=5),
-            'main', self.scenario_list)
+            'change scenario', self.scenario_list)
+        self.game_room_lobby_sel_scenario.visible = False
         self.game_room_lobby_players = gui.GameRoomLobbyPlayers(
             self.game_room_lobby, (400, 250),
             gui.RelativePos(to=self.game_room_lobby_game_name, pady=5))
@@ -233,6 +234,7 @@ class Engine(SLG.Client):
             'Submit')
         self.game_room_lobby_start = gui.Button(
             self.game_room_lobby, (500, 400), 'Start Game')
+        self.game_room_lobby_start.visible = False
 
 
         self.pre_conn_app.activate()

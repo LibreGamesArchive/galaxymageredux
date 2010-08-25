@@ -941,11 +941,13 @@ class GameRoomLobbyPlayers(Container):
             #new = Container(self, (self.size[0]-10, 24), pos)
             x = Label(self, pos, name)
             last = x
+            x = Label(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Team:')
             if game.player_name == name:
-                x = Label(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Team:')
                 self.pt = x = DropDownMenu(self, RelativePos(to=x, padx=5, x='right',y='top'),
                                      team, [team]+free_teams)
                 self.pt.dispatch.bind('select', self.swap_team_widg)
+            else:
+                x = Label(self, RelativePos(to=x, padx=5, x='right',y='top'), team)
             
             if game.am_master and not game.player_name==name:
                 x = Button(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Kick')
