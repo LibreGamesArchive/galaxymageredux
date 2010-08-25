@@ -96,7 +96,8 @@ class MapHandler(object):
         safe, why = test_safe_file3(path)
         if safe:
             access = {"game":self.engine.client,
-                      'gfx_engine':self.engine}
+                      'gfx_engine':self.engine,
+                      '__builtins__':{}}
             eval(compile(open(path, 'rU').read(), '<map>', 'exec'), access, {})
         else:
             print why
