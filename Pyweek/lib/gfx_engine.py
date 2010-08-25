@@ -25,12 +25,13 @@ class ImageHandler(object):
                 self.images[short] = img
 
 class MapEntity(object):
-    def __init__(self, parent, image, pos=(0,0)):
+    def __init__(self, parent, image, pos=(0,0), name=''):
         self.parent = parent
         self.image = image
         self.pos = (0,0)
         self.move(*pos)
         self.parent.entities.append(self)
+        self.name = name
 
     def kill(self):
         if self in self.parent.entities:
@@ -39,6 +40,9 @@ class MapEntity(object):
     def get_real_pos(self):
         cx,cy = self.parent.engine.camera.get_shift_pos()
         return int(self.pos[0]*tile_size[0]+cx), int(self.pos[1]*tile_size[1]+cy)
+
+    def get_my_tile(self):
+        return int(self.pos[0]), int(self.pos[1])
 
     def move(self, x, y):
         x = self.pos[0] + x
@@ -85,12 +89,13 @@ class MapHandler(object):
 
     def set_camera_pos(self, x, y):
         self.engine.camera.set_pos(x,y)
-    def make_entity(self, image, pos):
-        return MapEntity(self, image, pos)
+    def make_entity(self, image, pos, name=''):
+        return MapEntity(self, image, pos, name)
 
     def load_map_file(self, path):
         ok = ['engine.make_entity',#ok things for file to call
-              'engine.set_camera_pos']
+              'engine.set_camera_pos',
+              'engine.get_entities_on_tile']
         safe, why = test_safe_file(path, ok)
         if safe:
             engine = self
@@ -101,6 +106,7 @@ class MapHandler(object):
             self.map_grid = map_grid
         else:
             print why
+            self.engine.failed = True
 
     def render(self):
         yy = 0
@@ -123,6 +129,14 @@ class MapHandler(object):
         xx = int((mx-cx)/tile_size[0]) if mx-cx else 0
         yy = int((my-cy)/tile_size[1]) if my-cy else 0
         return xx, yy
+
+    def get_entities_on_tile(self, x, y):
+        n = []
+        for i in self.entities:
+            a, b = i.get_my_tile()
+            if a==x and b==y:
+                n.append(i)
+        return n
 
 class Camera(object):
     def __init__(self):
@@ -168,6 +182,7 @@ class GFXEngine(object):
     def __init__(self, screen, scenario):
         self.screen = screen
         self.scenario = scenario
+        self.failed = False
         self.load_images()
         self.camera = Camera()
         self.load_map()

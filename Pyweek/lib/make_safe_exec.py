@@ -69,10 +69,14 @@ def test_safe_file(filename, acceptable_functions=[]):
                 if before_that in ["def", "class"]:
                     acceptable_functions.append(last)
 
+    bad = []
     for i in ok:
         if i in acceptable_functions:
             continue
         else:
-            return False, ok
+            bad.append(i)
+
+    if bad:
+        return False, bad
 
     return True, []

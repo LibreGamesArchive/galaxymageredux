@@ -10,6 +10,8 @@ def main():
     event_handler = event.Handler()
 
     eng = gfx_engine.GFXEngine(screen, 'main')
+    if eng.failed:
+        return
 
     while 1:
         event_handler.update()
@@ -28,8 +30,6 @@ def main():
             eng.camera.move(0, -0.1)
         elif my > 475:
             eng.camera.move(0, 0.1)
-
-        print eng.mapd.get_mouse_tile()
 
         screen.fill((0,0,0))
         eng.render()
