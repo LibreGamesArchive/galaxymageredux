@@ -120,3 +120,6 @@ class Game(object):
     def talkToAllPlayers(self, command, args):
         for avatar in self.players:
             self.talkToPlayer(avatar, command, args)
+
+    def player_message(self, avatar, message):
+        self.talkToAllPlayers('getMessage', (avatar.name, message))

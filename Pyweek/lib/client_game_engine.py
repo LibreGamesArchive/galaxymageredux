@@ -18,6 +18,8 @@ class Engine(object):
         self.players = []
         self.max_players = 2
 
+        self.in_game = False
+
         #TODO: when self.client.playing, we need to be running our own
         #update function, with our own App
         #bound to self.client.event_handler
@@ -78,3 +80,13 @@ class Engine(object):
 
     def getTalkFromServer(self, command, args):
         getattr(self, command)(args)
+
+    def sendMessage(self, message):
+        self.talkToServer('player_message', message)
+
+    def getMessage(self, args):
+        player, message = args
+        if self.in_game:
+            pass #TODO: in-game text box!
+        else:
+            self.client.game_room_lobby_messages.add_line(player+': '+message)

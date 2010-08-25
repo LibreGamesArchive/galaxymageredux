@@ -208,30 +208,49 @@ class Engine(SLG.Client):
         #game room lobby view
         self.game_room_lobby = gui.App(self.screen, self.event_handler)
         self.game_room_lobby_game_name = gui.Label(self.game_room_lobby,
-            (5,5), '<game name>')
+            (5,5), 'game name: <game name>')
+        self.game_room_lobby_game_name.bg_color = (0,0,0,0)
+        self.game_room_lobby_game_name.text_color = (100,100,100)
+
         self.game_room_lobby_scenario = gui.Label(self.game_room_lobby,
-            gui.RelativePos(to=self.game_room_lobby_game_name,
-                             x='right', y='top', padx=5),
-            '<scenario>')
-        self.game_room_lobby_num_players = gui.Label(self.game_room_lobby,
-            gui.RelativePos(to=self.game_room_lobby_scenario,
-                            x='right', y='top', padx=5),
-            'players (0/0)')
+            gui.RelativePos(to=self.game_room_lobby_game_name,pady=5),
+            'scenario: <scenario>')
+        self.game_room_lobby_scenario.bg_color = (0,0,0,0)
+        self.game_room_lobby_scenario.text_color = (100,100,100)
+
         self.game_room_lobby_sel_scenario = gui.DropDownMenu(self.game_room_lobby,
-            gui.RelativePos(to=self.game_room_lobby_num_players,
+            gui.RelativePos(to=self.game_room_lobby_scenario,
                             x='right', y='top', padx=5),
             'change scenario', self.scenario_list)
         self.game_room_lobby_sel_scenario.visible = False
+
+        self.game_room_lobby_num_players = gui.Label(self.game_room_lobby,
+            gui.RelativePos(to=self.game_room_lobby_scenario,pady=5),
+            'players (0/0)')
+        self.game_room_lobby_num_players.bg_color = (0,0,0,0)
+        self.game_room_lobby_num_players.text_color = (100,100,100)
+
         self.game_room_lobby_players = gui.GameRoomLobbyPlayers(
             self.game_room_lobby, (400, 250),
-            gui.RelativePos(to=self.game_room_lobby_game_name, pady=5))
+            gui.RelativePos(to=self.game_room_lobby_num_players, pady=5))
         self.game_room_lobby_messages = gui.MessageBox(
             self.game_room_lobby, (400, 100), gui.RelativePos(to=self.game_room_lobby_players, pady=5))
+        self.game_room_lobby_messages.bg_color = (200,75,75)
+        self.game_room_lobby_messages.font = lil_font
+
         self.game_room_lobby_input = gui.Input(
             self.game_room_lobby, 350, gui.RelativePos(to=self.game_room_lobby_messages, pady=5))
+        self.game_room_lobby_input.bg_color = (200,75,75)
+        self.game_room_lobby_input.text_color = (0,0,0)
+        self.game_room_lobby_input.font = lil_font
+
         self.game_room_lobby_binput = gui.Button(
             self.game_room_lobby, gui.RelativePos(to=self.game_room_lobby_input, x='right',y='top',padx=5),
             'Submit')
+        self.game_room_lobby_binput.bg_color=(200,200,200)
+        self.game_room_lobby_input.dispatch.bind('input-submit', self.game_room_submit_message)
+        self.game_room_lobby_binput.dispatch.bind('click', self.game_room_submit_message)
+
         self.game_room_lobby_start = gui.Button(
             self.game_room_lobby, (500, 400), 'Start Game')
         self.game_room_lobby_start.visible = False
@@ -386,6 +405,12 @@ class Engine(SLG.Client):
             return None
         scen = self.game_room_make_scen.text
         self.avatar.callRemote('makeGame', name, scen, self.scenario_list)
+    def game_room_submit_message(self, *args):
+        text = self.game_room_lobby_input.text
+        if text:
+            self.cur_game.sendMessage(text)
+            self.game_room_lobby_input.text = ''
+            self.game_room_lobby_input.cursor_pos = 0
     #end game make view
 
     #gameplay functions
