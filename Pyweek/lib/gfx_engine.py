@@ -37,7 +37,6 @@ class MapEntity(object):
             self.parent.entities.remove(self)
 
     def get_real_pos(self):
-        #TODO add camera handling here!
         cx,cy = self.parent.engine.camera.get_shift_pos()
         return int(self.pos[0]*tile_size[0]+cx), int(self.pos[1]*tile_size[1]+cy)
 
@@ -117,6 +116,13 @@ class MapHandler(object):
         self.entities.sort(self.sort_entities)
         for i in self.entities:
             i.render()
+
+    def get_mouse_tile(self):
+        mx, my = pygame.mouse.get_pos()
+        cx, cy = self.engine.camera.get_shift_pos()
+        xx = int((mx-cx)/tile_size[0]) if mx-cx else 0
+        yy = int((my-cy)/tile_size[1]) if my-cy else 0
+        return xx, yy
 
 class Camera(object):
     def __init__(self):

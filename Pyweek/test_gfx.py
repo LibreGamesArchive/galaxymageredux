@@ -18,6 +18,19 @@ def main():
             pygame.quit()
             return None
 
+        mx, my = event_handler.mouse.get_pos()
+        if mx < 5:
+            eng.camera.move(-0.1, 0)
+        elif mx > 635:
+            eng.camera.move(0.1, 0)
+
+        if my < 5:
+            eng.camera.move(0, -0.1)
+        elif my > 475:
+            eng.camera.move(0, 0.1)
+
+        print eng.mapd.get_mouse_tile()
+
         screen.fill((0,0,0))
         eng.render()
         pygame.display.flip()
