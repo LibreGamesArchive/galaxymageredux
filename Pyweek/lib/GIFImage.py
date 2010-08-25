@@ -21,6 +21,9 @@ class GIFImage(object):
         self.startpoint = 0
         self.reversed = False
 
+    def get_rect(self):
+        return pygame.rect.Rect((0,0), self.image.size)
+
     def get_frames(self):
         image = self.image
 

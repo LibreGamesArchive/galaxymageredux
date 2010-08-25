@@ -24,7 +24,7 @@ class ImageHandler(object):
                 img = pygame.image.load(i).convert_alpha()
                 self.images[short] = img
 
-def MapEntity(object):
+class MapEntity(object):
     def __init__(self, parent, image, pos=(0,0)):
         self.parent = parent
         self.image = image
@@ -38,26 +38,33 @@ def MapEntity(object):
 
     def get_real_pos(self):
         #TODO add camera handling here!
-        return int(self.pos[0]*tile_size[0]), int(self.pos[1]*tile_size[1])
+        cx,cy = self.parent.engine.camera.get_shift_pos()
+        return int(self.pos[0]*tile_size[0]+cx), int(self.pos[1]*tile_size[1]+cy)
 
     def move(self, x, y):
         x = self.pos[0] + x
         y = self.pos[1] + y
-        if x < 0:
-            x = 0
-        if x >= len(self.parent.map_grid[0])-0.5:
-            x = len(self.parent.map_grid[0])-0.5
+        if self.parent.map_grid:
+            if x < 0:
+                x = 0
+            if x >= len(self.parent.map_grid[0])-0.5:
+                x = len(self.parent.map_grid[0])-0.5
 
-        if y < 0:
-            y = 0
-        if y >= len(self.parent.map_grid)-0.5:
-            y = len(self.parent.map_grid)-0.5
+            if y < 0:
+                y = 0
+            if y >= len(self.parent.map_grid)-0.5:
+                y = len(self.parent.map_grid)-0.5
 
         self.pos = (x,y)
 
     def render(self):
-        image = self.parent.images[self.image]
-        self.parent.screen.blit(image, self.get_real_pos())
+        image = self.parent.images.images[self.image]
+        r = image.get_rect()
+        r.midbottom = self.get_real_pos()
+        try:
+            image.render(self.parent.screen, r)
+        except:
+            self.parent.screen.blit(image, r)
 
 class MapHandler(object):
     def __init__(self, engine):
@@ -79,9 +86,11 @@ class MapHandler(object):
 
     def set_camera_pos(self, x, y):
         self.engine.camera.set_pos(x,y)
+    def make_entity(self, image, pos):
+        return MapEntity(self, image, pos)
 
     def load_map_file(self, path):
-        ok = ['MapEntity',#ok things for file to call
+        ok = ['make_entity',#ok things for file to call
               'set_camera_pos']
         safe, why = test_safe_file(path, ok)
         if safe:
@@ -104,6 +113,10 @@ class MapHandler(object):
                 self.screen.blit(self.images.images[self.tiles[tname]], (xx*tile_size[0]+cx, yy*tile_size[1]+cy))
                 xx += 1
             yy += 1
+
+        self.entities.sort(self.sort_entities)
+        for i in self.entities:
+            i.render()
 
 class Camera(object):
     def __init__(self):
