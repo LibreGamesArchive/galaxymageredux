@@ -207,6 +207,32 @@ class Engine(SLG.Client):
 
         #game room lobby view
         self.game_room_lobby = gui.App(self.screen, self.event_handler)
+        self.game_room_lobby_game_name = gui.Label(self.game_room_lobby,
+            (5,5), '<game name>')
+        self.game_room_lobby_scenario = gui.Label(self.game_room_lobby,
+            gui.RelativePos(to=self.game_room_lobby_game_name,
+                             x='right', y='top', padx=5),
+            '<scenario>')
+        self.game_room_lobby_num_players = gui.Label(self.game_room_lobby,
+            gui.RelativePos(to=self.game_room_lobby_scenario,
+                            x='right', y='top', padx=5),
+            'players (0/0)')
+        self.game_room_lobby_sel_scenario = gui.DropDownMenu(self.game_room_lobby,
+            gui.RelativePos(to=self.game_room_lobby_num_players,
+                            x='right', y='top', padx=5),
+            'main', self.scenario_list)
+        self.game_room_lobby_players = gui.GameRoomLobbyPlayers(
+            self.game_room_lobby, (400, 250),
+            gui.RelativePos(to=self.game_room_lobby_game_name, pady=5))
+        self.game_room_lobby_messages = gui.MessageBox(
+            self.game_room_lobby, (400, 100), gui.RelativePos(to=self.game_room_lobby_players, pady=5))
+        self.game_room_lobby_input = gui.Input(
+            self.game_room_lobby, 350, gui.RelativePos(to=self.game_room_lobby_messages, pady=5))
+        self.game_room_lobby_binput = gui.Button(
+            self.game_room_lobby, gui.RelativePos(to=self.game_room_lobby_input, x='right',y='top',padx=5),
+            'Submit')
+        self.game_room_lobby_start = gui.Button(
+            self.game_room_lobby, (500, 400), 'Start Game')
 
 
         self.pre_conn_app.activate()
@@ -223,6 +249,8 @@ class Engine(SLG.Client):
         if len(text)>=4:
             self.username = text
             self.connect()
+    def remote_OverrideUsername(self, name):
+        self.username = name
 
     def connected(self, avatar):
         SLG.Client.connected(self, avatar)
@@ -355,7 +383,7 @@ class Engine(SLG.Client):
         if len(name) < 4:
             return None
         scen = self.game_room_make_scen.text
-        self.avatar.callRemote('makeGame', name, scen)
+        self.avatar.callRemote('makeGame', name, scen, self.scenario_list)
     #end game make view
 
     #gameplay functions
@@ -366,12 +394,14 @@ class Engine(SLG.Client):
             n.append(os.path.split(i)[1])
         return n
 
-    def remote_joinedGame(self, scenario, team):
+    def remote_joinedGame(self, name, scenario, team):
         print scenario, team
         self.cur_game = client_game_engine.Engine(self)
         self.cur_game.scenario = scenario
         self.cur_game.my_team = team
         self.cur_game.am_master = False
+        self.cur_game.game_name = name
+        self.game_room_lobby.activate()
     def remote_getTalkFromServer(self, command, args):
         self.cur_game.getTalkFromServer(command, args)
     #end gameplay functions

@@ -19,6 +19,7 @@ class Server(net.Server):
     def join(self, avatar):
         print avatar.name, 'joined'
         net.Server.join(self, avatar)
+        self.remote(avatar, 'OverrideUsername', avatar.name)
         self.sendServerMessage('%s has joined the server'%avatar.name)
 
     def leave(self, avatar):
@@ -41,7 +42,7 @@ class Server(net.Server):
                           i.playing))
         self.remote(avatar, 'sendGameList', games)
 
-    def makeGame(self, avatar, name, scenario):
+    def makeGame(self, avatar, name, scenario, available_scenarios):
         if avatar.game:
             return
         new = Game(self, name, scenario)
@@ -49,7 +50,7 @@ class Server(net.Server):
         new.game_id = new_id
         self.games_list[new_id] = new
 
-        new.add_player(avatar)
+        new.add_player(avatar, available_scenarios)
 
     def update(self):
         #basically, every 15 seconds, make every client reget the server info to keep it updated...
@@ -72,7 +73,7 @@ class Server(net.Server):
             self.remote(avatar, 'cannotJoinGame', 'scen')
             return
 
-        game.add_player(avatar)
+        game.add_player(avatar, available_scenarios)
 
     def sendMessage(self, avatar, message):
         if avatar.game:
@@ -116,9 +117,9 @@ class SLGAvatar(net.BaseAvatar):
     def perspective_getGameList(self):
         self.server.getGameList(self)
 
-    def perspective_makeGame(self, name, scenario):
+    def perspective_makeGame(self, name, scenario, a_scen):
         if not self.game:
-            self.server.makeGame(self, name, scenario)
+            self.server.makeGame(self, name, scenario, a_scen)
 
     def perspective_requestJoinGame(self, game_id, a_scen):
         if not self.game:

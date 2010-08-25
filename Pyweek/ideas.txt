@@ -36,8 +36,7 @@ For all users display switch team button next to empty teams
 If change scenario:
 	If too many players - kick ai first, then kick newest players (with a prompt saying why)
 	assign people to teams based on join order
-For all users display ready button
-For master display Start Game button (instead of ready) (all users must be ready - ai alwats ready)
+For master display Start Game button
 If user doesn't have scenario
 
 

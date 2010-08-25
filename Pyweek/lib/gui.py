@@ -922,3 +922,35 @@ class DropDownMenu(DropDown):
     def fire_event(self, item):
         self.dispatch.fire('select', item)
         self.turn_off()
+
+
+class GameRoomLobbyPlayers(Container):
+    def __init__(self, parent, size, pos):
+        Container.__init__(self, parent, size, pos)
+
+    def set_players(self, game, players, free_teams):
+        self.widgets = []
+        last = None
+        for player in players:
+            name, team = player
+
+            if last:
+                pos = RelativePos(to=last, pady=5)
+            else:
+                pos = (5,5)
+            #new = Container(self, (self.size[0]-10, 24), pos)
+            x = Label(self, pos, name)
+            last = x
+            if game.player_name == name:
+                x = Label(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Team:')
+                self.pt = x = DropDownMenu(self, RelativePos(to=x, padx=5, x='right',y='top'),
+                                     team, [team]+free_teams)
+                self.pt.dispatch.bind('select', self.swap_team_widg)
+            
+            if game.am_master and not game.player_name==name:
+                x = Button(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Kick')
+                x.dispatch.bind('click', lambda name=name: self.dispatch.fire('kick', name))
+
+    def swap_team_widg(self, value):
+        self.pt.text = value
+        self.dispatch.fire('change-team', value)
