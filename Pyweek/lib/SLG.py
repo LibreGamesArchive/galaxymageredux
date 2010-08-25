@@ -28,8 +28,9 @@ class Game(object):
         return avatar == self.players[0]
 
     def make_master(self):
-        owner = self.players[0]
-        self.server.remote(owner, 'youAreNowMaster')
+        master = self.players[0]
+##        self.server.remote(master, 'youAreNowMaster')
+        self.talkToPlayer(master, 'youAreNowMaster', None)
 
     def get_master(self):
         return self.players[0]
@@ -40,6 +41,7 @@ class Game(object):
         name = self.get_free_names()[0]
         self.picked_names.append(name)
         self.server.remote(avatar, 'joinedGame', self.scenario, name)
+        #NOTE: this has to be a regular server call still!
         if self.is_master(avatar):
             self.make_master()
 
@@ -76,6 +78,9 @@ class Game(object):
     def get_command(self, avatar, command, args):
         getattr(self, command)(avatar, args)
 
+    def talkToPlayer(self, avatar, command, args):
+        self.server.remote(avatar, 'getTalkFromServer', command, args)
+
 class Server(net.Server):
     def __init__(self):
         net.Server.__init__(self)
@@ -86,11 +91,13 @@ class Server(net.Server):
         self.push_update_delay = 5 #seconds
 
     def join(self, avatar):
-        self.avatars.append(avatar)
+        print avatar.name, 'joined'
+        net.Server.join(self, avatar)
         self.sendServerMessage('%s has joined the server'%avatar.name)
 
     def leave(self, avatar):
-        self.avatars.remove(avatar)
+        print avatar.name, 'left'
+        net.Server.leave(self, avatar)
         if avatar.game:
             avatar.game.player_leave(avatar)
         else:
@@ -203,7 +210,7 @@ class Client(net.Client):
         pass
     def remote_sendLobbyUsersList(self, users):
         pass
-    def remote_joinedGame(self, scenario, team):
+    def remote_getTalkFromServer(self, command, args):
         pass
-    def remote_youAreNowMaster(self):
+    def remote_joinedGame(self, scenario, team):
         pass

@@ -35,9 +35,10 @@ class Realm(object):
         self.port = port
         self.hostname = main_server_hostname
         self.server = server
+        self.user_check = UsernameChecker()
 
     def start(self):
-        c = UsernameChecker()
+        c = self.user_check
         p = portal.Portal(self)
         p.registerChecker(c)
         reactor.listenTCP(self.port, pb.PBServerFactory(p))
@@ -71,6 +72,7 @@ class Server(object):
 
     def leave(self, avatar):
         self.avatars.remove(avatar)
+        self.realm.user_check.usernames.remove(avatar.name)
 
     def remote(self, avatar, action, *args):
         df = avatar.client.callRemote(action, *args)

@@ -1,7 +1,8 @@
 
 import pygame
 from pygame.locals import *
-from lib import SLG, event, gui, test_safe_file, client_game_engine
+from lib import SLG, event, gui, client_game_engine
+import glob, os
 
 class Engine(SLG.Client):
     def __init__(self):
@@ -351,24 +352,20 @@ class Engine(SLG.Client):
 
     #gameplay functions
     def get_scenarios(self):
-        return ['main']
-    def game_master_submit_scenario_data(self):
-        path = 'data/scenarios/%s/config.py'%self.cur_game.scenario
-        safe, why = test_safe_file(path)
-        if safe:
-            exec open(path, 'rU').read()
-            #self.avatar.callRemote('getGameScenarioInfo', {'name':name, 'maxp':num_players, 'teams':teams})
-            self.cur_game.talkToServer('getGameScenarioInfo', {'name':name, 'maxp':num_players, 'teams':teams})
+        l = glob.glob('data/scenarios/*')
+        n = []
+        for i in l:
+            n.append(os.path.split(i)[1])
+        return n
+
     def remote_joinedGame(self, scenario, team):
         print scenario, team
-        self.cur_game = client_game_engine.Engine(self.avatar)
+        self.cur_game = client_game_engine.Engine(self)
         self.cur_game.scenario = scenario
         self.cur_game.my_team = team
         self.cur_game.am_master = False
-    def remote_youAreNowMaster(self):
-        print 'yeah I dah man'
-        self.game_master_submit_scenario_data()
-        self.cur_game.am_master = True
+    def remote_getTalkFromServer(self, command, args):
+        self.cur_game.getTalkFromServer(command, args)
     #end gameplay functions
 
     #main update loop
