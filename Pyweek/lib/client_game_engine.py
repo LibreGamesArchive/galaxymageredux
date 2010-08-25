@@ -40,10 +40,14 @@ class Engine(object):
         #TODO: handle kicked
         pass
 
+    def kickedByMaster(self, args):
+        #TODO: handle kicked
+        pass
+
     def update_player_gui(self):
         self.client.game_room_lobby_num_players.text = 'players (%s/%s)'%(len(self.players), self.max_players)
-        self.client.game_room_lobby_scenario.text = self.scenario
-        self.client.game_room_lobby_game_name.text = self.game_name
+        self.client.game_room_lobby_scenario.text = 'scenario: '+self.scenario
+        self.client.game_room_lobby_game_name.text = 'game name: '+self.game_name
         self.client.game_room_lobby_players.set_players(
             self, self.players, self.free_teams)
         if self.am_master:
@@ -90,3 +94,6 @@ class Engine(object):
             pass #TODO: in-game text box!
         else:
             self.client.game_room_lobby_messages.add_line(player+': '+message)
+
+    def changeTeam(self, name):
+        self.talkToServer('playerTeamChange', name)

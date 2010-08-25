@@ -56,9 +56,10 @@ class Game(object):
 
         if self.is_master(avatar):
             self.make_master()
+            print '%s made room <%s>'%(avatar.name, self.name)
         self.talkToAllPlayers('stillFreeTeamNames', self.get_free_names())
         self.talkToAllPlayers('playerNamesTeams', self.get_player_names_teams())
-        #TODO: send message to players
+        self.talkToAllPlayers('getMessage', ('<server>', '%s joined the game'%avatar.name))
 
     def player_leave(self, avatar):
         master = self.get_master()
@@ -67,12 +68,13 @@ class Game(object):
         del self.picked_names[avatar]
         if self.players == []:
             del self.server.games_list[self.game_id]
+            print 'game room <%s> closed'%self.name
         else:
             if master == avatar:
                 self.make_master()
         self.talkToAllPlayers('stillFreeTeamNames', self.get_free_names())
         self.talkToAllPlayers('playerNamesTeams', self.get_player_names_teams())
-        #TODO: send message to other players
+        self.talkToAllPlayers('getMessage', ('<server>', '%s left the game'%avatar.name))
 
     def getGameScenarioInfo(self, avatar, config):
         if self.is_master(avatar):
@@ -109,6 +111,7 @@ class Game(object):
                 if i.name == name:
                     self.talkToPlayer(i, 'kickedByMaster', None)
                     self.player_leave(i)
+                    self.talkToAllPlayers('getMessage', ('<server>', '%s KICKED %s!!!'%(avatar.name, name)))
                     return
 
     def get_command(self, avatar, command, args):
@@ -123,3 +126,9 @@ class Game(object):
 
     def player_message(self, avatar, message):
         self.talkToAllPlayers('getMessage', (avatar.name, message))
+
+    def playerTeamChange(self, avatar, new):
+        if new in self.get_free_names():
+            self.picked_names[avatar] = new
+            self.talkToAllPlayers('stillFreeTeamNames', self.get_free_names())
+            self.talkToAllPlayers('playerNamesTeams', self.get_player_names_teams())

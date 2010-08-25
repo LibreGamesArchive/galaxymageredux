@@ -189,6 +189,7 @@ class Engine(SLG.Client):
         self.game_room_make_name.always_active=False
         self.game_room_make_name.bg_color = (200,200,200)
         self.game_room_make_name.text_color = (100,100,100)
+        self.game_room_make_name.dispatch.bind('input-submit', self.handle_game_make_room)
 
         x=gui.Label(cont, gui.RelativePos(to=self.game_room_make_name, padx=-5, pady=5), 'Pick Scenario:')
         x.bg_color = (0,0,0,0)
@@ -199,7 +200,7 @@ class Engine(SLG.Client):
         self.game_room_make_scen.bg_color = (100,100,100)
         self.game_room_make_scen.dispatch.bind('select', self.handle_game_scen_sel)
 
-        self.game_room_make_butt = gui.Button(cont, gui.RelativePos(to=self.game_room_make_scen, pady=5, padx=-5),
+        self.game_room_make_butt = gui.Button(cont, (5,160),
                                               "Make Game")
         self.game_room_make_butt.dispatch.bind('click', self.handle_game_make_room)
         #end make game room view
@@ -233,6 +234,11 @@ class Engine(SLG.Client):
         self.game_room_lobby_players = gui.GameRoomLobbyPlayers(
             self.game_room_lobby, (400, 250),
             gui.RelativePos(to=self.game_room_lobby_num_players, pady=5))
+        self.game_room_lobby_players.bg_color = (210,100,100)
+        self.game_room_lobby_players.dispatch.bind('kick', self.game_room_lobby_kick)
+        self.game_room_lobby_players.dispatch.bind('change-team', self.game_room_lobby_change_team)
+        self.game_room_lobby_players.font = lil_font
+
         self.game_room_lobby_messages = gui.MessageBox(
             self.game_room_lobby, (400, 100), gui.RelativePos(to=self.game_room_lobby_players, pady=5))
         self.game_room_lobby_messages.bg_color = (200,75,75)
@@ -399,7 +405,7 @@ class Engine(SLG.Client):
     #game make view functions
     def handle_game_scen_sel(self, value):
         self.game_room_make_scen.text = value
-    def handle_game_make_room(self):
+    def handle_game_make_room(self, *args):
         name = self.game_room_make_name.text
         if len(name) < 4:
             return None
@@ -422,7 +428,6 @@ class Engine(SLG.Client):
         return n
 
     def remote_joinedGame(self, name, scenario, team):
-        print scenario, team
         self.cur_game = client_game_engine.Engine(self)
         self.cur_game.scenario = scenario
         self.cur_game.my_team = team
@@ -431,6 +436,10 @@ class Engine(SLG.Client):
         self.game_room_lobby.activate()
     def remote_getTalkFromServer(self, command, args):
         self.cur_game.getTalkFromServer(command, args)
+    def game_room_lobby_kick(self, name):
+        self.cur_game.masterKickPlayer(name)
+    def game_room_lobby_change_team(self, name):
+        self.cur_game.changeTeam(name)
     #end gameplay functions
 
     #main update loop

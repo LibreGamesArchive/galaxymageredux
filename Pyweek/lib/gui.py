@@ -940,19 +940,25 @@ class GameRoomLobbyPlayers(Container):
                 pos = (5,5)
             #new = Container(self, (self.size[0]-10, 24), pos)
             x = Label(self, pos, name)
+            x.bg_color = (0,0,0)
+            x.text_color = (100,100,100)
             last = x
             x = Label(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Team:')
+            x.bg_color = (0,0,0)
+            x.text_color = (100,100,100)
             if game.player_name == name:
                 self.pt = x = DropDownMenu(self, RelativePos(to=x, padx=5, x='right',y='top'),
                                      team, [team]+free_teams)
                 self.pt.dispatch.bind('select', self.swap_team_widg)
             else:
                 x = Label(self, RelativePos(to=x, padx=5, x='right',y='top'), team)
+                x.bg_color = (0,0,0)
+                x.text_color = (100,100,100)
             
             if game.am_master and not game.player_name==name:
                 x = Button(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Kick')
                 x.dispatch.bind('click', lambda name=name: self.dispatch.fire('kick', name))
 
     def swap_team_widg(self, value):
-        self.pt.text = value
+##        self.pt.text = value
         self.dispatch.fire('change-team', value)
