@@ -90,8 +90,8 @@ class MapHandler(object):
         return MapEntity(self, image, pos)
 
     def load_map_file(self, path):
-        ok = ['make_entity',#ok things for file to call
-              'set_camera_pos']
+        ok = ['engine.make_entity',#ok things for file to call
+              'engine.set_camera_pos']
         safe, why = test_safe_file(path, ok)
         if safe:
             engine = self

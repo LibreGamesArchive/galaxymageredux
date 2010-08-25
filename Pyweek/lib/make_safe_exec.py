@@ -54,6 +54,7 @@ def test_safe_file(filename, acceptable_functions=[]):
     for i in xrange(len(new)):
         if new[i] == "(":
             last = new[i-1].split()[-1].split(".")[-1]
+            last_full = new[i-1].split()[-1]
             if last == "(" or True in [last.endswith(__i) for __i in (", ", ",", ": ", ":","=")]:
                 continue
             if len(new[i-1].split()) >= 2:
@@ -62,8 +63,8 @@ def test_safe_file(filename, acceptable_functions=[]):
                 before_that = None
             #remove a function/class declaration, and tuple declarations, they are different!
             if not before_that in ["def", "class"] and\
-               not last in ["print", "=", "in"]:
-                ok.append(last)
+               not last_full in ["print", "=", "in"]:
+                ok.append(last_full)
             else:
                 if before_that in ["def", "class"]:
                     acceptable_functions.append(last)
