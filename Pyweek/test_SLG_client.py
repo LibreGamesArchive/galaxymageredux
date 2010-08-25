@@ -133,10 +133,13 @@ class Engine(SLG.Client):
         self.popup_bads_cont = gui.Container(self.server_lobby_app, (5,5), (0,0))
         self.popup_bads_cont.visible = False
         self.popup_bads_cont.bg_color = (255,255,255,175)
-        popup_bads_label = gui.Label(self.popup_bads_cont, (5,15), "You don't have the required scenario to play this game!")
-        popup_bads_label.bg_color=(0,0,0,0)
-        popup_bads_label.font = lil_font
-        w,h = popup_bads_label.get_size()
+        self.popup_bads = {'ingame': "You cannot join this game room because it is already in progress",
+                           'full': "You cannot join this game room because it is full",
+                           'scen': "You cannot join this game room because you don't have the required scenario"}
+        self.popup_bads_label = gui.Label(self.popup_bads_cont, (5,15), self.popup_bads['scen'])
+        self.popup_bads_label.bg_color=(0,0,0,0)
+        self.popup_bads_label.font = lil_font
+        w,h = self.popup_bads_label.get_size()
         self.popup_bads_cont.change_size((w+10, h+30))
         self.popup_bads_cont.dispatch.bind('unfocus', lambda:self.turn_off_widget(self.popup_bads_cont))
 
@@ -231,10 +234,8 @@ class Engine(SLG.Client):
         #TODO: make some kind of message screen first!
 
     def remote_getMessage(self, player, message):
-        if self.playing:
-            pass #for in-game chats
-        else:
-            self.server_lobby_messages.add_line('%s: %s'%(player, message))
+        #this is only for server lobby chats - rest are handled by game functions!
+        self.server_lobby_messages.add_line('%s: %s'%(player, message))
 
     ####End core net functions
 
@@ -285,11 +286,13 @@ class Engine(SLG.Client):
 
         if not scenario in self.scenario_list:
             self.turn_on_widget(self.popup_bads_cont)
+            self.popup_bads_label.text = self.popup_bads['scen']
             self.popup_bads_cont.pos.x = 10
             self.popup_bads_cont.pos.y = pygame.mouse.get_pos()[1]
             self.popup_bads_cont.focus()
         else:
-            print value
+            if not in_game or players==max_players:
+                self.avatar.callRemote('requestJoinGame', game_id, self.scenario_list)
 
     def handle_lobby_create_game_room(self):
         self.game_room_make_app.activate()
@@ -309,7 +312,7 @@ class Engine(SLG.Client):
                 l += '    '
             l += str(name) + ' <' + str(scenario) + '> ' + '[' + str(master) + '] '
             l += '(' + str(players) + ' / ' + str(max_players) + ')'
-            if in_game:
+            if in_game or players==max_players:
                 l+= ' -- CLOSED'
             else:
                 l+= ' -- OPEN'
@@ -325,7 +328,7 @@ class Engine(SLG.Client):
             game_id, name, scenario, master, players, max_players, in_game = game
             l = str(name) + ' <' + str(scenario) + '> ' + '[' + str(master) + '] '
             l += '(' + str(players) + ' / ' + str(max_players) + ')'
-            if in_game:
+            if in_game or players==max_players:
                 l+= ' -- CLOSED'
             else:
                 l+= ' -- OPEN'
@@ -336,13 +339,18 @@ class Engine(SLG.Client):
     def remote_sendLobbyUsersList(self, users):
         self.server_lobby_users.entries = users
         self.server_lobby_users.build_entries()
+    def remote_cannotJoinGame(self, reason):
+        self.turn_on_widget(self.popup_bads_cont)
+        self.popup_bads_label.text = self.popup_bads[reason]
+        self.popup_bads_cont.pos.x = 10
+        self.popup_bads_cont.pos.y = pygame.mouse.get_pos()[1]
+        self.popup_bads_cont.focus()
     #end game lobby view
 
     #game make view functions
     def handle_game_scen_sel(self, value):
         self.game_room_make_scen.text = value
     def handle_game_make_room(self):
-        print 32
         name = self.game_room_make_name.text
         if len(name) < 4:
             return None

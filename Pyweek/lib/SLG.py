@@ -2,84 +2,10 @@
 
 
 import net, urllib, time
+from server_game_engine import Game
 
 main_server_host = 'localhost' #change to real server later!
 main_server_port = 54321
-
-class Game(object):
-    def __init__(self, server, name, scenario):
-        self.name = name
-        self.server = server
-        self.scenario = scenario
-        self.game_id = None
-
-        self.abs_max = 10 #no more players than that! Period!
-
-        self.players = []
-        self.teams = []
-        #TODO: build teams based on scenario, assign players to them in add_player
-        self.max_players = 2
-        self.scen_team_names = ['def1', 'def2']
-        self.picked_names = []
-
-        self.playing = False
-
-    def is_master(self, avatar):
-        return avatar == self.players[0]
-
-    def make_master(self):
-        master = self.players[0]
-##        self.server.remote(master, 'youAreNowMaster')
-        self.talkToPlayer(master, 'youAreNowMaster', None)
-
-    def get_master(self):
-        return self.players[0]
-
-    def add_player(self, avatar):
-        avatar.game = self
-        self.players.append(avatar)
-        name = self.get_free_names()[0]
-        self.picked_names.append(name)
-        self.server.remote(avatar, 'joinedGame', self.scenario, name)
-        #NOTE: this has to be a regular server call still!
-        if self.is_master(avatar):
-            self.make_master()
-
-    def set_scen_data(self, name, maxp, teams):
-        self.scenario = name
-        self.max_players = maxp
-        self.scen_team_names = teams
-        self.picked_names = []
-
-        #todo: inform players of new scenario
-        #todo: assign team names
-        #todo: if too many players, kick oldest
-
-    def get_free_names(self):
-        n = []
-        for i in self.scen_team_names:
-            if not i in self.picked_names:
-                n.append(i)
-        return n
-
-    def player_leave(self, avatar):
-        master = self.get_master()
-        self.players.remove(avatar)
-        if self.players == []:
-            del self.server.games_list[self.game_id]
-        else:
-            if master == avatar:
-                self.make_master()
-
-    def getGameScenarioInfo(self, avatar, config):
-        if self.is_master(avatar):
-            self.set_scen_data(config['name'], config['maxp'], config['teams'])
-
-    def get_command(self, avatar, command, args):
-        getattr(self, command)(avatar, args)
-
-    def talkToPlayer(self, avatar, command, args):
-        self.server.remote(avatar, 'getTalkFromServer', command, args)
 
 class Server(net.Server):
     def __init__(self):
@@ -134,17 +60,19 @@ class Server(net.Server):
                     self.getGameList(i)
             self.last_push_update = time.time()
 
-    def requestJoinGame(self, avatar, game_id):
+    def requestJoinGame(self, avatar, game_id, available_scenarios):
         game = self.games_list[game_id]
         if game.playing:
-            self.remote(avatar, 'cannotJoinGame')
+            self.remote(avatar, 'cannotJoinGame', 'ingame')
+            return
         if len(game.players) >= game.max_players:
-            self.remote(avatar, 'cannotJoinGame')
-        if not game.scenario in avatar.available_scenarios:
-            self.remote(avatar, 'cannotJoinGame')
+            self.remote(avatar, 'cannotJoinGame', 'full')
+            return
+        if not game.scenario in available_scenarios:
+            self.remote(avatar, 'cannotJoinGame', 'scen')
+            return
 
         game.add_player(avatar)
-        self.remote(avatar, 'joinedGame')
 
     def sendMessage(self, avatar, message):
         if avatar.game:
@@ -184,7 +112,6 @@ class SLGAvatar(net.BaseAvatar):
     def __init__(self, name, server, clientRef):
         net.BaseAvatar.__init__(self, name, server, clientRef)
         self.game = None
-        self.available_scenarios = ['test'] #TODO: load from scenarios dir
 
     def perspective_getGameList(self):
         self.server.getGameList(self)
@@ -193,9 +120,9 @@ class SLGAvatar(net.BaseAvatar):
         if not self.game:
             self.server.makeGame(self, name, scenario)
 
-    def perspective_joinGame(self, game_id):
+    def perspective_requestJoinGame(self, game_id, a_scen):
         if not self.game:
-            a = self.server.joinGame(self, game_id)
+            a = self.server.requestJoinGame(self, game_id, a_scen)
 
     def perspective_sendMessage(self, message):
         self.server.sendMessage(self, message)
@@ -213,4 +140,6 @@ class Client(net.Client):
     def remote_getTalkFromServer(self, command, args):
         pass
     def remote_joinedGame(self, scenario, team):
+        pass
+    def remote_cannotJoinGame(self, reason):
         pass
