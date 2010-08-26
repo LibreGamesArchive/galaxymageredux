@@ -288,8 +288,11 @@ class Engine(SLG.Client):
         self.avatar.callRemote('getGameList')
 
     def disconnected(self):
-        self.pre_conn_app.activate()
+        #self.pre_conn_app.activate()
         #TODO: make some kind of message screen first!
+
+        self.close_app()
+        raw_input('Connection to server lost!')
 
     def remote_getMessage(self, player, message):
         #this is only for server lobby chats - rest are handled by game functions!
@@ -349,8 +352,7 @@ class Engine(SLG.Client):
             self.popup_bads_cont.pos.y = pygame.mouse.get_pos()[1]
             self.popup_bads_cont.focus()
         else:
-            if not in_game or players==max_players:
-                self.avatar.callRemote('requestJoinGame', game_id, self.scenario_list)
+            self.avatar.callRemote('requestJoinGame', game_id, self.scenario_list)
 
     def handle_lobby_create_game_room(self):
         self.game_room_make_app.activate()
@@ -384,7 +386,10 @@ class Engine(SLG.Client):
         self.game_list_list = {}
         for game in games:
             game_id, name, scenario, master, players, max_players, in_game = game
-            l = str(name) + ' <' + str(scenario) + '> ' + '[' + str(master) + '] '
+            l = ''
+            if in_game:
+                l += '    '
+            l += str(name) + ' <' + str(scenario) + '> ' + '[' + str(master) + '] '
             l += '(' + str(players) + ' / ' + str(max_players) + ')'
             if in_game or players==max_players:
                 l+= ' -- CLOSED'
@@ -451,19 +456,23 @@ class Engine(SLG.Client):
         self.clock.tick(30)
         s = str(self.clock.get_fps())
         pygame.display.set_caption(s)
-        self.event_handler.update()
-        if self.event_handler.quit:
-            pygame.quit()
-            self.disconnect()
-            self.close()
-            return None
 
-        self.screen.fill((0,0,0))
         if self.playing:
             #handle game play events/rendering
             self.cur_game.update_game()
-        self.event_handler.gui.render()
-        pygame.display.flip()
+        else:
+            self.event_handler.update()
+            if self.event_handler.quit:
+                self.close_app()
+                return None
+            self.screen.fill((0,0,0))
+            self.event_handler.gui.render()
+            pygame.display.flip()
+
+    def close_app(self):
+        pygame.quit()
+        self.disconnect()
+        self.close()
 
 def main():
     g = Engine()

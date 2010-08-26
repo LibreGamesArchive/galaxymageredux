@@ -103,9 +103,9 @@ class Engine(object):
         self.talkToServer('playerTeamChange', name)
 
     def startGame(self, args):
+        self.game_obj = in_game.Game(self)
         self.in_game = True
         self.client.playing = True
-        self.game_obj = in_game.Game(self)
 
     def masterStartGame(self):
         self.talkToServer('masterStartGame', None)

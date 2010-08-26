@@ -129,6 +129,7 @@ class Game(object):
 
     def masterStartGame(self, avatar, args):
         if self.is_master(avatar):
+            self.playing = True
             self.talkToAllPlayers('startGame', None)
 
     def playerTeamChange(self, avatar, new):
