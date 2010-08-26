@@ -8,7 +8,7 @@ class Game(object):
         self.screen = engine.client.screen
 
         self.gfx = gfx_engine.GFXEngine(engine.client.screen, engine.scenario)
-        self.mod = mod_base.Scenario(engine.scenario)
+        self.mod = mod_base.Scenario(self, engine.scenario)
 
         self.event_handler = event.Handler()
 
@@ -38,7 +38,6 @@ class Game(object):
         self.event_handler.dispatch.bind('keydown', self.handle_input_key)
         self.input_type.dispatch.bind('input-submit', self.handle_input_submit)
         self.input_butt.dispatch.bind('click', self.handle_input_submit)
-
 
         ###game code:
 

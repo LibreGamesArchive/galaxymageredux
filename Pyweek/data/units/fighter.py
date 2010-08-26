@@ -5,8 +5,9 @@ class Unit(BaseUnit):
     def __init__(self):
         BaseUnit.__init__(self)
 
-        self.stats = {'strength':10,
-                      "health":10,
-                      'agility':10}
+        self.base_stats = {'strength':10,
+                           "health":10,
+                           'agility':10}
+        self.image = 'test-ent1.gif'
 
 store.unit = Unit
