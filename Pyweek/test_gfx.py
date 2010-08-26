@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import *
 
-from lib import gfx_engine, event
+from lib import gfx_engine, event, mod_base
 
 def main():
     pygame.init()
@@ -12,6 +12,11 @@ def main():
     eng = gfx_engine.GFXEngine(screen, 'main')
     if eng.failed:
         return
+
+    units = mod_base.UnitHolder()
+    units.load_dir('data/scenarios/main/units/')
+    units.load_dir('data/units/')
+    print units.units
 
     while 1:
         event_handler.update()
