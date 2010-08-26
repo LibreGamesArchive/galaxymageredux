@@ -15,7 +15,16 @@ class Game(object):
         self.scen_team_names = ['def1', 'def2']
         self.picked_names = {}
 
+        self.player_turn = 0
+
         self.playing = False
+
+    def is_turn(self, avatar):
+        team = self.scen_team_names[self.player_turn]
+        if team in self.picked_names:
+            return self.picked_names[team] == avatar
+        else: #ai player
+            return self.is_master(avatar)
 
     def is_master(self, avatar):
         return avatar == self.players[0]
@@ -131,9 +140,20 @@ class Game(object):
         if self.is_master(avatar):
             self.playing = True
             self.talkToAllPlayers('startGame', None)
+            self.player_turn = 0
+            self.talkToAllPlayers('setPlayerTurn', self.scen_team_names[0])
 
     def playerTeamChange(self, avatar, new):
         if new in self.get_free_names():
             self.picked_names[avatar] = new
             self.talkToAllPlayers('stillFreeTeamNames', self.get_free_names())
             self.talkToAllPlayers('playerNamesTeams', self.get_player_names_teams())
+
+    def playerEndTurn(self, avatar, args):
+        if self.is_turn(avatar):
+            self.player_turn += 1
+            if self.player_turn >= self.max_players:
+                self.player_turn = 0
+            self.talkToAllPlayers('setPlayerTurn', self.scen_team_names[self.player_turn])
+        else:
+            pass

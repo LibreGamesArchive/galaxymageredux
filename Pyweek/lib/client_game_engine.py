@@ -16,6 +16,7 @@ class Engine(object):
         self.free_teams = []
         self.players = []
         self.max_players = 2
+        self.whos_turn = ""
 
         self.in_game = False
         self.game_obj = None
@@ -109,3 +110,6 @@ class Engine(object):
 
     def masterStartGame(self):
         self.talkToServer('masterStartGame', None)
+
+    def setPlayerTurn(self, team):
+        self.whos_turn = team

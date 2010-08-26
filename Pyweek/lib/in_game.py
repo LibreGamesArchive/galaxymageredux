@@ -39,6 +39,9 @@ class Game(object):
         self.input_type.dispatch.bind('input-submit', self.handle_input_submit)
         self.input_butt.dispatch.bind('click', self.handle_input_submit)
 
+
+        ###game code:
+
     def handle_input_submit(self, *args):
         text = self.input_type.text
         if text:
@@ -52,6 +55,16 @@ class Game(object):
             self.input_cont.visible = not self.input_cont.visible
 
     def update(self):
+
+        if self.engine.whos_turn == self.engine.my_team:
+            print 'my turn', self.engine.my_team
+            self.engine.talkToServer('playerEndTurn', None)
+        elif self.engine.whos_turn in self.engine.free_teams:
+            #AI player
+            print 'AI turn', self.engine.whos_turn
+            self.engine.talkToServer('playerEndTurn', None)
+        else:
+            print 'his turn', self.engine.whos_turn
 
         self.event_handler.update()
         if self.event_handler.quit:
