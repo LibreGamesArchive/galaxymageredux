@@ -531,6 +531,10 @@ class MessageBoxLabel(Widget):
 
     def render(self):
         self.size = self.get_size()
+        if self.parent.entry_bg_color:
+            self.draw_rect(self.parent.screen,
+                           pygame.Rect(self.pos.get_pos(), self.size),
+                           self.parent.entry_bg_color)
         self.parent.screen.blit(self.font.render(self.text, 1, self.parent.text_color), self.pos.get_pos())
 
 class MessageBox(Container):
@@ -539,6 +543,7 @@ class MessageBox(Container):
 
         self.max_lines = max_lines
         self.text_color = (0,0,0)
+        self.entry_bg_color = None
 
     def add_line(self, text):
         MessageBoxLabel(self, text)

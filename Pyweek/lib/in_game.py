@@ -9,8 +9,17 @@ class Game(object):
 
         self.event_handler = engine.client.event_handler
 
-    def update(self):
+        self.app = gui.App(engine.client.screen,
+                           engine.client.event_handler)
 
+        self.messages = gui.MessageBox(self.app,
+                                       (630, 50),
+                                       (5,5))
+        self.messages.max_lines = 5
+        self.messages.bg_color = (0,0,0,0)
+        self.messages.entry_bg_color = (100,100,255,100)
+
+    def update(self):
         mx, my = self.event_handler.mouse.get_pos()
         if mx < 5:
             self.gfx.camera.move(-0.1, 0)

@@ -39,8 +39,8 @@ class MapEntity(object):
 
     def get_real_pos(self):
         cx,cy = self.parent.engine.camera.get_shift_pos()
-        return int(self.pos[0]*tile_size[0]/2 - self.pos[1]*tile_size[1]/2+cx),
-               int(self.pos[1]*tile_size[1]/2 + self.pos[0]*tile_size[0]/2+cy)
+        return (int(self.pos[0]*tile_size[0]*0.5 - self.pos[1]*tile_size[1]*0.5+cx),
+                int(self.pos[1]*tile_size[1]*0.5 + self.pos[0]*tile_size[0]*0.5+cy))
 
     def get_my_tile(self):
         return int(self.pos[0]), int(self.pos[1])
@@ -79,6 +79,8 @@ class MapHandler(object):
         self.images = engine.images
         self.entities = []
 
+        self.tile_size = tile_size
+
     def sort_entities(self, a, b):
         if a.pos[1] < b.pos[1]:
             return -1
@@ -88,8 +90,6 @@ class MapHandler(object):
             return -1
         return 1
 
-    def set_camera_pos(self, x, y):
-        self.engine.camera.set_pos(x,y)
     def make_entity(self, image, pos, name=''):
         return MapEntity(self, image, pos, name)
 
@@ -107,7 +107,9 @@ class MapHandler(object):
             for x in y:
                 tname = x
                 cx, cy = self.engine.camera.get_shift_pos()
-                self.screen.blit(self.images.images[self.tiles[tname]], (xx*tile_size[0]/2-yy*tile_size[1]/2+cx, xx*tile_size[0]/2+yy*tile_size[1]/2+cy))
+                self.screen.blit(self.images.images[self.tiles[tname]],
+                                 (xx*self.tile_size[0]/2-yy*self.tile_size[1]/2+cx,
+                                  xx*self.tile_size[0]/2+yy*self.tile_size[1]/2+cy))
                 xx += 1
             yy += 1
 
@@ -118,8 +120,8 @@ class MapHandler(object):
     def get_mouse_tile(self):
         mx, my = pygame.mouse.get_pos()
         cx, cy = self.engine.camera.get_shift_pos()
-        xx = int((mx-cx)/tile_size[0]) if mx-cx else 0
-        yy = int((my-cy)/tile_size[1]) if my-cy else 0
+        xx = int((mx-cx)/self.tile_size[0]) if mx-cx else 0
+        yy = int((my-cy)/self.tile_size[1]) if my-cy else 0
         return xx, yy
 
     def get_entities_on_tile(self, x, y):
@@ -131,42 +133,43 @@ class MapHandler(object):
         return n
 
 class Camera(object):
-    def __init__(self):
+    def __init__(self, engine):
         self.pos = (0,0)
-        self.mapd = None
+        self.engine = engine
 
     def get_shift_pos(self):
-        return 320-int(self.pos[0]*tile_size[0]), 240-int(self.pos[1]*tile_size[1])
+        return (320-int(self.pos[0]*self.engine.mapd.tile_size[0]),
+                240-int(self.pos[1]*self.engine.mapd.tile_size[1]))
 
     def move(self, x, y):
         x = self.pos[0] + x
         y = self.pos[1] + y
-        if self.mapd:
+        if self.engine.mapd:
             if x < 0:
                 x = 0
-            if x >= len(self.mapd.map_grid[0]):
-                x = len(self.mapd.map_grid[0])
+            if x >= len(self.engine.mapd.map_grid[0]):
+                x = len(self.engine.mapd.map_grid[0])
 
             if y < 0:
                 y = 0
-            if y >= len(self.mapd.map_grid):
-                y = len(self.mapd.map_grid)
+            if y >= len(self.engine.mapd.map_grid):
+                y = len(self.engine.mapd.map_grid)
 
         self.pos = (x,y)
 
     def set_pos(self, x, y):
         x = x
         y = y
-        if self.mapd:
+        if self.engine.mapd:
             if x < 0:
                 x = 0
-            if x >= len(self.mapd.map_grid[0])-0.5:
-                x = len(self.mapd.map_grid[0])-0.5
+            if x >= len(self.engine.mapd.map_grid[0])-0.5:
+                x = len(self.engine.mapd.map_grid[0])-0.5
 
             if y < 0:
                 y = 0
-            if y >= len(self.mapd.map_grid)-0.5:
-                y = len(self.mapd.map_grid)-0.5
+            if y >= len(self.engine.mapd.map_grid)-0.5:
+                y = len(self.engine.mapd.map_grid)-0.5
 
         self.pos = (x,y)
 
@@ -177,7 +180,8 @@ class GFXEngine(object):
         self.client = client
         self.failed = False
         self.load_images()
-        self.camera = Camera()
+        self.mapd = None
+        self.camera = Camera(self)
         self.load_map()
 
     def load_images(self):
@@ -191,4 +195,3 @@ class GFXEngine(object):
 
     def render(self):
         self.mapd.render()
-        self.camera.mapd = self.mapd

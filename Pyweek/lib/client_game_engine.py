@@ -95,7 +95,7 @@ class Engine(object):
     def getMessage(self, args):
         player, message = args
         if self.in_game:
-            pass #TODO: in-game text box!
+            self.game_obj.messages.add_line(player+': '+message)
         else:
             self.client.game_room_lobby_messages.add_line(player+': '+message)
 
