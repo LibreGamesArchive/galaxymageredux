@@ -39,7 +39,8 @@ class MapEntity(object):
 
     def get_real_pos(self):
         cx,cy = self.parent.engine.camera.get_shift_pos()
-        return int(self.pos[0]*tile_size[0]+cx), int(self.pos[1]*tile_size[1]+cy)
+        return int(self.pos[0]*tile_size[0]/2 - self.pos[1]*tile_size[1]/2+cx),
+               int(self.pos[1]*tile_size[1]/2 + self.pos[0]*tile_size[0]/2+cy)
 
     def get_my_tile(self):
         return int(self.pos[0]), int(self.pos[1])
@@ -106,7 +107,7 @@ class MapHandler(object):
             for x in y:
                 tname = x
                 cx, cy = self.engine.camera.get_shift_pos()
-                self.screen.blit(self.images.images[self.tiles[tname]], (xx*tile_size[0]+cx, yy*tile_size[1]+cy))
+                self.screen.blit(self.images.images[self.tiles[tname]], (xx*tile_size[0]/2-yy*tile_size[1]/2+cx, xx*tile_size[0]/2+yy*tile_size[1]/2+cy))
                 xx += 1
             yy += 1
 
