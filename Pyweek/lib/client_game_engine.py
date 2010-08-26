@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 
 import GIFImage
-from make_safe_exec import test_safe_file
+import load_mod_file
 
 
 class Engine(object):
@@ -70,10 +70,11 @@ class Engine(object):
 
     def game_master_submit_scenario_data(self):
         path = 'data/scenarios/%s/config.py'%self.scenario
-        safe, why = test_safe_file(path)
-        if safe:
-            exec open(path, 'rU').read()
-            self.talkToServer('getGameScenarioInfo', {'name':name, 'maxp':num_players, 'teams':teams})
+        store = load_mod_file.load(path)
+        if store == False:
+            print 'failed to load config O.o'
+        else:
+            self.talkToServer('getGameScenarioInfo', {'name':store.name, 'maxp':store.num_players, 'teams':store.teams})
 
     def stillFreeTeamNames(self, args):
         self.free_teams = args

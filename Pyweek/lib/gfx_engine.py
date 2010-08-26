@@ -3,7 +3,7 @@ from pygame.locals import *
 import glob, os
 
 import GIFImage
-from make_safe_exec import test_safe_file3
+import load_mod_file
 
 tile_size = (32,32)
 
@@ -93,14 +93,10 @@ class MapHandler(object):
         return MapEntity(self, image, pos, name)
 
     def load_map_file(self, path):
-        safe, why = test_safe_file3(path)
-        if safe:
-            access = {"game":self.engine.client,
-                      'gfx_engine':self.engine,
-                      '__builtins__':{}}
-            eval(compile(open(path, 'rU').read(), '<map>', 'exec'), access, {})
-        else:
-            print why
+        access = {"game":self.engine.client,
+                  'gfx_engine':self.engine}
+        succeed = load_mod_file.load(path, access)
+        if succeed == False:
             self.engine.failed = True
 
     def render(self):

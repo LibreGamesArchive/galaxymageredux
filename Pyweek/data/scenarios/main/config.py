@@ -1,4 +1,4 @@
 
-name = 'main'
-num_players = 2
-teams = ['goodguys', 'badguys']
+store.name = 'main'
+store.num_players = 2
+store.teams = ['goodguys', 'badguys']
