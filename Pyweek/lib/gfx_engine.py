@@ -5,7 +5,11 @@ import glob, os
 import GIFImage
 import load_mod_file
 
-tile_size = (32,32)
+tile_size = (64,32)
+
+def GridToScreen(c, r, cx, cy):
+    return cx + c*tile_size[0]*0.5 + r*tile_size[0]*0.5, \
+           cy - c*tile_size[1]*0.5 + r*tile_size[1]*0.5 
 
 class ImageHandler(object):
     def __init__(self):
@@ -39,8 +43,7 @@ class MapEntity(object):
 
     def get_real_pos(self):
         cx,cy = self.parent.engine.camera.get_shift_pos()
-        return (int(self.pos[0]*tile_size[0]*0.5 - self.pos[1]*tile_size[1]*0.5+cx),
-                int(self.pos[1]*tile_size[1]*0.5 + self.pos[0]*tile_size[0]*0.5+cy))
+        return GridToScreen(self.pos[0],self.pos[1],cx,cy)
 
     def get_my_tile(self):
         return int(self.pos[0]), int(self.pos[1])
@@ -101,17 +104,15 @@ class MapHandler(object):
             self.engine.failed = True
 
     def render(self):
-        yy = 0
-        for y in self.map_grid:
-            xx = 0
-            for x in y:
-                tname = x
+        r = 0
+        for row in self.map_grid:
+            c = 0
+            for col in row:
                 cx, cy = self.engine.camera.get_shift_pos()
-                self.screen.blit(self.images.images[self.tiles[tname]],
-                                 (xx*self.tile_size[0]/2-yy*self.tile_size[1]/2+cx,
-                                  xx*self.tile_size[0]/2+yy*self.tile_size[1]/2+cy))
-                xx += 1
-            yy += 1
+                self.screen.blit(self.images.images[self.tiles[col]],
+                                 (GridToScreen(c,r,cx,cy)))
+                c += 1
+            r += 1
 
         self.entities.sort(self.sort_entities)
         for i in self.entities:

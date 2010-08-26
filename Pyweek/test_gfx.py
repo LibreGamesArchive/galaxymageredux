@@ -13,7 +13,7 @@ def main():
     if eng.failed:
         return
 
-    units = mod_base.UnitHolder()
+    units = mod_base.UnitHandler()
     units.load_dir('data/scenarios/main/units/')
     units.load_dir('data/units/')
     print units.units
