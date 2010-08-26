@@ -260,10 +260,13 @@ class Engine(SLG.Client):
         self.game_room_lobby_start = gui.Button(
             self.game_room_lobby, (500, 400), 'Start Game')
         self.game_room_lobby_start.visible = False
+        self.game_room_lobby_start.dispatch.bind('click', lambda self=self: self.cur_game.masterStartGame())
 
 
         self.pre_conn_app.activate()
         ###END GUI STUFF###
+
+        self.clock = pygame.time.Clock()
 
         #start the game loop!
         SLG.Client.__init__(self, "changeme", SLG.main_server_host, SLG.main_server_port)
@@ -434,6 +437,7 @@ class Engine(SLG.Client):
         self.cur_game.am_master = False
         self.cur_game.game_name = name
         self.game_room_lobby.activate()
+        self.cur_game = client_game_engine.Engine(self)
     def remote_getTalkFromServer(self, command, args):
         self.cur_game.getTalkFromServer(command, args)
     def game_room_lobby_kick(self, name):
@@ -444,6 +448,9 @@ class Engine(SLG.Client):
 
     #main update loop
     def update(self):
+        self.clock.tick(30)
+        s = str(self.clock.get_fps())
+        pygame.display.set_caption(s)
         self.event_handler.update()
         if self.event_handler.quit:
             pygame.quit()
@@ -454,7 +461,7 @@ class Engine(SLG.Client):
         self.screen.fill((0,0,0))
         if self.playing:
             #handle game play events/rendering
-            pass
+            self.cur_game.update_game()
         self.event_handler.gui.render()
         pygame.display.flip()
 

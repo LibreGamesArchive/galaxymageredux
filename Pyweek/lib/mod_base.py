@@ -12,7 +12,7 @@ class Unit(object):
         self.stats = {}
 
 
-class UnitHolder(object):
+class UnitHandler(object):
     def __init__(self):
         self.units = {}
 
@@ -25,3 +25,10 @@ class UnitHolder(object):
                 print 'fail load unit <%s>'%unit
             else:
                 self.units[store.unit.type] = store.unit
+
+
+class Scenario(object):
+    def __init__(self, scenario):
+        self.units = UnitHandler()
+        self.units.load_dir('data/scenarios/%s/units/'%scenario)
+        self.units.load_dir('data/units/')

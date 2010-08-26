@@ -1,8 +1,7 @@
 import pygame
 from pygame.locals import *
 
-import GIFImage
-import load_mod_file
+import load_mod_file, in_game
 
 
 class Engine(object):
@@ -19,10 +18,14 @@ class Engine(object):
         self.max_players = 2
 
         self.in_game = False
+        self.game_obj = None
 
         #TODO: when self.client.playing, we need to be running our own
         #update function, with our own App
         #bound to self.client.event_handler
+
+    def update_game(self):
+        self.game_obj.update()
 
     def talkToServer(self, command, args):
         self.client.avatar.callRemote('talkToGame', command, args)
@@ -98,3 +101,11 @@ class Engine(object):
 
     def changeTeam(self, name):
         self.talkToServer('playerTeamChange', name)
+
+    def startGame(self, args):
+        self.in_game = True
+        self.client.playing = True
+        self.game_obj = in_game.Game(self)
+
+    def masterStartGame(self):
+        self.talkToServer('masterStartGame', None)

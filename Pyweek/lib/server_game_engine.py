@@ -127,6 +127,10 @@ class Game(object):
     def player_message(self, avatar, message):
         self.talkToAllPlayers('getMessage', (avatar.name, message))
 
+    def masterStartGame(self, avatar, args):
+        if self.is_master(avatar):
+            self.talkToAllPlayers('startGame', None)
+
     def playerTeamChange(self, avatar, new):
         if new in self.get_free_names():
             self.picked_names[avatar] = new
