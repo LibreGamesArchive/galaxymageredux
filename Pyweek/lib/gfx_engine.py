@@ -35,14 +35,14 @@ class ImageHandler(object):
                 self.images[short] = img
 
 class MapEntity(object):
-    def __init__(self, parent, image, pos=(0,0), name=''):
+    def __init__(self, parent, image, pos=(0,0), name='', render_pos='real'):
         self.parent = parent
         self.image = image
         self.pos = (0,0)
         self.move(*pos)
         self.parent.entities.append(self)
         self.name = name
-
+        self.render_pos = render_pos
     def kill(self):
         if self in self.parent.entities:
             self.parent.entities.remove(self)
@@ -76,7 +76,15 @@ class MapEntity(object):
     def render(self):
         image = self.parent.images.images[self.image]
         r = image.get_rect()
-        r.midbottom = self.get_real_pos()
+        x, y = self.get_real_pos()
+        tw,th = self.parent.tile_size
+        if self.render_pos == 'bottom':
+            r.midbottom = (int(x), int(y))
+        elif self.render_pos == 'center':
+            r.midbottom = (int(x),int(y)-th*0.5)
+        else: # 'real'
+            r.topleft = (x-tw*0.5,y-th)
+        
         try:
             image.render(self.parent.screen, r)
         except:
@@ -89,6 +97,7 @@ class MapHighlight(MapEntity):
         self.pos = (0,0)
         self.move(*pos)
         self.parent.highlights.append(self)
+        self.render_pos = 'real'
 
     def kill(self):
         if self in self.parent.highlights:
