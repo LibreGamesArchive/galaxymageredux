@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 import glob, os
+from math import floor
 
 import GIFImage
 import load_mod_file
@@ -131,9 +132,10 @@ class MapHandler(object):
     def get_mouse_tile(self):
         mx, my = pygame.mouse.get_pos()
         cx, cy = self.engine.camera.get_shift_pos()
-        tw, th = self.tile_size
-        xx = int((mx-cx)/tw - (my-cy)/th) if mx-cx else 0
-        yy = int((mx-cx)/tw + (my-cy)/th) if my-cy else 0
+        tw = float(self.tile_size[0])
+        th = float(self.tile_size[1])
+        xx = int(floor((mx-cx)/tw - (my-cy-th*0.5)/th) ) if mx-cx else 0
+        yy = int(floor((mx-cx)/tw + (my-cy-th*0.5)/th)) if my-cy else 0
         return xx, yy
 
     def get_entities_on_tile(self, x, y):
