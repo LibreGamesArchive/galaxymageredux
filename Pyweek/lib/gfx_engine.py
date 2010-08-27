@@ -95,12 +95,12 @@ class MapHandler(object):
 
     def sort_entities(self, a, b):
         if a.pos[1] < b.pos[1]:
-            return -1
-        elif b.pos[1] < a.pos[1]:
             return 1
-        elif a.pos[0] < b.pos[0]:
+        elif b.pos[1] < a.pos[1]:
             return -1
-        return 1
+        elif a.pos[0] < b.pos[0]:
+            return 1
+        return -1
 
     def make_entity(self, image, pos, name=''):
         return MapEntity(self, image, pos, name)
