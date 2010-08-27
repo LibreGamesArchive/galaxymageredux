@@ -1,11 +1,10 @@
 
 mapd = gfx_engine.mapd
 
-mapd.tiles = {1:'test-terrain1.png',
-              2:'test-terrain2.png'}
+mapd.tiles = {1:'floor-dungeon-blue.png'}
 
 mapd.map_grid = [[1,1,1,1,1],
-                 [1,2,2,2,1],
+                 [1,1,1,1,1],
                  [1,1,1,1,1]]
 
 mapd.engine.camera.set_pos(2.5, 1.5)
