@@ -43,7 +43,7 @@ def main():
             print(eng.mapd.get_mouse_tile())
 
         x, y = eng.mapd.get_mouse_tile()
-        m_tile.pos = (x,y)
+        m_tile.pos = (x+0.5, y+0.5)
         
         screen.fill((0,0,0))
         eng.render()
