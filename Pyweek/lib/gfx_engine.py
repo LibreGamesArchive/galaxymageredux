@@ -51,8 +51,8 @@ class MapEntity(object):
         cx,cy = self.parent.engine.camera.get_shift_pos()
         tw,th = self.parent.tile_size
         sx, sy = self.pos
-        return (cx + sx*tw*0.5 + sy*tw*0.5,
-                cy - sx*th*0.5 + sy*th*0.5 + th*0.5)
+        return (cx + sx*tw*0.5 + sy*tw*0.5 + tw*0.5,
+                cy - sx*th*0.5 + sy*th*0.5 + th)
 
     def get_my_tile(self):
         return int(self.pos[0]), int(self.pos[1])
@@ -63,13 +63,13 @@ class MapEntity(object):
         if self.parent.map_grid:
             if x < 0:
                 x = 0
-            if x >= len(self.parent.map_grid[0])-0.5:
-                x = len(self.parent.map_grid[0])-0.5
+            if x >= len(self.parent.map_grid[0]):
+                x = len(self.parent.map_grid[0])
 
             if y < 0:
                 y = 0
-            if y >= len(self.parent.map_grid)-0.5:
-                y = len(self.parent.map_grid)-0.5
+            if y >= len(self.parent.map_grid):
+                y = len(self.parent.map_grid)
 
         self.pos = (x,y)
 
