@@ -18,7 +18,7 @@ def main():
     units.load_dir('data/units/')
     print units.units
 
-    m_tile = eng.mapd.make_entity('test-terrain1.png', (0,0))
+    m_tile = eng.mapd.make_entity('gui_mouse-hover.png', (0,0))
 
     while 1:
         event_handler.update()
