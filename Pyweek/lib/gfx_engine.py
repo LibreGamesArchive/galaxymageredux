@@ -51,8 +51,16 @@ class MapEntity(object):
         cx,cy = self.parent.engine.camera.get_shift_pos()
         tw,th = self.parent.tile_size
         sx, sy = self.pos
-        return (cx + sx*tw*0.5 + sy*tw*0.5,
-                cy - sx*th*0.5 + sy*th*0.5 + th*0.5)
+
+        if self.render_pos == 'bottom':
+            return (int(cx + sx*tw*0.5 + sy*tw*0.5 + tw*0.5),
+                    int(cy - sx*th*0.5 + sy*th*0.5 + th))
+        elif self.render_pos == 'center':
+            return (int(cx + sx*tw*0.5 + sy*tw*0.5 + tw*0.5),
+                    int(cy - sx*th*0.5 + sy*th*0.5 + th*0.5))
+        else: #real
+            return (int(cx + sx*tw*0.5 + sy*tw*0.5),
+                    int(cy - sx*th*0.5 + sy*th*0.5))
 
     def get_my_tile(self):
         return int(self.pos[0]), int(self.pos[1])
@@ -77,13 +85,12 @@ class MapEntity(object):
         image = self.parent.images.images[self.image]
         r = image.get_rect()
         x, y = self.get_real_pos()
-        tw,th = self.parent.tile_size
         if self.render_pos == 'bottom':
-            r.midbottom = (int(x), int(y))
+            r.midbottom = x,y
         elif self.render_pos == 'center':
-            r.midbottom = (int(x),int(y)-th*0.5)
+            r.midbottom = x,y
         else: # 'real'
-            r.topleft = (x-tw*0.5,y-th)
+            r.topleft = x,y
         
         try:
             image.render(self.parent.screen, r)
@@ -125,8 +132,8 @@ class MapHandler(object):
             return 1
         return -1
 
-    def make_entity(self, image, pos, name=''):
-        return MapEntity(self, image, pos, name)
+    def make_entity(self, image, pos, name='', render_pos='bottom'):
+        return MapEntity(self, image, map(int, pos), name, render_pos)
 
     def load_map_file(self, path):
         access = {"game":self.engine.client,
@@ -136,7 +143,7 @@ class MapHandler(object):
             self.engine.failed = True
 
     def add_highlight(self, image, pos):
-        return MapHighlight(self, image, (pos[0], pos[1]+1))
+        return MapHighlight(self, image, (pos[0], pos[1]))
     def clear_highlights(self):
         self.highlights = []
 

@@ -104,7 +104,7 @@ Scenario methods:
 
 Need A* code for ai... in case we want pathing (necessary for blockign entities)
 
-Entity.destroy
+Entity.destroy #DONE
 
 /list and /kick actions from message box for master
 
@@ -116,4 +116,4 @@ Units need to update when they move/die
 
 On game over, show who won screen, then destroy game and take everyone to the main lobby again
 
-Refactor client code to swap between states nicer
+Refactor client code to swap between states nicer #DONE

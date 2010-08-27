@@ -116,7 +116,7 @@ class Scenario(object):
         new = self.unith.units[type](self)
         new.load_stats(stats)
         new.team = team
-        new.gfx_entity = self.engine.gfx.mapd.make_entity(new.image, new.pos, new.name)
+        new.gfx_entity = self.engine.gfx.mapd.make_entity(new.image, new.pos, new.name, 'center')
         self.units.append(new)
 
     def update(self):
