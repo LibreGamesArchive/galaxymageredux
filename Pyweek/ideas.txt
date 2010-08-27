@@ -66,6 +66,7 @@ If owner leaves, everyone should already have their own copy of each player, so 
 Add disabled/disabled_bg_color/etc. state for menu options.
 Make game list and in-game action select user disabled items.
 When item is clicked, fire event with arg of disabled
+Make new popup - that is bound to mouse pos, and bind to disabled clicks
 
 All unit actions are abilities
 
@@ -89,6 +90,7 @@ Units have attributes:
 	strength
 	action_points
 	actions = {action:Action()}
+	dead
 
 Actions have access to unit and game object
 Action attributes:
@@ -103,4 +105,12 @@ Scenario methods:
 Need A* code for ai... in case we want pathing (necessary for blockign entities)
 
 Entity.destroy
+
+/list and /kick actions from message box for master
+
+AI class calls update each time it's turn
+AI has access to the engine - obviously
+AI scenario mod needs to handle the cases for individual units...
+
+Units need to update when they move/die
 	
