@@ -9,11 +9,19 @@ from math import sqrt, pi, cos, sin, tan
 from sys import maxint
 
 class AI_Player:
-    def update(self, engine):
-        ''' Calling this assumes it is the AI's turn'''
-        for unit in my_team:
-            closest_enemy = find_closest_enemy(unit, eng.mapd)
-            move_along_path(unit, closest_enemy, eng.mapd)
+    def __init__(self, my_team, engine):
+        self.team = my_team
+        self.engine = engine
+
+    def update(self):
+        ''' Calling this assumes it is the AI's turn. Fairly dumb and agressive
+        AI. Always rushes, always attacks.'''
+        for unit in self.team:
+            # TODO: give each unit a target preference/priority list: closest, weakest, type
+            closest_enemy = find_closest_enemy(unit, self.engine.mapd)
+            path = a_star(unit,closest_enemy,self.engine.mapd)# find path using a_star
+            if path:
+                move_along_path(unit, path)
             unit.attack(closest_enemy)
 
     def ValidSquare(self, x, y, map):
@@ -25,34 +33,6 @@ class AI_Player:
             Distance not jumpable by unit
         '''
         return True
-
-    def move_along_path(self, center, target, map, radius):
-        ''' Makes best attempt to find a legal path to location and then move
-        unit.'''
-        if center is Unit:
-            x, y = center.pos
-        else:
-            x, y = center # Center is a tuple
-        x = float(x)
-        y = float(y)
-        
-        if target is Unit:
-            goal = (float(target.pos[0]), float(target.pos[1]))
-        else:
-            goal = (float(target[0]), float(target[1])) # target is a tuple
-
-        for i in range(1,radius):
-            d = sqrt((goal[0]-x)**2 + (goal[1]-y)**2)
-            vector = ((goal[0]-x)/d,
-                      (goal[1]-y)/d)
-            if ValidSquare(x+int(vector[0]), y + int(vector[1]), map):
-                x += int(vector[0])
-                y += int(vector[1])
-            else:
-                pass
-        if center is Unit:
-            center.move(x,y)
-        return x, y
 
 # A* Search utility functions
 
@@ -76,6 +56,21 @@ class AI_Player:
 
 # End A* utility functions
 
+    def tile_weight(self, node):
+        '''Gets weight of tiles, from map or something'''
+        if len(self.engine.map) < node[1] or len(self.engine.map[len(self.engine.map)/2]):
+            return maxint
+        if self.engine.map(node) == (Wall or Water or Hole or Offmap):
+            return maxint
+        for e in self.engine.entities:
+            if self.team.index(e):
+                return 0
+            else:
+                return maxint
+
+    def heuristic_estimate_of_distance(self, start, goal, map):
+        '''Guess based on "barrier" density and area between start and goal'''
+        return 2 * abs((start[0]-goal[0])*(start[1]-goal[1]))+len(map.entities)/(len(map)*len(map[len(map)/2]))
     def a_star(self, center, target, map):
         
         start = center.pos() if center is Unit else center
@@ -100,7 +95,7 @@ class AI_Player:
             for y in neighbor_nodes(x):
                 if y in closedset:
                     continue
-                tentative_g_score = g_score[repr(x)] + distance(x,y)
+                tentative_g_score = g_score[repr(x)] + distance(x,y) + tile_weight(x)
                 
                 if y not in openset:
                     openset.add(y) 
@@ -117,29 +112,17 @@ class AI_Player:
         return None #Really?
 
     def find_closest_enemy(self, center, map, radius = None):
-        '''Searches until it finds an enemy. center may be the Unit searching
-        for an enemy or a (col, row) tuple. radius limits how far from the
+        '''Searches until it finds an enemy. radius limits how far from the
         center we can look.'''
-        if center is Unit:
-            x, y = center.pos
-        else:
-            x, y = center # Center is a tuple
-        
         if radius == None:
             radius = len(map.map_grid) + len(map.map_grid[0])
 
-        r = 1
         enemy = None
-        while not enemy and r < radius:
-            potentials = list()
-            for i in xrange(x-r,x+r):
-                for j in xrange(y-r, y+r):
-                    for e in get_entities_on_tile(i,j):
-                        if my_team.index(e) == None:
-                            potentials.append(e)
-            for e in potentials:
-                if enemy.hp > e.hp: enemy = e # May not be fair, depends on what human players can know.
-            r += 1
+        for e in self.engine.entities:
+            if e not in self.team:
+                d = distance(e,center)
+                if d < radius and d < distance(enemy,center):
+                    enemy = e
         return enemy
 
     def find_closest_injured(self, center, game, radius = None, threshold = 0.5):

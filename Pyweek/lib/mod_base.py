@@ -6,6 +6,7 @@ class Action(object):
     def __init__(self, parent, engine):
         self.unit = parent
         self.game_object = engine
+        self.cost = 0
 
     def test_acceptable(self, target):
         pass
