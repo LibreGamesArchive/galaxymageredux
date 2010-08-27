@@ -18,7 +18,7 @@ def main():
     units.load_dir('data/units/')
     print units.units
 
-    m_tile = eng.mapd.make_entity('gui_mouse-hover2.png', (0,0))
+##    m_tile = eng.mapd.make_entity('gui_mouse-hover2.png', (0,0))
 
     while 1:
         event_handler.update()
@@ -42,8 +42,11 @@ def main():
         else:
             print(eng.mapd.get_mouse_tile())
 
-        x, y = eng.mapd.get_mouse_tile()
-        m_tile.pos = (x+0.5, y+0.5)
+        xy = eng.mapd.get_mouse_tile()
+        eng.mapd.clear_highlights()
+        if xy:
+            x,y = xy
+            eng.mapd.add_highlight('gui_mouse-hover2.png', (x+0.5,y+0.5))
         
         screen.fill((0,0,0))
         eng.render()

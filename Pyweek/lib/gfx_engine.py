@@ -82,6 +82,18 @@ class MapEntity(object):
         except:
             self.parent.screen.blit(image, r)
 
+class MapHighlight(MapEntity):
+    def __init__(self, parent, image, pos=(0,0)):
+        self.parent = parent
+        self.image = image
+        self.pos = (0,0)
+        self.move(*pos)
+        self.parent.highlights.append(self)
+
+    def kill(self):
+        if self in self.parent.highlights:
+            self.parent.highlights.remove(self)
+
 class MapHandler(object):
     def __init__(self, engine):
         self.tiles = {}
@@ -90,6 +102,8 @@ class MapHandler(object):
         self.screen = engine.screen
         self.images = engine.images
         self.entities = []
+
+        self.highlights = []
 
         self.tile_size = tile_size
 
@@ -112,6 +126,11 @@ class MapHandler(object):
         if succeed == False:
             self.engine.failed = True
 
+    def add_highlight(self, image, pos):
+        return MapHighlight(self, image, pos)
+    def clear_highlights(self):
+        self.highlights = []
+
     def render(self):
         r = 0
         tw, th = self.tile_size
@@ -125,6 +144,9 @@ class MapHandler(object):
                 c += 1
             r += 1
 
+        for i in self.highlights:
+            i.render()
+
         self.entities.sort(self.sort_entities)
         for i in self.entities:
             i.render()
@@ -136,7 +158,11 @@ class MapHandler(object):
         th = float(self.tile_size[1])
         xx = int(floor((mx-cx)/tw - (my-cy-th*0.5)/th) ) if mx-cx else 0
         yy = int(floor((mx-cx)/tw + (my-cy-th*0.5)/th)) if my-cy else 0
-        return xx, yy
+
+        if xx >= 0 and xx < len(self.map_grid[0]) and\
+           yy >= 0 and yy < len(self.map_grid):
+            return xx, yy
+        return None
 
     def get_entities_on_tile(self, x, y):
         n = []

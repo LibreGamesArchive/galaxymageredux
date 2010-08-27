@@ -62,7 +62,7 @@ If owner leaves, everyone should already have their own copy of each player, so 
 
 
 
-
+####Need to be done!
 Add disabled/disabled_bg_color/etc. state for menu options.
 Make game list and in-game action select user disabled items.
 When item is clicked, fire event with arg of disabled
