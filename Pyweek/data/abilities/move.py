@@ -10,7 +10,7 @@ class Ability(BaseAbility):
             return True
 
     def render_select(self):
-        #TODO: add doding of obstacles!
+        #TODO: add dodging of obstacles!
         mapd = self.unit.scenario.engine.gfx.mapd #yikes!
         ap = self.unit.cur_ap
         cx, cy = self.unit.pos
@@ -32,7 +32,7 @@ class Ability(BaseAbility):
                         (cx+x,cy-y)])
 
         mapd.clear_highlights()
-        for i in pos:
+        for i in set(pos):
             if mapd.in_bounds(i):
                 mapd.add_highlight('gui_mouse-hover2.png', i)
 

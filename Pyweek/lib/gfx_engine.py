@@ -127,7 +127,7 @@ class MapHandler(object):
             self.engine.failed = True
 
     def add_highlight(self, image, pos):
-        return MapHighlight(self, image, pos)
+        return MapHighlight(self, image, (pos[0], pos[1]+1))
     def clear_highlights(self):
         self.highlights = []
 

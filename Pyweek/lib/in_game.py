@@ -85,15 +85,14 @@ class Game(object):
         xy = self.gfx.mapd.get_mouse_tile()
         self.gfx.mapd.clear_highlights()
         if xy:
-            x,y = xy
-            self.gfx.mapd.add_highlight('gui_mouse-hover2.png', (x+0.5,y+0.5))
+            self.gfx.mapd.add_highlight('gui_mouse-hover2.png', xy)
 
         if 'left' in self.event_handler.mouse.active:
             if xy:
                 for unit in self.mod.units:
-                    x,y = map(int, unit.pos)
+                    x,y = unit.pos
                     if (x,y) == xy:
-                        print unit.name
+                        unit.actions['walk'].render_select()
 
         self.screen.fill((0,0,0))
         self.gfx.render()

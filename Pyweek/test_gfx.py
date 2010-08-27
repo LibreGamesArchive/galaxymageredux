@@ -13,10 +13,10 @@ def main():
     if eng.failed:
         return
 
-    units = mod_base.UnitHandler()
-    units.load_dir('data/scenarios/main/units/')
-    units.load_dir('data/units/')
-    print units.units
+##    units = mod_base.UnitHandler()
+##    units.load_dir('data/scenarios/main/units/')
+##    units.load_dir('data/units/')
+##    print units.units
 
 ##    m_tile = eng.mapd.make_entity('gui_mouse-hover2.png', (0,0))
 
@@ -46,7 +46,7 @@ def main():
         eng.mapd.clear_highlights()
         if xy:
             x,y = xy
-            eng.mapd.add_highlight('gui_mouse-hover2.png', (x+0.5,y+0.5))
+            eng.mapd.add_highlight('gui_mouse-hover2.png', (x,y))
         
         screen.fill((0,0,0))
         eng.render()

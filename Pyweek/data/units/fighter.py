@@ -3,9 +3,9 @@
 class Unit(BaseUnit):
     type = 'fighter'
     def initialize(self):
-        self.base_stats = {'strength':10,
-                           "health":10,
-                           'agility':10}
+        self.strength = 10
+        self.hp = 10
+        self.action_points = 3
         self.image = 'test-ent1.gif'
         print self.abilities
         self.actions = {'walk': self.abilities['move'](self)}

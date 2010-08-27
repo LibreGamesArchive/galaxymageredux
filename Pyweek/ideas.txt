@@ -77,8 +77,8 @@ master send serverMasterDoAction(name, unit_id) if acceptable
 select unit with left click
 either show options with right click - or better, when selected - show options
 
-map handler highlights list - (tile, color) vals
-map_handler.clear_highlights()
+map handler highlights list - (tile, color) vals #DONE
+map_handler.clear_highlights() #DONE
 
 Actions have methods:
 	test_available() - whether action can even be performed or not
