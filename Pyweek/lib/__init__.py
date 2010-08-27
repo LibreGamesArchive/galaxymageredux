@@ -1,1 +1,2 @@
-import event, gui, GIFImage, net, SLS, SLG, client_game_engine, gfx_engine, mod_base
+import event, gui, GIFImage, net, SLS, SLG
+import gfx_engine, mod_base, client_states
