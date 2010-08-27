@@ -49,8 +49,9 @@ class MapEntity(object):
     def get_real_pos(self):
         cx,cy = self.parent.engine.camera.get_shift_pos()
         tw,th = self.parent.tile_size
-        return cx + self.pos[0]*tw*0.5 + self.pos[1]*tw*0.5, \
-               cy - self.pos[1]*th*0.5 + self.pos[1]*th*0.5
+        sx, sy = self.pos
+        return (cx + sx*tw*0.5 + sy*tw*0.5,
+                cy - sx*th*0.5 + sy*th*0.5 + th*0.5)
 
     def get_my_tile(self):
         return int(self.pos[0]), int(self.pos[1])
@@ -130,8 +131,9 @@ class MapHandler(object):
     def get_mouse_tile(self):
         mx, my = pygame.mouse.get_pos()
         cx, cy = self.engine.camera.get_shift_pos()
-        xx = int((mx-cx)/self.tile_size[0] - (my-cy)/self.tile_size[1]) if mx-cx else 0
-        yy = int((mx-cx)/self.tile_size[0] + (my-cy)/self.tile_size[1]) if my-cy else 0
+        tw, th = self.tile_size
+        xx = int((mx-cx)/tw - (my-cy)/th) if mx-cx else 0
+        yy = int((mx-cx)/tw + (my-cy)/th) if my-cy else 0
         return xx, yy
 
     def get_entities_on_tile(self, x, y):

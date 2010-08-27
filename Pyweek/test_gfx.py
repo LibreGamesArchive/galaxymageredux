@@ -18,6 +18,8 @@ def main():
     units.load_dir('data/units/')
     print units.units
 
+    m_tile = eng.mapd.make_entity('test-terrain1.png', (0,0))
+
     while 1:
         event_handler.update()
 
@@ -39,6 +41,11 @@ def main():
             eng.camera.move(0, 0.1)
         else:
             print(eng.mapd.get_mouse_tile())
+
+        x, y = eng.mapd.get_mouse_tile()
+        x += 0.5
+        y += 0.5
+        m_tile.pos = (x,y)
         
         screen.fill((0,0,0))
         eng.render()
