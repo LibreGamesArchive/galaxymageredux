@@ -43,10 +43,14 @@ class Game(object):
 
     def handle_input_submit(self, *args):
         text = self.input_type.text
-        if text:
+        if text.startswith('/list'):
+            self.messages.add_line('<info>players: '+', '.join([i[0] for i in self.engine.players]))
+        elif text.startswith('/kick') and self.engine.am_master:
+            self.engine.masterKickPlayer(text.split()[-1])
+        elif text:
             self.engine.sendMessage(text)
-            self.input_type.text = ''
-            self.input_type.cursor_pos = 0
+        self.input_type.text = ''
+        self.input_type.cursor_pos = 0
         self.input_cont.visible = False
 
     def handle_input_key(self, key, name):
@@ -67,7 +71,7 @@ class Game(object):
 
         self.event_handler.update()
         if self.event_handler.quit:
-            self.engine.client.close_app()
+            self.engine.client.engine.close_app() #sheesh!
             return
 
         mx, my = self.event_handler.mouse.get_pos()
