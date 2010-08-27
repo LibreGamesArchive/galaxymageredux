@@ -55,15 +55,15 @@ class Game(object):
 
     def update(self):
 
-        if self.engine.whos_turn == self.engine.my_team:
-            print 'my turn', self.engine.my_team
-            self.engine.talkToServer('playerEndTurn', None)
-        elif self.engine.whos_turn in self.engine.free_teams:
-            #AI player
-            print 'AI turn', self.engine.whos_turn
-            self.engine.talkToServer('playerEndTurn', None)
-        else:
-            print 'his turn', self.engine.whos_turn
+##        if self.engine.whos_turn == self.engine.my_team:
+##            print 'my turn', self.engine.my_team
+##            self.engine.talkToServer('playerEndTurn', None)
+##        elif self.engine.whos_turn in self.engine.free_teams:
+##            #AI player
+##            print 'AI turn', self.engine.whos_turn
+##            self.engine.talkToServer('playerEndTurn', None)
+##        else:
+##            print 'his turn', self.engine.whos_turn
 
         self.event_handler.update()
         if self.event_handler.quit:
@@ -87,6 +87,13 @@ class Game(object):
         if xy:
             x,y = xy
             self.gfx.mapd.add_highlight('gui_mouse-hover2.png', (x+0.5,y+0.5))
+
+        if 'left' in self.event_handler.mouse.active:
+            if xy:
+                for unit in self.mod.units:
+                    x,y = map(int, unit.pos)
+                    if (x,y) == xy:
+                        print unit.name
 
         self.screen.fill((0,0,0))
         self.gfx.render()

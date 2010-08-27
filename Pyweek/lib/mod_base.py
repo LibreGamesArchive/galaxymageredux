@@ -1,5 +1,5 @@
 import load_mod_file
-import glob
+import glob, os
 
 class Ability(object):
     '''Base Action class'''
@@ -17,8 +17,11 @@ class Ability(object):
     def test_acceptable(self, target):
         return True
 
-    def perform(target):
+    def perform(self, target):
         return False
+
+    def render_select(self):
+        pass
 
 class AbilityHandler(object):
     def __init__(self):
@@ -28,11 +31,12 @@ class AbilityHandler(object):
         self.abilities = {}
         access = {'BaseAbility':Ability}
         for ability in glob.glob(path+'*.py'):
+            name = os.path.split(ability)[1].split('.')[0]
             store = load_mod_file.load(ability, access)
             if store == False:
                 print 'fail load ability <%s>'%ability
             else:
-                self.abilities[ability] = store.ability
+                self.abilities[name] = store.ability
 
 class Unit(object):
     type = 'base'
@@ -109,7 +113,7 @@ class Scenario(object):
         self.mod.initialize()
 
     def make_unit(self, type, team, stats):
-        new = self.unith.units[type]()
+        new = self.unith.units[type](self)
         new.load_stats(stats)
         new.team = team
         new.gfx_entity = self.engine.gfx.mapd.make_entity(new.image, new.pos, new.name)

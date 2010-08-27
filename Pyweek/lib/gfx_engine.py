@@ -151,6 +151,14 @@ class MapHandler(object):
         for i in self.entities:
             i.render()
 
+    def in_bounds(self, pos):
+        xx, yy = pos
+        if self.map_grid:
+            if xx >= 0 and xx < len(self.map_grid[0]) and\
+               yy >= 0 and yy < len(self.map_grid):
+                return True
+        return False
+
     def get_mouse_tile(self):
         mx, my = pygame.mouse.get_pos()
         cx, cy = self.engine.camera.get_shift_pos()
@@ -159,8 +167,7 @@ class MapHandler(object):
         xx = int(floor((mx-cx)/tw - (my-cy-th*0.5)/th) ) if mx-cx else 0
         yy = int(floor((mx-cx)/tw + (my-cy-th*0.5)/th)) if my-cy else 0
 
-        if xx >= 0 and xx < len(self.map_grid[0]) and\
-           yy >= 0 and yy < len(self.map_grid):
+        if self.in_bounds((xx,yy)):
             return xx, yy
         return None
 
