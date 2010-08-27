@@ -11,6 +11,11 @@ def GridToScreen(c, r, cx, cy):
     return cx + c*tile_size[0]*0.5 + r*tile_size[0]*0.5, \
            cy - c*tile_size[1]*0.5 + r*tile_size[1]*0.5 
 
+def ScreenToGrid(mx, my, cx, cy):
+    '''Returns Column, Row pair. May return points outside the grid_bounds '''
+    return (mx-cx)/tile_size[0] - (my-cy)/tile_size[1], \
+           (mx-cx)/tile_size[0] + (my-cy)/tile_size[1]
+
 class ImageHandler(object):
     def __init__(self):
         self.images = {}
@@ -43,7 +48,9 @@ class MapEntity(object):
 
     def get_real_pos(self):
         cx,cy = self.parent.engine.camera.get_shift_pos()
-        return GridToScreen(self.pos[0],self.pos[1],cx,cy)
+        tw,th = self.parent.tile_size
+        return cx + self.pos[0]*tw*0.5 + self.pos[1]*tw*0.5, \
+               cy - self.pos[1]*th*0.5 + self.pos[1]*th*0.5
 
     def get_my_tile(self):
         return int(self.pos[0]), int(self.pos[1])
@@ -105,12 +112,14 @@ class MapHandler(object):
 
     def render(self):
         r = 0
+        tw, th = self.tile_size
         for row in self.map_grid:
             c = 0
             for col in row:
                 cx, cy = self.engine.camera.get_shift_pos()
                 self.screen.blit(self.images.images[self.tiles[col]],
-                                 (GridToScreen(c,r,cx,cy)))
+                                 (cx + c*tw*0.5 + r*tw*0.5,
+                                  cy - c*th*0.5 + r*th*0.5))
                 c += 1
             r += 1
 
@@ -121,8 +130,8 @@ class MapHandler(object):
     def get_mouse_tile(self):
         mx, my = pygame.mouse.get_pos()
         cx, cy = self.engine.camera.get_shift_pos()
-        xx = int((mx-cx)/self.tile_size[0]) if mx-cx else 0
-        yy = int((my-cy)/self.tile_size[1]) if my-cy else 0
+        xx = int((mx-cx)/self.tile_size[0] - (my-cy)/self.tile_size[1]) if mx-cx else 0
+        yy = int((mx-cx)/self.tile_size[0] + (my-cy)/self.tile_size[1]) if my-cy else 0
         return xx, yy
 
     def get_entities_on_tile(self, x, y):
