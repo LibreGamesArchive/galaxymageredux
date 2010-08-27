@@ -59,3 +59,48 @@ Once the game is going it should be simply each unit doing actions, and teams en
 AI:
 owning played controls the AI players...
 If owner leaves, everyone should already have their own copy of each player, so the next one can just become the owner...
+
+
+
+
+Add disabled/disabled_bg_color/etc. state for menu options.
+Make game list and in-game action select user disabled items.
+When item is clicked, fire event with arg of disabled
+
+All unit actions are abilities
+
+when action is selected, send a serverRequestAction(name, unit_id)
+server query master to test if it is acceptable
+master send serverMasterDoAction(name, unit_id) if acceptable
+
+select unit with left click
+either show options with right click - or better, when selected - show options
+
+map handler highlights list - (tile, color) vals
+map_handler.clear_highlights()
+
+Actions have methods:
+	test_available() - whether action can even be performed or not
+	test_acceptable(target) - whether target (x,y) is acceptable
+	perform(target) - if test_acceptable(target) perform action
+
+Units have attributes:
+	hp
+	strength
+	action_points
+	actions = {action:Action()}
+
+Actions have access to unit and game object
+Action attributes:
+	unit
+	game_object (access to the game_object itself)
+
+	<action specific vars>
+
+Scenario methods:
+	have_winner() -> if do, master submit gameWinner action, then server reset game action
+
+Need A* code for ai... in case we want pathing (necessary for blockign entities)
+
+Entity.destroy
+	

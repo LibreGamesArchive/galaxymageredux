@@ -7,7 +7,8 @@ class ReturnVals(object):
 def load(path, access={}):
     try:
         ret_val = ReturnVals()
-        eval(compile(open(path, 'rU').read(), '<mod>', 'exec'), access, {'store':ret_val})
+        eval(compile(open(path, 'rU').read(), '<%s>'%path, 'exec'),
+             access, {'store':ret_val})
         return ret_val
     except:
         print 'exec mod <%s> failed!' % path
