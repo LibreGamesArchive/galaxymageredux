@@ -30,12 +30,16 @@ def main():
             eng.camera.move(-0.1, 0)
         elif mx > 635:
             eng.camera.move(0.1, 0)
+        else:
+            print(eng.mapd.get_mouse_tile())
 
         if my < 5:
             eng.camera.move(0, -0.1)
         elif my > 475:
             eng.camera.move(0, 0.1)
-
+        else:
+            print(eng.mapd.get_mouse_tile())
+        
         screen.fill((0,0,0))
         eng.render()
         pygame.display.flip()
