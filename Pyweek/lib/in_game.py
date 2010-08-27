@@ -81,6 +81,13 @@ class Game(object):
         elif my > 475:
             self.gfx.camera.move(0, 0.1)
 
+        #TODO: change this
+        xy = self.gfx.mapd.get_mouse_tile()
+        self.gfx.mapd.clear_highlights()
+        if xy:
+            x,y = xy
+            self.gfx.mapd.add_highlight('gui_mouse-hover2.png', (x+0.5,y+0.5))
+
         self.screen.fill((0,0,0))
         self.gfx.render()
         self.app.render()

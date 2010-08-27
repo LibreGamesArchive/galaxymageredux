@@ -1,22 +1,44 @@
 import load_mod_file
 import glob
 
-class Action(object):
+class Ability(object):
     '''Base Action class'''
-    def __init__(self, parent, engine):
+    def __init__(self, parent):
         self.unit = parent
-        self.game_object = engine
         self.cost = 0
+        self.initialize()
+
+    def initialize(self):
+        pass
+
+    def test_available(self):
+        return True
 
     def test_acceptable(self, target):
-        pass
+        return True
 
     def perform(target):
-        pass
+        return False
+
+class AbilityHandler(object):
+    def __init__(self):
+        self.abilities = {}
+
+    def load_dir(self, path):
+        self.abilities = {}
+        access = {'BaseAbility':Ability}
+        for ability in glob.glob(path+'*.py'):
+            store = load_mod_file.load(ability, access)
+            if store == False:
+                print 'fail load ability <%s>'%ability
+            else:
+                self.abilities[ability] = store.ability
 
 class Unit(object):
     type = 'base'
-    def __init__(self):
+    def __init__(self, scenario):
+        self.scenario = scenario
+
         # Gfx Attributes
         self.name = ''
         self.pos = (0,0)
@@ -31,15 +53,24 @@ class Unit(object):
         self.dead = False
         self.team = ''
         self.base_stats = {}
+        self.abilities = self.scenario.abilh.abilities
         self.actions = {}
 
+        self.initialize()
+
+        self.cur_hp = int(self.hp)
+        self.cur_ap = int(self.action_points)
+
+    def initialize(self):
+        pass
 
     def load_stats(self, stats):
         self.name, self.pos, self.level = stats
 
 
 class UnitHandler(object):
-    def __init__(self):
+    def __init__(self, scenario):
+        self.scenario = scenario
         self.units = {}
 
     def load_dir(self, path):
@@ -56,7 +87,11 @@ class Scenario(object):
     def __init__(self, engine, scenario):
         self.engine = engine
 
-        self.unith = UnitHandler()
+        self.abilh = AbilityHandler()
+        self.abilh.load_dir('data/scenarios/%s/abilities/'%scenario)
+        self.abilh.load_dir('data/abilities/')
+
+        self.unith = UnitHandler(self)
         self.unith.load_dir('data/scenarios/%s/units/'%scenario)
         self.unith.load_dir('data/units/')
 
