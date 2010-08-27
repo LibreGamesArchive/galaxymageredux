@@ -1,19 +1,37 @@
 import load_mod_file
 import glob
 
+class Action(object):
+    '''Base Action class'''
+    def __init__(self, parent, engine):
+        self.unit = parent
+        self.game_object = engine
+
+    def test_acceptable(self, target):
+        pass
+
+    def perform(target):
+        pass
+
 class Unit(object):
     type = 'base'
     def __init__(self):
+        # Gfx Attributes
         self.name = ''
         self.pos = (0,0)
         self.level = 1
         self.image = ''
-
-        self.team = ''
-
-        self.base_stats = {}
-
         self.gfx_entity = None
+        
+        # Battle Attributes
+        self.hp = 0
+        self.strength = 0
+        self.action_points = 0
+        self.dead = False
+        self.team = ''
+        self.base_stats = {}
+        self.actions = {}
+
 
     def load_stats(self, stats):
         self.name, self.pos, self.level = stats
