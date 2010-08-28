@@ -31,7 +31,7 @@ class AI(BaseAI):
                     if a.name == 'Move':
                         #if enemy_list and len(enemy_list:
                         bt,pt = a._get_blocked_tiles()
-                        p = a.get_path(u.pos, enemy_list[0].pos, bt)
+                        p = a.get_path(u.pos, enemy_list[0].pos, bt+pt)
                         # Just move once, because there may be a closer enemy or
                         # an enemy in range if we move.
 
