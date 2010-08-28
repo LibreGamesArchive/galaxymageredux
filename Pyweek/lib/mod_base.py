@@ -99,6 +99,23 @@ class UnitHandler(object):
             else:
                 self.units[store.unit.type] = store.unit
 
+class AI(object):
+    def __init__(self, scenario, team):
+        self.scenario = scenario
+        self.team = team
+
+        self.initialize()
+
+    def initialize(self):
+        pass
+
+class BaseScenario(object):
+    def __init__(self):
+        self.initialize()
+
+    def game_over(self):
+        return False
+
 class Scenario(object):
     def __init__(self, engine, scenario):
         self.engine = engine
@@ -111,18 +128,31 @@ class Scenario(object):
         self.unith.load_dir('data/scenarios/%s/units/'%scenario)
         self.unith.load_dir('data/units/')
 
+        self.units = []
+
         access = {'Unit':self.make_unit,
                   'engine':self.engine,
-                  'parent':self}
+                  'parent':self,
+                  'BaseScenario':BaseScenario}
         store = load_mod_file.load('data/scenarios/%s/scenario.py'%scenario, access)
         if store == False:
             print 'fail load scenario <%s>'%scenario
         else:
-            self.mod = store.scenario
+            self.mod = store.scenario()
 
-        self.units = []
+        access = {'BaseAI':AI}
+        store = load_mod_file.load('data/scenarios/%s/ai.py'%scenario, access)
+        if store == False:
+            print 'fail load ai <%s>'%scenario
+        else:
+            self.core_ai = store.ai
 
-        self.mod.initialize()
+        self.ai_players = []
+
+    def make_ai_player(self, team):
+        print 'make ai', team
+        new = self.core_ai(self, team)
+        self.ai_players.append(new)
 
     def make_unit(self, type, team, stats):
         new = self.unith.units[type](self)
@@ -132,4 +162,15 @@ class Scenario(object):
         self.units.append(new)
 
     def update(self):
-        self.mod.update()
+        if self.engine.engine.am_master:
+            turn = self.engine.engine.whos_turn
+            for i in self.ai_players:
+                if i.team == turn:
+                    i.update()
+        try:
+            self.mod.update()
+        except:
+            pass
+
+    def game_over(self):
+        return self.mod.game_over()

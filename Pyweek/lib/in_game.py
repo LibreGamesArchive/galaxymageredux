@@ -108,6 +108,15 @@ class Game(object):
 
         self.lock = False
 
+    def set_turn(self, team):
+        for i in self.mod.units:
+            if i.team == team:
+                i.cur_ap = int(i.action_points)
+        print team
+        if team == self.engine.my_team:
+            print 32
+            self.activate_commands()
+
     def handle_input_submit(self, *args):
         text = self.input_type.text
         if text.startswith('/list'):
@@ -195,9 +204,9 @@ class Game(object):
                             break
 
         self.select_unit(sel)
-        
 
     def deactivate_commands(self):
+        self.commands_active = False
         for x in [self.next_unit, self.end_turn]:
             x.text_color = x.text_reg_color = x.text_hover_color = x.text_click_color = (100,100,100)
             x.bg_color = (0,0,0,0)
@@ -216,6 +225,8 @@ class Game(object):
             self.engine.talkToServer('playerEndTurn', None)
             self.deactivate_commands()
             self.select_unit(None)
+        elif self.engine.whos_turn in self.engine.free_teams:
+            self.engine.talkToServer('playerEndTurn', None)
 
     def goToNextUnit(self, *args):
         for i in self.mod.units:
@@ -255,6 +266,11 @@ class Game(object):
         self.select_unit(unit)
 
     def update(self):
+        self.mod.update()#right up here at top before anything else!
+        x = self.mod.game_over()
+        if x:
+            print "game over!"
+
         if self.engine.whos_turn == self.engine.my_team:
             self.activate_commands()
 
@@ -285,13 +301,6 @@ class Game(object):
                 self.gfx.mapd.clear_highlights()
                 if xy:
                     self.gfx.mapd.add_highlight('gui_mouse-hover2.png', xy)
-
-##        if 'left' in self.event_handler.mouse.active:
-##            if xy:
-##                for unit in self.mod.units:
-##                    x,y = unit.pos
-##                    if (x,y) == xy:
-##                        unit.actions['walk'].render_select()
 
         self.screen.fill((0,0,0))
         self.gfx.render()

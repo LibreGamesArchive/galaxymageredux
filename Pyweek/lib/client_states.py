@@ -556,10 +556,13 @@ class GameEngine(object):
 
     def youAreNowMaster(self, args):
         self.am_master = True
-        self.game_master_submit_scenario_data()
+        if not self.in_game:
+            self.game_master_submit_scenario_data()
         self.update_player_gui()
         if self.in_game:
             self.game_obj.messages.add_line('<server>: You [%s] are now master'%self.client.engine.username)
+        for i in self.free_teams:
+            self.game_obj.mod.make_ai_player(i)
 
     def kickedDueToTooManyPlayers(self, args):
         #TODO: handle kicked
@@ -606,8 +609,14 @@ class GameEngine(object):
             self.talkToServer('getGameScenarioInfo', {'name':store.name, 'maxp':store.num_players, 'teams':store.teams})
 
     def stillFreeTeamNames(self, args):
+        print args
         self.free_teams = args
         self.update_player_gui()
+
+        if self.in_game and self.am_master:
+            for i in self.free_teams:
+                if not i in [a.team for a in self.game_obj.mod.ai_players]:
+                    self.game_obj.mod.make_ai_player(i)
 
     def masterKickPlayer(self, name):
         self.talkToServer('kickPlayer', name)
@@ -631,12 +640,16 @@ class GameEngine(object):
     def startGame(self, args):
         self.game_obj = in_game.Game(self)
         self.in_game = True
+        if self.am_master:
+            for i in self.free_teams:
+                self.game_obj.mod.make_ai_player(i)
 
     def masterStartGame(self):
         self.talkToServer('masterStartGame', None)
 
     def setPlayerTurn(self, team):
         self.whos_turn = team
+        self.game_obj.set_turn(team)
 
     def leaveGame(self, *args):
         self.talkToServer('playerVoluntaryLeave', None)

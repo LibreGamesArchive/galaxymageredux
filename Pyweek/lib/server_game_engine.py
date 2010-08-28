@@ -3,6 +3,7 @@ class Game(object):
         self.name = name
         self.server = server
         self.scenario = scenario
+        self.need_scenario = True
         self.game_id = None
 
         self.abs_max = 10 #no more players than that! Period!
@@ -75,18 +76,22 @@ class Game(object):
         self.players.remove(avatar)
         avatar.game = None
         del self.picked_names[avatar]
+
+        self.talkToAllPlayers('stillFreeTeamNames', self.get_free_names())
+        self.talkToAllPlayers('playerNamesTeams', self.get_player_names_teams())
+        self.talkToAllPlayers('getMessage', ('<server>', '%s left the game'%avatar.name))
         if self.players == []:
             del self.server.games_list[self.game_id]
             print 'game room <%s> closed'%self.name
         else:
             if master == avatar:
                 self.make_master()
-        self.talkToAllPlayers('stillFreeTeamNames', self.get_free_names())
-        self.talkToAllPlayers('playerNamesTeams', self.get_player_names_teams())
-        self.talkToAllPlayers('getMessage', ('<server>', '%s left the game'%avatar.name))
 
     def getGameScenarioInfo(self, avatar, config):
         if self.is_master(avatar):
+            if (not self.need_scenario) and self.scenario == config['name']:
+                return
+            self.need_scenario = False
             self.scenario = config['name']
             self.max_players = config['maxp']
             self.scen_team_names = config['teams']
