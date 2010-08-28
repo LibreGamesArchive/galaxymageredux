@@ -25,12 +25,12 @@ class Game(object):
         self.messages.font = lil_font
         self.messages.no_events = True
 
-        self.input_cont = gui.Container(self.app, (630, 30), (5, 445))
+        self.input_cont = gui.Container(self.app, (320, 30), (160, 330))
         self.input_cont.bg_color = (100,100,255,100)
-        self.input_type = gui.Input(self.input_cont, 300, (5,5))
+        self.input_type = gui.Input(self.input_cont, 225, (5,5))
         self.input_type.bg_color = (0,0,0,0)
         self.input_butt = gui.Button(self.input_cont,
-                                     gui.RelativePos(to=self.input_type, x='right', y='top', padx=150),
+                                     gui.RelativePos(to=self.input_type, x='right', y='top', padx=5),
                                      'Submit')
         self.input_butt.bg_color = (150,150,255,100)
 
@@ -41,9 +41,24 @@ class Game(object):
 
         self.unit_info = gui.Container(self.app, (150, 150), (5, 325))
         self.unit_info.bg_color = (100,100,255,100)
+        self.unit_info.font = lil_font
+
+        self.unit_info_sub = gui.Container(self.unit_info, (150,150), (0,0))
+        self.unit_info_sub.bg_color = (0,0,0,0)
+        self.ui_icon = gui.Icon(self.unit_info_sub, (5,5), self.gfx.images.images.values()[0])
+        self.ui_name = gui.Label(self.unit_info_sub, gui.RelativePos(to=self.ui_icon,x='right',y='top',padx=5,pady=25), 'Name')
+        self.ui_hp = gui.Label(self.unit_info_sub, gui.RelativePos(to=self.ui_name, pady=5), 'HP: 10/10')
+        self.ui_ap = gui.Label(self.unit_info_sub, gui.RelativePos(to=self.ui_hp, pady=5), 'AP: 10/10')
+        self.ui_strength = gui.Label(self.unit_info_sub, gui.RelativePos(to=self.ui_ap, pady=5), 'STR: 10')
+        self.unit_info_sub.visible = False
 
         self.commands = gui.Container(self.app, (150, 150), (485, 325))
         self.commands.bg_color = (100,100,255,100)
+        self.commands.font = lil_font
+
+        self.unit_desc = gui.Container(self.app, (320, 100), (160, 375))
+        self.unit_desc.bg_color = (100,100,255,100)
+        self.unit_desc.font = lil_font
 
         ###game code:
 
@@ -66,19 +81,32 @@ class Game(object):
         if key == K_RETURN:
             self.input_cont.visible = not self.input_cont.visible
 
+    def select_unit(self, unit):
+        self.selected_unit = unit
+
+        if unit:
+            self.unit_info_sub.visible = True
+            self.ui_icon.image = self.gfx.images.images[unit.image]
+            self.ui_name.text = unit.name
+            self.ui_hp.text = 'HP: %s/%s'%(unit.cur_hp, unit.hp)
+            self.ui_ap.text = 'AP: %s/%s'%(unit.cur_ap, unit.action_points)
+            self.ui_strength.text = 'STR: %s'%unit.strength
+        else:
+            self.unit_info_sub.visible = False
+
     def try_select_unit(self, button, name):
+        sel = None
         if name == 'left':
             xy = self.gfx.mapd.get_mouse_tile()
             if xy:
                 for unit in self.mod.units:
                     if unit.pos == xy:
-                        self.selected_unit = unit
-                        print unit.name
-                        return
-        self.selected_unit = None
+                        sel = unit
+                        break
+
+        self.select_unit(sel)
 
     def update(self):
-
 ##        if self.engine.whos_turn == self.engine.my_team:
 ##            print 'my turn', self.engine.my_team
 ##            self.engine.talkToServer('playerEndTurn', None)

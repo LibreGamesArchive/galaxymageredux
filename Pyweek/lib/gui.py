@@ -453,8 +453,15 @@ class Icon(Widget):
 
         self.size = self.image.get_size()
 
+    def get_size(self):
+        return self.image.get_size()
+
     def render(self):
-        self.parent.screen.blit(self.image, self.pos.get_pos())
+        self.size = self.get_size()
+        try:
+            self.image.render(self.parent.screen, self.pos.get_pos())
+        except:
+            self.parent.screen.blit(self.image, self.pos.get_pos())
 
 class Label(Widget):
     def __init__(self, parent, pos, text):

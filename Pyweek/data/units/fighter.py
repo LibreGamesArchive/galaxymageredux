@@ -10,4 +10,6 @@ class Unit(BaseUnit):
         print self.abilities
         self.actions = {'walk': self.abilities['move'](self)}
 
+        self.desc = 'A typical fighter unit'
+
 store.unit = Unit

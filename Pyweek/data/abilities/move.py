@@ -3,6 +3,7 @@
 class Ability(BaseAbility):
     def initialize(self):
         self.cost = 1
+        self.desc = 'Move <cost 1 AP>'
 
     def test_available(self):
         mapd = self.unit.scenario.engine.gfx.mapd #yikes!

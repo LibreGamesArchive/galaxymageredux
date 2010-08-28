@@ -6,6 +6,7 @@ class Ability(object):
     def __init__(self, parent):
         self.unit = parent
         self.cost = 0
+        self.desc = 'Action <costs 0 AP>'
         self.initialize()
 
     def initialize(self):
@@ -52,12 +53,13 @@ class Unit(object):
         self.level = 1
         self.image = ''
         self.gfx_entity = None
+        self.desc = 'BaseUnit desciption'
         
         # Battle Attributes
         self.hp = 0
         self.strength = 0
         self.action_points = 0
-        self.dead = False
+
         self.team = ''
         self.base_stats = {}
         self.abilities = self.scenario.abilh.abilities
