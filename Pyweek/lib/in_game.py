@@ -8,7 +8,6 @@ class Game(object):
         self.screen = engine.client.screen
 
         self.gfx = gfx_engine.GFXEngine(engine.client.screen, engine.scenario)
-        self.mod = mod_base.Scenario(self, engine.scenario)
 
         self.event_handler = event.Handler()
 
@@ -90,8 +89,25 @@ class Game(object):
                                                                            x='right', y='top', padx=5),
                                           'Return to Game')
         self.dont_leave_game.dispatch.bind('click', self.passLeaveGame)
-
         self.leave_game.visible = False
+
+
+        self.scenario_mess = gui.Container(self.app, (640,480), (0,0))
+        self.scenario_mess.bg_color = (100,100,255,50)
+
+        bg = gui.Container(self.scenario_mess, (630, 175), (5,200))
+        bg.bg_color = (100,100,255,255)
+
+        self.scenario_mess_icon = gui.Icon(bg, (5, 5), self.gfx.images.images.values()[0])
+        self.scenario_mess_mess = gui.Label(bg,
+                                            gui.RelativePos(to=self.scenario_mess_icon,
+                                                            pady = 5),
+                                            'Say Something!')
+        self.scenario_mess_mess.text_color = (255,255,255)
+        self.scenario_mess_leave = gui.Button(bg, (55, 110), 'Close')
+        self.scenario_mess_leave.dispatch.bind('click', self.closeScenarioMess)
+
+        self.scenario_mess.visible = False
 
 
         self.ui_whos_turn = gui.Label(self.app, (200, 340), 'Players <team> turn')
@@ -106,6 +122,8 @@ class Game(object):
 
         ###game code:
 
+        self.mod = mod_base.Scenario(self, engine.scenario)
+
         self.selected_unit = None
         self.selected_action = None
         self.control_highlight = False
@@ -115,6 +133,23 @@ class Game(object):
         self.lock = False
         if not self.engine.whos_turn == self.engine.my_team:
             self.deactivate_commands()
+
+    def closeScenarioMess(self):
+        self.mod.closeScenarioMess()
+        self.scenario_mess.visible = False
+        self.lock = False
+
+    def setScenarioMess(self, mess, icon, button_name='Close'):
+        self.scenario_mess.visible = True
+        if icon:
+            self.scenario_mess_icon.image = self.gfx.images.images[icon]
+            self.scenario_mess_icon.visible = True
+        else:
+            self.scenario_mess_icon.visible = False
+        self.scenario_mess_mess.text = mess
+        self.scenario_mess_leave.text = button_name
+        self.lock = True
+        self.scenario_mess.focus()
 
     def set_turn(self, team):
         for i in self.mod.units:

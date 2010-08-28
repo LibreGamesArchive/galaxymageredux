@@ -156,11 +156,15 @@ class AI(object):
                    int(sin(i*0.5*pi)+x[1]))
 
 class BaseScenario(object):
-    def __init__(self):
+    def __init__(self, engine):
+        self.engine = engine
         self.initialize()
 
-    def game_over(self):
+    def winner(self):
         return False
+
+    def closeScenarioMess(self):
+        pass
 
 class Scenario(object):
     def __init__(self, engine, scenario):
@@ -190,7 +194,7 @@ class Scenario(object):
         if store == False:
             print 'fail load scenario <%s>'%scenario
         else:
-            self.mod = store.scenario()
+            self.mod = store.scenario(self)
 
         access = {'BaseAI':AI}
         store = load_mod_file.load('data/scenarios/%s/ai.py'%scenario, access)
@@ -200,6 +204,9 @@ class Scenario(object):
             self.core_ai = store.ai
 
         self.ai_players = []
+
+    def setScenarioMess(self, *args, **kwargs):
+        self.engine.setScenarioMess(*args, **kwargs)
 
     def make_ai_player(self, team):
         new = self.core_ai(self, team)
@@ -228,4 +235,7 @@ class Scenario(object):
             pass
 
     def winner(self):
-        return self.mod.game_over()
+        return self.mod.winner()
+
+    def closeScenarioMess(self):
+        self.mod.closeScenarioMess()
