@@ -116,6 +116,7 @@ class Game(object):
 
         self.select_action = gui.DisableMenu(self.app, (0,0), padding=(2,2))
         self.select_action.entry_bg_color = (200,75,75)
+        self.select_action.font = lil_font
         self.select_action.dispatch.bind('select', self.handle_action_sel)
         self.select_action.visible = False
         self.select_action.bg_color = (100,100,100,255)

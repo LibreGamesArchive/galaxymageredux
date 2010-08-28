@@ -7,6 +7,7 @@ class Scenario(BaseScenario):
         Unit('fighter', 'goodguys',('Bob', (0,0), 1))
         Unit('fighter', 'goodguys',('Rob', (0,1), 1))
         Unit('fighter', 'goodguys',('Cob', (0,2), 1))
+        Unit('archer', 'goodguys',('Sob', (1,1), 1))
         
         # Bad Guys Team
         Unit('fighter', 'badguys',('Felix', (4,0), 1))

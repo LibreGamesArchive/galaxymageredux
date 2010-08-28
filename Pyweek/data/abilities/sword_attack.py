@@ -58,7 +58,7 @@ class Ability(BaseAbility):
         units = self.unit.scenario.units
         for i in units:
             if i.pos == target and i.team != self.unit.team:
-                i.cur_hp -= int(self.unit.strength*0.2)
+                i.cur_hp -= int(self.unit.strength*0.3)
                 self.unit.cur_ap = 0
                 i.update()
                 self.unit.update()
