@@ -8,7 +8,8 @@ class Unit(BaseUnit):
         self.action_points = 3
         self.image = 'unit-test-fighter.gif'
         print self.abilities
-        self.actions = {'walk': self.abilities['move'](self)}
+##        self.actions = [self.abilities['move'](self)]
+        self.have_ability('move')
 
         self.desc = 'A typical fighter unit'
 

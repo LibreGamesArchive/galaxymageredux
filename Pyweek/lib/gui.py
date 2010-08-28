@@ -1011,7 +1011,7 @@ class DisableMenu(Container):
         for i in self.widgets:
             i.size = width, i.size[1]
 
-        self.change_size((width, height))
+        self.change_size((width+self.padding[0]*2, height+self.padding[1]))
 
 class DropDownMenu(DropDown):
     def __init__(self, parent, pos, text, options=[], padding=(0,0)):

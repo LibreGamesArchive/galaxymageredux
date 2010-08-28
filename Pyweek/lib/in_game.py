@@ -57,6 +57,7 @@ class Game(object):
         self.commands.font = lil_font
 
         self.next_unit = gui.Button(self.commands, (5,5), 'Next Unit')
+        self.next_unit.dispatch.bind('click', self.goToNextUnit)
         self.end_turn = gui.Button(self.commands, gui.RelativePos(to=self.next_unit, pady=25), 'End Turn')
         self.end_turn.dispatch.bind('click', self.endMyTurn)
         self.leave_game = gui.Button(self.commands, gui.RelativePos(to=self.end_turn, pady=25), 'Leave Game')
@@ -78,6 +79,7 @@ class Game(object):
         self.leave_game.bg_color = (255,255,255,100)
 
         self.leave_game_question = gui.Label(self.leave_game, (100, 200), 'Do you really want to leave the game?!?!')
+        self.leave_game_question.text_color = (255,255,255)
         self.do_leave_game = gui.Button(self.leave_game, (200, 240), 'Confirm')
         self.do_leave_game.dispatch.bind('click', self.engine.leaveGame)
         self.dont_leave_game = gui.Button(self.leave_game, gui.RelativePos(to=self.do_leave_game,
@@ -90,6 +92,13 @@ class Game(object):
 
         self.ui_whos_turn = gui.Label(self.app, (200, 340), 'Players <team> turn')
         self.ui_whos_turn.font = lil_font
+
+
+        self.select_action = gui.DisableMenu(self.app, (0,0), padding=(2,2))
+        self.select_action.entry_bg_color = (200,75,75)
+        self.select_action.dispatch.bind('select', self.handle_action_sel)
+        self.select_action.visible = False
+        self.select_action.bg_color = (100,100,100,255)
 
         ###game code:
 
@@ -114,6 +123,13 @@ class Game(object):
         if key == K_RETURN:
             self.input_cont.visible = not self.input_cont.visible
 
+    def handle_action_sel(self, value, disabled):
+        if disabled:
+            return
+
+        print value
+        self.select_action.visible = False
+
     def select_unit(self, unit):
         self.selected_unit = unit
 
@@ -127,10 +143,25 @@ class Game(object):
 
             self.unit_desc_sub.visible = True
             self.unit_desc2.text = unit.desc
-            self.unit_abil2.text = ', '.join([i.name for i in unit.actions.values()])
+            self.unit_abil2.text = ', '.join([i.name for i in unit.actions])
+
+            self.gfx.camera.set_pos(*unit.pos)
+
+            self.select_action.visible = True
+            self.select_action.options = [(i.name, i.test_available()) for i in unit.actions]
+            self.select_action.build_options()
+
+            sx,sy = self.select_action.size
+            px, py = 320, 200
+            px = min((px, 640-sx))
+            py = min((py, 480-sy))
+            self.select_action.pos = gui.AbsolutePos((px, py))
+            self.select_action.focus()
+
         else:
             self.unit_info_sub.visible = False
             self.unit_desc_sub.visible = False
+            self.select_action.visible = False
 
     def try_select_unit(self, button, name):
         sel = None
@@ -162,6 +193,17 @@ class Game(object):
         if self.engine.whos_turn == self.engine.my_team:
             self.engine.talkToServer('playerEndTurn', None)
             self.deactivate_commands()
+            self.select_unit(None)
+
+    def goToNextUnit(self, *args):
+        for i in self.mod.units:
+            if i == self.selected_unit:
+                continue
+            if i.cur_ap:
+                self.select_unit(i)
+                return
+
+        self.select_unit(None)
 
     def queryLeaveGame(self, *args):
         self.leave_game.visible = True

@@ -64,7 +64,7 @@ class Unit(object):
         self.team = ''
         self.base_stats = {}
         self.abilities = self.scenario.abilh.abilities
-        self.actions = {}
+        self.actions = []
 
         self.initialize()
 
@@ -73,6 +73,9 @@ class Unit(object):
 
     def initialize(self):
         pass
+
+    def have_ability(self, name):
+        self.actions.append(self.abilities[name](self))
 
     def load_stats(self, stats):
         self.name, self.pos, self.level = stats
