@@ -276,8 +276,8 @@ class Game(object):
 
     def goToNextUnit(self, *args):
         for i in self.mod.units:
-            if i == self.selected_unit:
-                continue
+##            if i == self.selected_unit:
+##                continue
             if i.cur_ap and i.team == self.engine.my_team and True in [a.test_available() for a in i.actions]:
                 self.select_unit(i)
                 return
