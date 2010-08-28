@@ -92,11 +92,10 @@ class Unit(object):
         self.name, self.pos, self.level = stats
 
     def update(self):
-        if self.hp <= 0:
-            self.hp = 0
+        if self.cur_hp <= 0:
+            self.cur_hp = 0
             self.dead = True
             self.gfx_entity.kill()
-            self.team_flag.kill()
 
         self.gfx_entity.pos = self.pos
 

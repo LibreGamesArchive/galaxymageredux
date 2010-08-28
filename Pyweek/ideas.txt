@@ -119,7 +119,7 @@ On game over, show who won screen, then destroy game and take everyone to the ma
 Refactor client code to swap between states nicer #DONE
 
 
-Bad move if unit is dead!
+Bad move if unit is dead! #Done!
 scenario needs access to gui #Done
 ai base_functions (end_my_turn, do_action, get_my_units, get_enemy_units) #done!
 move check blocking #Done

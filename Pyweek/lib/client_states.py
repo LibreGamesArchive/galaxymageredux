@@ -669,13 +669,14 @@ class GameEngine(object):
             if i.gid == gid:
                 unit = i
                 break
+
         act = None
         for i in unit.actions:
             if i.name == action:
                 act = i
                 break
 
-        if unit and act:
+        if unit and act and (not unit.dead):
             player = None
             team = None
             for i in self.players:

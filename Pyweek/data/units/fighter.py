@@ -11,6 +11,7 @@ class Unit(BaseUnit):
         self.image = 'unit-test-fighter.gif'
 
         self.have_ability('move')
+        self.have_ability('sword_attack')
 
         self.desc = 'A typical fighter unit'
 
