@@ -3,7 +3,82 @@ class AI(BaseAI):
     def initialize(self):
         pass
 
+    def goodguys_update(self):
+        enemy_list = self.get_enemy_units()
+        team_list = self.get_my_units()
+        if not (enemy_list or team_list):
+            self.end_my_turn()
+        
+        for u in team_list:
+            if u.dead:
+                continue
+            if self.scenario.mod.prisoner_free:
+                goal = (0,0)
+            else:
+                goal = (16,14)
+            if u.type == 'prisoner':
+                if self.scenario.mod.prisoner_free:
+                    for a in u.actions:
+                        if a.name == 'Move':
+                            bt,pt = a._get_blocked_tiles()
+                            if enemy_list:
+                                p = a.get_path(u.pos, goal, bt+pt)
+                            else:
+                                p = None
+                            tar = None
+                            if p:
+                                for i in p:
+                                    if a.test_acceptable(i):
+                                        tar = i
+                                        break
+                            if tar:
+                                self.do_action(u, a, i)
+                            else:
+                                u.cur_ap = 0
+                            break
+                break
+
+            enemy_list.sort(key=lambda e: self.distance(e.pos,u.pos))
+            # AI always moves to the closest enemy.
+            while u.cur_ap > 0:
+                for a in u.actions:
+                    if a.name == 'Move':
+                        continue # First try an attacking ability
+                    for e in enemy_list:
+                        if a.test_acceptable(e.pos):
+                            self.do_action(u, a, e.pos)
+
+                # Now we make first attempt at moving.
+                if u.cur_ap < 1:
+                    break
+                
+                for a in u.actions:
+                    if a.name == 'Move':
+                        #if enemy_list and len(enemy_list:
+                        bt,pt = a._get_blocked_tiles()
+                        if enemy_list:
+                            p = a.get_path(u.pos,goal, bt+pt)
+                        else:
+                            p = None
+                        tar = None
+                        if p:
+                            for i in p:
+                                if a.test_acceptable(i):
+                                    tar = i
+                                    break
+                        if tar:
+                            self.do_action(u, a, i)
+                        else:
+                            u.cur_ap = 0
+                        break
+
+        self.end_my_turn()   
+
     def update(self):
+        if self.team == 'goodguys':
+            self.goodguys_update()
+            return
+        
         enemy_list = self.get_enemy_units()
         team_list = self.get_my_units()
         if not (enemy_list or team_list):
