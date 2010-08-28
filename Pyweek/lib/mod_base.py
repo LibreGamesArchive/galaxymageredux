@@ -106,7 +106,6 @@ class UnitHandler(object):
         self.units = {}
 
     def load_dir(self, path):
-        self.units = {}
         access = {'BaseUnit':Unit}
         for unit in glob.glob(path+'*.py'):
             store = load_mod_file.load(unit, access)

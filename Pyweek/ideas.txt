@@ -124,7 +124,7 @@ scenario needs access to gui #Done
 ai base_functions (end_my_turn, do_action, get_my_units, get_enemy_units) #done!
 move check blocking #Done
 scenario needs a message box for saying things (not messages) #Done
-'Caught' scenario needs max_turns, cur_turn, and gui element for it
+'Caught' scenario needs max_turns, cur_turn, and gui element for it #Done
 Game over screen needs line that allows you to say which player name won (colored) #Needs testing!
 bind map_entites together #Done!
 map_enties have dead attribute #Done!
