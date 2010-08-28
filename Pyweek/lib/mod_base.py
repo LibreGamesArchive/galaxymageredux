@@ -60,8 +60,6 @@ class Unit(object):
         self.abilities = self.scenario.abilh.abilities
         self.actions = {}
 
-        self.dead = False
-
         self.initialize()
 
         self.cur_hp = int(self.hp)
