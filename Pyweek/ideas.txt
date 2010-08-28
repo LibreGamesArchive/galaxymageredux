@@ -102,7 +102,7 @@ Action attributes:
 Scenario methods:
 	have_winner() -> if do, master submit gameWinner action, then server reset game action #DONE
 
-Need A* code for ai... in case we want pathing (necessary for blocking entities) #not happening
+Need A* code for ai... in case we want pathing (necessary for blocking entities) #DONE
 
 Entity.destroy #DONE
 
