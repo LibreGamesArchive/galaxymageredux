@@ -62,9 +62,12 @@ class MapEntity(object):
         self.parent.entities.append(self)
         self.name = name
         self.render_pos = render_pos
+        self.dead = False
+        self.bound_to = None
     def kill(self):
         if self in self.parent.entities:
             self.parent.entities.remove(self)
+            self.dead = True
 
     def get_real_pos(self):
         cx,cy = self.parent.engine.camera.get_shift_pos()
@@ -101,6 +104,12 @@ class MapEntity(object):
         self.pos = (x,y)
 
     def render(self):
+        if self.bound_to:
+            x, y = self.bound_to.pos
+            y += 0.01
+            self.pos = x,y
+            if self.bound_to.dead:
+                self.kill()
         image = self.parent.images.images[self.image]
         r = image.get_rect()
         x, y = self.get_real_pos()
@@ -124,6 +133,7 @@ class MapHighlight(MapEntity):
         self.move(*pos)
         self.parent.highlights.append(self)
         self.render_pos = 'real'
+        self.bound_to = None
 
     def kill(self):
         if self in self.parent.highlights:

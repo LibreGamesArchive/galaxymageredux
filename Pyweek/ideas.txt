@@ -102,7 +102,7 @@ Action attributes:
 Scenario methods:
 	have_winner() -> if do, master submit gameWinner action, then server reset game action #DONE
 
-Need A* code for ai... in case we want pathing (necessary for blockign entities) #not happening
+Need A* code for ai... in case we want pathing (necessary for blocking entities) #not happening
 
 Entity.destroy #DONE
 
@@ -117,3 +117,14 @@ Units need to update when they move/die #DONE!
 On game over, show who won screen, then destroy game and take everyone to the main lobby again #DONE!
 
 Refactor client code to swap between states nicer #DONE
+
+
+Bad move if unit is dead!
+scenario needs access to gui
+ai base_functions (end_my_turn, do_action, get_my_units, get_enemy_units, get_adjacent_enemies)
+move check blocking
+scenario needs a message box for saying things (not messages)
+'Caught' scenario needs max_turns, cur_turn, and gui element for it
+Game over screen needs line that allows you to say which player name won (colored)
+bind map_entites together
+map_enties have dead attribute

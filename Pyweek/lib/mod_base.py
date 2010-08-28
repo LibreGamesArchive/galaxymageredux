@@ -99,7 +99,7 @@ class Unit(object):
             self.team_flag.kill()
 
         self.gfx_entity.pos = self.pos
-        self.team_flag.pos = self.pos[0], self.pos[1]+0.01
+##        self.team_flag.pos = self.pos[0], self.pos[1]+0.01
 
 
 class UnitHandler(object):
@@ -304,6 +304,7 @@ class Scenario(object):
         new.gfx_entity = self.engine.gfx.mapd.make_entity(new.image, new.pos, new.name, 'center')
         new.team_flag = self.engine.gfx.mapd.make_entity('player-team-flag.png'+str(self.config.teams.index(team)),
                                                        new.pos, new.name+'_flag', 'center')
+        new.team_flag.bound_to = new.gfx_entity
         new.update()
         self.units.append(new)
 
