@@ -21,6 +21,10 @@ class AI(BaseAI):
             enemy_list.sort(key=lambda e: self.distance(e.pos,u.pos))
             # AI always moves to the closest enemy.
             while u.cur_ap > 0:
+                if u.name == 'Guard':
+                    if enemy_list:
+                        if self.distance(enemy_list[0].pos, u.pos) > 4:
+                            break
                 for a in u.actions:
                     if a.name == 'Move':
                         continue # First try an attacking ability

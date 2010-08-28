@@ -6,14 +6,19 @@ class Scenario(BaseScenario):
         # Good Guys Team
         Unit('fighter', 'goodguys',('Bob', (0,0), 1))
         Unit('fighter', 'goodguys',('Rob', (0,1), 1))
-        Unit('fighter', 'goodguys',('Cob', (0,2), 1))
-        Unit('archer', 'goodguys',('Sob', (1,1), 1))
-        self.prisoner = Unit('prisoner', 'goodguys',('leader', (18,16), 1))
+        Unit('fighter', 'goodguys',('Cob', (1,0), 1))
+        Unit('fighter', 'goodguys',('Cob', (1,1), 1))
+        Unit('archer', 'goodguys',('Sob', (4,2), 1))
+        Unit('archer', 'goodguys',('Sob', (5,2), 1))
+        self.prisoner = Unit('prisoner', 'goodguys',('Leader', (18,16), 1))
         
         # Bad Guys Team
         Unit('fighter', 'badguys',('Guard', (4,13), 1))
         Unit('fighter', 'badguys',('Guard', (4,15), 1))
-        Unit('fighter', 'badguys',('Guard', (6,14), 1))
+        Unit('fighter', 'badguys',('Boss', (6,14), 3))
+        Unit('fighter', 'badguys',('Runner', (1,13), 1))
+        Unit('fighter', 'badguys',('Runner', (1,15), 1))
+        Unit('fighter', 'badguys',('Runner', (1,14), 1))
 
 ##        self.engine.setScenarioMess('Welcome', 'unit-test-fighter.gif')
         self.start_messages = (('Welcome to the main scenario for GalaxyMage Redux~Pyweek~',

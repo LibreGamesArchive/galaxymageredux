@@ -74,12 +74,7 @@ class Unit(object):
 
         self.initialize()
 
-        self.cur_hp = int(self.hp)
-        self.cur_ap = int(self.action_points)
         self.gid = self.last_gid
-        self.strength += self.boost_strength*(self.level-1)
-        self.hp += self.boost_hp*(self.level-1)
-        self.cur_hp = int(self.hp)
         Unit.last_gid += 1
 
     def initialize(self):
@@ -90,6 +85,10 @@ class Unit(object):
 
     def load_stats(self, stats):
         self.name, self.pos, self.level = stats
+        self.hp += self.boost_hp*(self.level-1)
+        self.cur_hp = int(self.hp)
+        self.cur_ap = int(self.action_points)
+        self.strength += self.boost_strength*(self.level-1)
 
     def update(self):
         if self.cur_hp <= 0:
