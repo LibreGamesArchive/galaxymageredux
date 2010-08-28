@@ -177,6 +177,7 @@ class Game(object):
     def handle_input_key(self, key, name):
         if key == K_RETURN:
             self.input_cont.visible = not self.input_cont.visible
+            self.input_cont.focus()
 
     def handle_action_sel(self, value, disabled):
         if disabled:
@@ -346,6 +347,8 @@ class Game(object):
         print('my team:'+ self.engine.my_team)
         if self.engine.whos_turn == self.engine.my_team:
             self.activate_commands()
+        else:
+            self.deactivate_commands()
 
         self.ui_whos_turn.text = 'TURN: Team "%s"' % self.engine.whos_turn
         
