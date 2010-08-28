@@ -711,7 +711,7 @@ class MidGameLeave(State):
                                                                                pady=5),
                                               second)
         self.leave_game_question2.text_color = second_col
-        self.do_leave_game = gui.Button(self.leave_game, (200, 240), 'Leave Game')
+        self.do_leave_game = gui.Button(self.leave_game, (200, 275), 'Leave Game')
         self.do_leave_game.dispatch.bind('click', self.leaveGame)
 
     def leaveGame(self, *args):
