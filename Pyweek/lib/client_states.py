@@ -661,6 +661,7 @@ class GameEngine(object):
         av_name, args = args
         gid, action, xy = args
 
+
         unit = None
         for i in self.game_obj.mod.units:
             if i.gid == gid:
@@ -673,9 +674,16 @@ class GameEngine(object):
                 break
 
         if unit and act:
-            if act.test_acceptable(xy):
-                self.talkToServer('masterDoAction', args)
-                return
+            player = None
+            team = None
+            for i in self.players:
+                if i[0] == av_name:
+                    player, team = i
+                    break
+            if team == unit.team:
+                if act.test_acceptable(xy):
+                    self.talkToServer('masterDoAction', args)
+                    return
         else:
             print 'WTF:', gid, action
 

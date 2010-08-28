@@ -108,6 +108,7 @@ class Game(object):
 
         self.selected_unit = None
         self.selected_action = None
+        self.control_highlight = False
         self.event_handler.dispatch.bind('mouseup', self.handle_mouseup)
         self.event_handler.dispatch.bind('keydown', self.handle_input_key)
 
@@ -161,6 +162,7 @@ class Game(object):
         self.selected_unit = unit
         self.gfx.mapd.clear_highlights()
         self.selected_action = None
+        self.control_highlight = False
 
         if unit:
             self.unit_info_sub.visible = True
@@ -173,6 +175,14 @@ class Game(object):
 
             if unit.team == self.engine.my_team:
                 self.ui_your_unit.visible = True
+                if self.engine.whos_turn == self.engine.my_team:
+                    self.select_action.visible = True
+                    self.select_action.options = [(i.name, not i.test_available()) for i in unit.actions]
+                    self.select_action.build_options()
+
+                    self.select_action.pos = gui.AbsolutePos((350, 200))
+                    self.select_action.focus()
+                    self.control_highlight = True
             else:
                 self.ui_your_unit.visible = False
 
@@ -182,13 +192,6 @@ class Game(object):
 
             self.gfx.camera.set_pos(*unit.pos)
 
-            if self.engine.whos_turn == self.engine.my_team:
-                self.select_action.visible = True
-                self.select_action.options = [(i.name, not i.test_available()) for i in unit.actions]
-                self.select_action.build_options()
-
-                self.select_action.pos = gui.AbsolutePos((350, 200))
-                self.select_action.focus()
 
         else:
             self.unit_info_sub.visible = False
@@ -308,7 +311,7 @@ class Game(object):
                 self.gfx.camera.move(0, 0.1)
 
             #TODO: change this
-            if not self.selected_unit:
+            if not self.control_highlight:
                 xy = self.gfx.mapd.get_mouse_tile()
                 self.gfx.mapd.clear_highlights()
                 if xy:
