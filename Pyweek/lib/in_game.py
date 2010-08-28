@@ -200,7 +200,7 @@ class Game(object):
         self.selected_action = None
         self.control_highlight = False
 
-        if unit:
+        if unit and unit.dead==False:
             self.unit_info_sub.visible = True
             self.ui_icon.image = self.gfx.images.images[unit.image]
             self.ui_icon2.image = self.gfx.images.images[unit.team_flag.image]
