@@ -58,6 +58,7 @@ class Unit(object):
         self.desc = 'BaseUnit desciption'
         self.boost_hp = 1
         self.boost_strength = 1
+        self.dead = False
         
         # Battle Attributes
         self.hp = 0
@@ -177,5 +178,5 @@ class Scenario(object):
         except:
             pass
 
-    def game_over(self):
+    def winner(self):
         return self.mod.game_over()

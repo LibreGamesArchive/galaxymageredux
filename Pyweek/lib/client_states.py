@@ -544,6 +544,8 @@ class GameEngine(object):
         self.in_game = False
         self.game_obj = None
 
+        self.goto_state = MidGameLeave
+
         #TODO: when self.client.playing, we need to be running our own
         #update function, with our own App
         #bound to self.client.event_handler
@@ -565,16 +567,16 @@ class GameEngine(object):
             self.game_obj.mod.make_ai_player(i)
 
     def kickedDueToTooManyPlayers(self, args):
-        #TODO: handle kicked
-        pass
+        self.client.engine.cur_state = MidGameLeave(self.client.engine, #YUCK!
+                                                            'Kicked from game Due To Too Many Players')
 
     def kickedDueToScenario(self, args):
-        #TODO: handle kicked
-        pass
+        self.client.engine.cur_state = MidGameLeave(self.client.engine, #YUCK!
+                                                            'Kicked from game Due To Not Having the required Scenario')
 
     def kickedByMaster(self, args):
-        #TODO: handle kicked
-        pass
+        self.client.engine.cur_state = MidGameLeave(self.client.engine, #YUCK!
+                                                            'Kicked from game by master!')
 
     def update_player_gui(self):
         self.client.game_room_lobby_num_players.text = 'players (%s/%s)'%(len(self.players), self.max_players)
@@ -682,3 +684,20 @@ class GameEngine(object):
     def doAction(self, args):
         gid, action, xy = args
         self.game_obj.doAction(gid, action, xy)
+
+class MidGameLeave(State):
+    def __init__(self, engine, message):
+        State.__init__(self, engine)
+
+        self.message = message
+
+        self.leave_game = gui.Container(self.app, (640,480), (0,0))
+        self.leave_game.bg_color = (255,255,255,100)
+
+        self.leave_game_question = gui.Label(self.leave_game, (100, 200), message)
+        self.leave_game_question.text_color = (0,0,0)
+        self.do_leave_game = gui.Button(self.leave_game, (200, 240), 'Leave Game')
+        self.do_leave_game.dispatch.bind('click', self.leaveGame)
+
+    def leaveGame(self, *args):
+        self.engine.cur_state = ServerLobby(self.engine)

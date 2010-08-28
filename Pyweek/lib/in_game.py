@@ -265,11 +265,23 @@ class Game(object):
         unit.gfx_entity.pos = unit.pos
         self.select_unit(unit)
 
+        units = []
+        for i in self.mod.units:
+            if i.pos == target:
+                units.append(i)
+        for i in units:
+            if i.cur_hp <= 0:
+                i.gfx_entity.kill()
+                i.dead = True
+
     def update(self):
         self.mod.update()#right up here at top before anything else!
-        x = self.mod.game_over()
+        x = self.mod.winner()
         if x:
-            print "game over!"
+            #TODO: pop up something saying game over...
+            self.engine.leaveGame(None)
+            self.engine.client.engine.cur_state = self.engine.goto_state(self.engine.client.engine, #YUCK!
+                                                               'Game Over - %s won'%x)
 
         if self.engine.whos_turn == self.engine.my_team:
             self.activate_commands()
