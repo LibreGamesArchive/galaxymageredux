@@ -265,15 +265,6 @@ class Game(object):
         unit.gfx_entity.pos = unit.pos
         self.select_unit(unit)
 
-        units = []
-        for i in self.mod.units:
-            if i.pos == target:
-                units.append(i)
-        for i in units:
-            if i.cur_hp <= 0:
-                i.gfx_entity.kill()
-                i.dead = True
-
     def update(self):
         self.mod.update()#right up here at top before anything else!
         x = self.mod.winner()

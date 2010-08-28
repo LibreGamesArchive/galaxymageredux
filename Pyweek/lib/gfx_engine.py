@@ -223,16 +223,16 @@ class Camera(object):
     def set_pos(self, x, y):
         x = x
         y = y
-        if self.engine.mapd:
-            if x < 0:
-                x = 0
-            if x >= len(self.engine.mapd.map_grid[0])-0.5:
-                x = len(self.engine.mapd.map_grid[0])-0.5
-
-            if y < 0:
-                y = 0
-            if y >= len(self.engine.mapd.map_grid)-0.5:
-                y = len(self.engine.mapd.map_grid)-0.5
+##        if self.engine.mapd:
+##            if x < 0:
+##                x = 0
+##            if x >= len(self.engine.mapd.map_grid[0]):
+##                x = len(self.engine.mapd.map_grid[0])
+##
+##            if y < 0:
+##                y = 0
+##            if y >= len(self.engine.mapd.map_grid):
+##                y = len(self.engine.mapd.map_grid)
 
         self.pos = (x,y)
 

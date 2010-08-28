@@ -89,6 +89,14 @@ class Unit(object):
     def load_stats(self, stats):
         self.name, self.pos, self.level = stats
 
+    def update(self):
+        if self.hp <= 0:
+            self.hp = 0
+            self.dead = True
+            self.gfx_entity.kill()
+
+        self.gfx_entity.pos = self.pos
+
 
 class UnitHandler(object):
     def __init__(self, scenario):

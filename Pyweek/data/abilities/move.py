@@ -56,4 +56,6 @@ class Ability(BaseAbility):
         price = abs(target[0]-xx)+abs(target[1]-xy)
         self.unit.cur_ap -= price
 
+        self.unit.update()
+
 store.ability = Ability
