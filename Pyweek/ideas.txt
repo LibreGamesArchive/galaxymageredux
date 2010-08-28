@@ -68,7 +68,7 @@ Make game list and in-game action select user disabled items.
 When item is clicked, fire event with arg of disabled
 Make new popup - that is bound to mouse pos, and bind to disabled clicks
 
-All unit actions are abilities
+All unit actions are abilities #DONE
 
 when action is selected, send a serverRequestAction(name, unit_id)
 server query master to test if it is acceptable
@@ -80,19 +80,19 @@ either show options with right click - or better, when selected - show options
 map handler highlights list - (tile, color) vals #DONE
 map_handler.clear_highlights() #DONE
 
-Actions have methods:
+Actions have methods: #DONE
 	test_available() - whether action can even be performed or not
 	test_acceptable(target) - whether target (x,y) is acceptable
 	perform(target) - if test_acceptable(target) perform action
 
-Units have attributes:
+Units have attributes: #DONE
 	hp
 	strength
 	action_points
 	actions = {action:Action(self)}
 	dead
 
-Actions have access to unit and game object
+Actions have access to unit and game object #DONE
 Action attributes:
 	unit
 	game_object (access to the game_object itself)
@@ -106,7 +106,7 @@ Need A* code for ai... in case we want pathing (necessary for blockign entities)
 
 Entity.destroy #DONE
 
-/list and /kick actions from message box for master
+/list and /kick actions from message box for master #DONE
 
 AI class calls update each time it's turn
 AI has access to the engine - obviously

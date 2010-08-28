@@ -555,6 +555,8 @@ class GameEngine(object):
         self.am_master = True
         self.game_master_submit_scenario_data()
         self.update_player_gui()
+        if self.in_game:
+            self.game_obj.messages.add_line('<server>: You [%s] are now master'%self.client.engine.username)
 
     def kickedDueToTooManyPlayers(self, args):
         #TODO: handle kicked
