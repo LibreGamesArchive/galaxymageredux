@@ -35,7 +35,6 @@ class Game(object):
         self.input_butt.bg_color = (150,150,255,100)
 
         self.input_cont.visible = False
-        self.event_handler.dispatch.bind('keydown', self.handle_input_key)
         self.input_type.dispatch.bind('input-submit', self.handle_input_submit)
         self.input_butt.dispatch.bind('click', self.handle_input_submit)
 
@@ -103,7 +102,9 @@ class Game(object):
         ###game code:
 
         self.selected_unit = None
-        self.event_handler.dispatch.bind('mousedown', self.try_select_unit)
+        self.selected_action = None
+        self.event_handler.dispatch.bind('mouseup', self.handle_mouseup)
+        self.event_handler.dispatch.bind('keydown', self.handle_input_key)
 
         self.lock = False
 
@@ -127,11 +128,23 @@ class Game(object):
         if disabled:
             return
 
-        print value
+        self.selected_action = value
         self.select_action.visible = False
+        act = None
+        for i in self.selected_unit.actions:
+            if i.name == value:
+                act = i
+                break
+        if act:
+            self.selected_action = act
+            self.selected_action.render_select()
+        else:
+            'error - non-existant action select <%s>'%act
 
     def select_unit(self, unit):
         self.selected_unit = unit
+        self.gfx.mapd.clear_highlights()
+        self.selected_action = None
 
         if unit:
             self.unit_info_sub.visible = True
@@ -163,17 +176,25 @@ class Game(object):
             self.unit_desc_sub.visible = False
             self.select_action.visible = False
 
-    def try_select_unit(self, button, name):
+    def handle_mouseup(self, button, name):
         sel = None
         if name == 'left':
             xy = self.gfx.mapd.get_mouse_tile()
             if xy:
-                for unit in self.mod.units:
-                    if unit.pos == xy:
-                        sel = unit
-                        break
+                if self.selected_action:
+                    if self.selected_action.test_acceptable(xy):
+                        self.engine.talkToServer("requestAction", (self.selected_unit.gid, self.selected_action.name, xy))
+                    self.selected_action = None
+                    self.gfx.mapd.clear_highlights()
+                    return
+                else:
+                    for unit in self.mod.units:
+                        if unit.pos == xy:
+                            sel = unit
+                            break
 
         self.select_unit(sel)
+        
 
     def deactivate_commands(self):
         for x in [self.next_unit, self.end_turn]:
@@ -212,6 +233,25 @@ class Game(object):
     def passLeaveGame(self, *args):
         self.leave_game.visible = False
         self.lock = False
+
+    def doAction(self, gid, action, target):
+        unit = None
+        for i in self.mod.units:
+            if i.gid == gid:
+                unit = i
+                break
+
+        act = None
+        for i in unit.actions:
+            if i.name == action:
+                act = i
+                break
+
+        if unit and act:
+            act.perform(target)
+
+        unit.gfx_entity.pos = unit.pos
+        self.select_unit(unit)
 
     def update(self):
         if self.engine.whos_turn == self.engine.my_team:

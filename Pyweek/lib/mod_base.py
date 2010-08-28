@@ -45,6 +45,7 @@ class AbilityHandler(object):
 
 class Unit(object):
     type = 'base'
+    last_gid = 0
     def __init__(self, scenario):
         self.scenario = scenario
 
@@ -70,6 +71,8 @@ class Unit(object):
 
         self.cur_hp = int(self.hp)
         self.cur_ap = int(self.action_points)
+        self.gid = self.last_gid
+        Unit.last_gid += 1
 
     def initialize(self):
         pass

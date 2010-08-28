@@ -641,3 +641,31 @@ class GameEngine(object):
     def leaveGame(self, *args):
         self.talkToServer('playerVoluntaryLeave', None)
         self.client.engine.cur_state = ServerLobby(self.client.engine)
+
+    def isAcceptableAction(self, args):
+        av_name, args = args
+        gid, action, xy = args
+
+        unit = None
+        for i in self.game_obj.mod.units:
+            if i.gid == gid:
+                unit = i
+                break
+        act = None
+        for i in unit.actions:
+            if i.name == action:
+                act = i
+                break
+
+        if unit and act:
+            if act.test_acceptable(xy):
+                self.talkToServer('masterDoAction', args)
+                return
+        else:
+            print 'WTF:', gid, action
+
+        self.talkToServer('masterBadAction', av_name)
+
+    def doAction(self, args):
+        gid, action, xy = args
+        self.game_obj.doAction(gid, action, xy)

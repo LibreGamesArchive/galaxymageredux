@@ -10,6 +10,9 @@ class Ability(BaseAbility):
         if self.unit.cur_ap >= 2: #can't be last action!
             return True
 
+    def test_acceptable(self, target):
+        return target in self.get_select()
+
     def get_select(self):
         ap = self.unit.cur_ap
         cx, cy = self.unit.pos
@@ -46,5 +49,11 @@ class Ability(BaseAbility):
         for i in set(pos):
             if mapd.in_bounds(i):
                 mapd.add_highlight('gui_mouse-hover2.png', i)
+
+    def perform(self, target):
+        xx, xy = self.unit.pos
+        self.unit.pos = target
+        price = abs(target[0]-xx)+abs(target[1]-xy)
+        self.unit.cur_ap -= price
 
 store.ability = Ability

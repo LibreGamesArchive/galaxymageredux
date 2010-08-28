@@ -160,3 +160,15 @@ class Game(object):
 
     def playerVoluntaryLeave(self, avatar, args):
         self.player_leave(avatar)
+
+    def requestAction(self, avatar, args):
+        if self.is_turn(avatar):
+            self.talkToPlayer(self.get_master(), 'isAcceptableAction', (avatar.name, args))
+
+    def masterDoAction(self, avatar, args):
+        if self.is_master(avatar):
+            self.talkToAllPlayers('doAction', args)
+
+    def masterBadAction(self, avatar, av_name):
+        if self.is_master(avatar):
+            self.talkToAllPlayers('getMessage', ('<server>', '%s has attempted an invalid action'%av_name))
