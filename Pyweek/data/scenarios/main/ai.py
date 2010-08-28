@@ -4,18 +4,22 @@ class AI(BaseAI):
         pass
 
     def update(self):
-        enemy_list = []
-        team_list = []
+        enemy_list = self.get_enemy_units()
+        team_list = self.get_my_units()
         # I think we need an AIHandler
-        for u in self.scenario.units:
-            if u.team == self.team:
-                team_list.append(u)
-            elif not u.dead:
-                enemy_list.append(u)
+        # This would allow each "ai" class in the scenarios.ai.py to be customized by team
+        for u in team_list:
+            if u.dead:
+                continue
+            enemy_list.sort(key=lambda e: self.distance(e.pos,u.pos))
+            # AI always moves to the closest enemy.
+            while u.cur_ap > 0:
+                if self.distance(u.pos, enemy_list[0].pos) < 2:
+                    print("Attack not designed or implemented")
+                    break
+                else:
+                    self.do_action(u, u.actions[0], self.get_next_tile(u, enemy_list[0]))
         
-        team_list[0].actions[0].perform((team_list[0].pos[0] -1, 
-                                         team_list[0].pos[1]))
-        self.scenario.engine.endMyTurn()
-        self.scenario.engine.engine.sendMessage('<AI> I end turn')
+        self.end_my_turn()   
 
 store.ai = AI

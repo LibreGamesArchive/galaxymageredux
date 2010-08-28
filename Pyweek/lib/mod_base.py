@@ -1,5 +1,6 @@
 import load_mod_file
 import glob, os
+from math import sqrt, sin, cos, pi
 
 class Ability(object):
     '''Base Action class'''
@@ -125,6 +126,50 @@ class AI(object):
 
     def initialize(self):
         pass
+
+    def end_my_turn(self):
+        self.scenario.engine.endMyTurn()
+        self.scenario.engine.engine.sendMessage('<AI> I end turn')
+    
+    def do_action(self, unit, action, target):
+        action.perform(target)
+    
+    def get_my_units(self):
+        bucket = []
+        for u in self.scenario.units:
+            if u.team == self.team:
+                bucket.append(u)
+        return bucket
+
+    def get_enemy_units(self):
+        bucket = []
+        for u in self.scenario.units:
+            if u.team != self.team:
+                bucket.append(u)
+        return bucket
+
+    # Path search utility functions
+    def distance(self, a, b):
+        return abs(a[0]-b[0]) + abs(a[1]-b[1])
+
+    def get_neighbors(self, x):
+        for i in range(0,3):
+            yield (int(cos(i*0.5*pi)+x[0]),
+                   int(sin(i*0.5*pi)+x[1]))
+
+    def get_next_tile(self, start, goal):
+        '''TODO: update to a proper a_star search '''
+        s = start.pos
+        g = goal.pos
+        next = s
+        for n in self.get_neighbors(s):
+            if n == goal:
+                return s
+            if next == s:
+                next = n
+            if self.distance(next,g) > self.distance(n,g):
+                next = n
+        return next
 
 class BaseScenario(object):
     def __init__(self):
