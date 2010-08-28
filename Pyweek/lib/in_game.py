@@ -331,13 +331,14 @@ class Game(object):
             else:
                 first = 'You lost!'
                 team = None
+                if x in self.engine.free_teams:
+                    team = '<AI>', x
                 for i in self.engine.players:
+                    if team:
+                        break
                     if i[1] == x:
                         team = i
-                        break
-                if not team:
-                    team = '<AI>', x
-                second = 'player: %s <%s> won...'%(i[0], i[1])
+                second = 'player: %s <%s> won...'%(team[0], team[1])
             self.engine.client.engine.cur_state = self.engine.goto_state(self.engine.client.engine, #YUCK!
                                                                first, second, (255,0,0))
 
