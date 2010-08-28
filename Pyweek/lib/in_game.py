@@ -25,7 +25,7 @@ class Game(object):
         self.messages.no_events = True
 
         self.input_cont = gui.Container(self.app, (320, 30), (160, 330))
-        self.input_cont.bg_color = (100,100,255,200)
+        self.input_cont.bg_color = (100,100,255,255)
         self.input_type = gui.Input(self.input_cont, 225, (5,5))
         self.input_type.bg_color = (0,0,0,0)
         self.input_butt = gui.Button(self.input_cont,
@@ -38,7 +38,7 @@ class Game(object):
         self.input_butt.dispatch.bind('click', self.handle_input_submit)
 
         self.unit_info = gui.Container(self.app, (150, 150), (5, 325))
-        self.unit_info.bg_color = (100,100,255,100)
+        self.unit_info.bg_color = (100,100,255,200)
         self.unit_info.font = lil_font
 
         self.unit_info_sub = gui.Container(self.unit_info, (150,150), (0,0))
@@ -56,7 +56,7 @@ class Game(object):
         self.unit_info_sub.visible = False
 
         self.commands = gui.Container(self.app, (150, 150), (485, 325))
-        self.commands.bg_color = (100,100,255,100)
+        self.commands.bg_color = (100,100,255,200)
         self.commands.font = lil_font
 
         self.next_unit = gui.Button(self.commands, (5,5), 'Next Unit')
@@ -68,7 +68,7 @@ class Game(object):
         self.commands_active = False
 
         self.unit_desc = gui.Container(self.app, (320, 100), (160, 375))
-        self.unit_desc.bg_color = (100,100,255,100)
+        self.unit_desc.bg_color = (100,100,255,200)
         self.unit_desc.font = lil_font
         self.unit_desc_sub = gui.Container(self.unit_desc, (320,100), (0,0))
         self.unit_desc_sub.bg_color = (0,0,0,0)
@@ -79,7 +79,7 @@ class Game(object):
         self.unit_desc_sub.visible = False
 
         self.leave_game = gui.Container(self.app, (640,480), (0,0))
-        self.leave_game.bg_color = (255,255,255,100)
+        self.leave_game.bg_color = (255,255,255,150)
 
         self.leave_game_question = gui.Label(self.leave_game, (100, 200), 'Do you really want to leave the game?!?!')
         self.leave_game_question.text_color = (255,255,255)
@@ -93,7 +93,7 @@ class Game(object):
 
 
         self.scenario_mess = gui.Container(self.app, (640,480), (0,0))
-        self.scenario_mess.bg_color = (100,100,255,50)
+        self.scenario_mess.bg_color = (100,100,255,100)
 
         bg = gui.Container(self.scenario_mess, (630, 175), (5,200))
         bg.bg_color = (100,100,255,255)
@@ -349,15 +349,15 @@ class Game(object):
 
         if not self.lock:
             mx, my = self.event_handler.mouse.get_pos()
-            if mx < 5:
-                self.gfx.camera.move(-0.1, 0)
-            elif mx > 635:
-                self.gfx.camera.move(0.1, 0)
+            if mx < 10:
+                self.gfx.camera.move(-0.3, -0.3)
+            elif mx > 630:
+                self.gfx.camera.move(0.3, 0.3)
 
-            if my < 5:
-                self.gfx.camera.move(0, -0.1)
-            elif my > 475:
-                self.gfx.camera.move(0, 0.1)
+            if my < 10:
+                self.gfx.camera.move(0.3, -0.3)
+            elif my > 470:
+                self.gfx.camera.move(-0.3, 0.3)
 
             #TODO: change this
             if not self.control_highlight:
