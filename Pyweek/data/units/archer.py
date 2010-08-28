@@ -7,7 +7,7 @@ class Unit(BaseUnit):
         self.hp = 5
         self.boost_hp = 2
         self.boost_strength = 1
-        self.action_points = 4
+        self.action_points = 6
         self.image = 'unit-test-archer.gif'
 
         self.have_ability('move')

@@ -7,7 +7,7 @@ class Unit(BaseUnit):
         self.hp = 10
         self.boost_hp = 5
         self.boost_strength = 2
-        self.action_points = 3
+        self.action_points = 5
         self.image = 'unit-test-fighter.gif'
 
         self.have_ability('move')

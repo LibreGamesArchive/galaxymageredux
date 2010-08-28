@@ -50,8 +50,10 @@ class Ability(BaseAbility):
 
                 if abs(x) + abs(y) <= ap:
                     n = cx+x, cy+y
-                    if mapd.in_bounds(n) and (not n in blocked+passable) and self.get_path((cx,cy), n, blocked):
-                        pos.append((cx+x,cy+y))
+                    if mapd.in_bounds(n) and (not n in blocked+passable):
+                        p = self.get_path((cx,cy), n, blocked)
+                        if p and len(p[1:]) <= ap:
+                            pos.append((cx+x,cy+y))
 
         return pos
 

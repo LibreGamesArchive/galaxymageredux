@@ -8,6 +8,11 @@ class AI(BaseAI):
         team_list = self.get_my_units()
         if not (enemy_list or team_list):
             self.end_my_turn()
+        if not self.scenario.mod.prisoner_free:
+            for i in enemy_list:
+                if i.type == 'prisoner':
+                    enemy_list.remove(i)
+                    break
         # I think we need an AIHandler
         # This would allow each "ai" class in the scenarios.ai.py to be customized by team
         for u in team_list:
