@@ -221,6 +221,7 @@ class Scenario(object):
         new.team_flag.bound_to = new.gfx_entity
         new.update()
         self.units.append(new)
+        return new
 
     def update(self):
         if self.engine.engine.am_master:

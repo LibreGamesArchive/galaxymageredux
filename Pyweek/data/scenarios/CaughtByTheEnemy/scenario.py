@@ -8,7 +8,7 @@ class Scenario(BaseScenario):
         Unit('fighter', 'goodguys',('Rob', (0,1), 1))
         Unit('fighter', 'goodguys',('Cob', (0,2), 1))
         Unit('archer', 'goodguys',('Sob', (1,1), 1))
-        Unit('prisoner', 'goodguys',('leader', (18,16), 1))
+        self.prisoner = Unit('prisoner', 'goodguys',('leader', (18,16), 1))
         
         # Bad Guys Team
         Unit('fighter', 'badguys',('Guard', (4,13), 1))
@@ -58,6 +58,7 @@ class Scenario(BaseScenario):
         for i in self.engine.engine.gfx.mapd.entities:
             if i.name == 'Gate':
                 i.kill()
+        self.prisoner.have_ability('move')
 
     def update(self):
         whos_turn = self.engine.engine.engine.whos_turn #OMG yuck!
