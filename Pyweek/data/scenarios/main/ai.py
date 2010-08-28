@@ -18,8 +18,12 @@ class AI(BaseAI):
                     print("Attack not designed or implemented")
                     break
                 else:
-                    self.do_action(u, u.actions[0], self.get_next_tile(u, enemy_list[0]))
-        
+                    t = u.actions[0].get_select()
+                    if len(t):
+                        t.sort(key=lambda v: self.distance(enemy_list[0].pos,v))
+                        self.do_action(u, u.actions[0], t[0])
+                    else:
+                        break
         self.end_my_turn()   
 
 store.ai = AI
