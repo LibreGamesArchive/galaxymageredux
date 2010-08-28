@@ -696,7 +696,7 @@ class GameEngine(object):
         self.game_obj.doAction(gid, action, xy)
 
 class MidGameLeave(State):
-    def __init__(self, engine, message):
+    def __init__(self, engine, message, second='', second_col=(0,0,0)):
         State.__init__(self, engine)
 
         self.message = message
@@ -706,6 +706,10 @@ class MidGameLeave(State):
 
         self.leave_game_question = gui.Label(self.leave_game, (100, 200), message)
         self.leave_game_question.text_color = (0,0,0)
+        self.leave_game_question2 = gui.Label(self.leave_game, gui.RelativePos(to=self.leave_game_question,
+                                                                               pady=5),
+                                              second)
+        self.leave_game_question2.text_color = second_col
         self.do_leave_game = gui.Button(self.leave_game, (200, 240), 'Leave Game')
         self.do_leave_game.dispatch.bind('click', self.leaveGame)
 

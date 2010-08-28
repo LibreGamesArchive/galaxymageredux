@@ -279,10 +279,18 @@ class Game(object):
         self.mod.update()#right up here at top before anything else!
         x = self.mod.winner()
         if x:
-            #TODO: pop up something saying game over...
             self.engine.leaveGame(None)
+            if x == self.engine.my_team:
+                first = 'You won!'
+                second = ''
+            else:
+                first = 'You lost!'
+                for i in self.engine.players:
+                    if i[1] == x:
+                        break
+                second = 'player: %s <%s> won...'%(i[0], i[1])
             self.engine.client.engine.cur_state = self.engine.goto_state(self.engine.client.engine, #YUCK!
-                                                               'Game Over - %s won'%x)
+                                                               first, second, (255,0,0))
 
         if self.engine.whos_turn == self.engine.my_team:
             self.activate_commands()
