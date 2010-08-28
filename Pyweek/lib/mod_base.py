@@ -170,6 +170,83 @@ class AI(object):
             if self.distance(next,g) > self.distance(n,g):
                 next = n
         return next
+    
+    def tile_weight(self, v):
+        return 0 # TODO: implement any hinderence that map can cause.
+
+    def estimate(self, a, b):
+        '''This needs to be tweaked. It really only works for a rectangular
+        plane with no gaps, barriers or other hinderences'''
+        return self.distance(a,b)
+
+    def reconstruct(self, node, dgraph):
+        if repr(node) in directed_graph.keys():
+            return reconstruct(dgraph[repr(node)],dgraph) + [node]
+        else:
+            return [node]
+
+    def valid_tile(self, v):
+        map = self.scenario.engine.mapd
+
+        # Test out bounds
+        if 0 > v[1] or v[1] < len(map) or 0 > v[0] or v[0] > len(map[v[1]]):
+            return False
+
+        # Test for blocking unit (Assuming that all units will block)
+        for u in self.scenario.units:
+            if int(u.pos[0]) == v[0] or int(u.pos[1]) == v[1]:
+                return False 
+
+        # Test for blocking MapEntity(somewhat redundant?)
+        # Assumes all MapEntities block
+        for u in self.scenario.engine.gfx.mapd:
+            if int(u.pos[0]) == v[0] or int(u.pos[1]) == v[1]:
+                return False
+
+    def get_path(self, start, goal):
+        ''' Start and Goal are (row,column) tuples. Returns best path from
+        start to goal, inclusive, as a list of (row,column) tuples. If a path cannot be
+        found, returns None'''
+        start = (int(start[0]), int(start[1]))
+        goal = (int(goal[0]), int(goal[1]))
+
+        open = set([start])
+        closed = set()
+
+        G = {repr(start):0}
+        H = {repr(start):estimate(start,goal)}
+        F = {repr(start):H[repr(start)]}
+
+        directed_graph = {}
+        while len(open):
+            cur = list(open)[0]
+            for v in open:
+                if F[repr(v)] < F[repr(cur)]: cur = v
+
+            if cur in open:
+                open.remove(cur)
+                closed.add(cur)
+            else:
+                print("Error in AI.get_path. <hatemail: durandal@gmail.com>")
+                return None # Hopefully not, though
+
+            for v in self.get_neighbors(cur):
+                if v == goal:
+                    return reconstruct(cur, directed_graph) + [goal]
+
+                if v in closed or not self.valid_tile(v):
+                    continue
+
+                if v in open:
+                    pass
+                else:
+                    directed_graph[repr(v)] = cur
+                    open.add(v)
+                    G[repr(v)] = 0
+                    H[repr(v)] = self.estimate(v,goal)
+                    F[repr(v)] = G[repr(v)] + H[repr(v)] + self.tile_weight(v)
+
+        return None #Really?
 
 class BaseScenario(object):
     def __init__(self):
