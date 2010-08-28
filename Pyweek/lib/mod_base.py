@@ -135,14 +135,14 @@ class AI(object):
     def get_my_units(self):
         bucket = []
         for u in self.scenario.units:
-            if u.team == self.team:
+            if u.team == self.team and u.dead == False:
                 bucket.append(u)
         return bucket
 
     def get_enemy_units(self):
         bucket = []
         for u in self.scenario.units:
-            if u.team != self.team:
+            if u.team != self.team and u.dead == False:
                 bucket.append(u)
         return bucket
 

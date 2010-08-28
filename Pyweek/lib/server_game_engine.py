@@ -159,15 +159,11 @@ class Game(object):
             self.talkToAllPlayers('playerNamesTeams', self.get_player_names_teams())
 
     def playerEndTurn(self, avatar, args):
-        print 32
         if self.is_turn(avatar):
             self.player_turn += 1
             if self.player_turn >= self.max_players:
                 self.player_turn = 0
             self.talkToAllPlayers('setPlayerTurn', self.scen_team_names[self.player_turn])
-        else:
-            print 45, avatar.name, self.scen_team_names
-            print self.picked_names, avatar
 
     def playerVoluntaryLeave(self, avatar, args):
         self.player_leave(avatar)

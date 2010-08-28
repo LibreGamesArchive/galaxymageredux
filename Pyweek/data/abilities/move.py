@@ -15,7 +15,7 @@ class Ability(BaseAbility):
     def _get_blocked_tiles(self):
         tiles = []
         for i in self.unit.scenario.units:
-            if i.team != self.unit.team:
+            if i.team != self.unit.team and i.dead == False:
                 tiles.append(i.pos)
 
         for i in self.unit.scenario.engine.gfx.mapd.entities:
@@ -24,7 +24,7 @@ class Ability(BaseAbility):
 
         passable = []
         for i in self.unit.scenario.units:
-            if i.team == self.unit.team:
+            if i.team == self.unit.team and i.dead == False:
                 if not i in tiles:
                     passable.append(i.pos)
 

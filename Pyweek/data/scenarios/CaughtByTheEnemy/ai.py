@@ -6,6 +6,8 @@ class AI(BaseAI):
     def update(self):
         enemy_list = self.get_enemy_units()
         team_list = self.get_my_units()
+        if not (enemy_list or team_list):
+            self.end_my_turn()
         # I think we need an AIHandler
         # This would allow each "ai" class in the scenarios.ai.py to be customized by team
         for u in team_list:
@@ -28,10 +30,21 @@ class AI(BaseAI):
                 for a in u.actions:
                     if a.name == 'Move':
                         #if enemy_list and len(enemy_list:
-                        p = a.get_path(u.pos, enemy_list[0].pos, a._get_blocked_tiles()[0])
+                        bt,pt = a._get_blocked_tiles()
+                        p = a.get_path(u.pos, enemy_list[0].pos, bt)
                         # Just move once, because there may be a closer enemy or
                         # an enemy in range if we move.
-                        self.do_action(u, a, p[1])
+
+                        tar = None
+                        if p:
+                            for i in p:
+                                if a.test_acceptable(i):
+                                    tar = i
+                                    break
+                        if tar:
+                            self.do_action(u, a, i)
+                        else:
+                            u.cur_ap = 0
                         break
 
         self.end_my_turn()   

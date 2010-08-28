@@ -10,9 +10,9 @@ class Scenario(BaseScenario):
         Unit('archer', 'goodguys',('Sob', (1,1), 1))
         
         # Bad Guys Team
-        Unit('fighter', 'badguys',('Felix', (4,0), 1))
-        Unit('fighter', 'badguys',('Frank', (4,1), 1))
-        Unit('fighter', 'badguys',('Fritz', (4,2), 1))
+        Unit('fighter', 'badguys',('Guard', (4,13), 1))
+        Unit('fighter', 'badguys',('Guard', (4,15), 1))
+        Unit('fighter', 'badguys',('Guard', (6,14), 1))
 
         self.engine.setScenarioMess('Welcome', 'unit-test-fighter.gif')
 

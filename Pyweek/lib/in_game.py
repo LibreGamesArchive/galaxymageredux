@@ -112,6 +112,8 @@ class Game(object):
 
         self.ui_whos_turn = gui.Label(self.app, (200, 340), 'Players <team> turn')
         self.ui_whos_turn.font = lil_font
+        self.ui_whos_turn.bg_color = (100,100,255,200)
+        self.ui_whos_turn.text_color = (0,0,0)
 
 
         self.select_action = gui.DisableMenu(self.app, (0,0), padding=(2,2))
