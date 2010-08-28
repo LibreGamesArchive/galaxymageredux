@@ -240,6 +240,7 @@ class Widget(object):
                 self.dispatch.fire("press")
                 return True
             self.unfocus()
+        return self._mhover
 
     def handle_mouseup(self, button, name):
         """Handle a mouse release event from the App."""
@@ -251,6 +252,7 @@ class Widget(object):
                 self._mhold = False
                 self.dispatch.fire("click")
                 return True
+        return self._mhover
 
     def handle_mousehold(self, button, name):
         """Handle a mouse hold event from the App."""
@@ -259,6 +261,7 @@ class Widget(object):
         if name == "left":
             if self._mhold:
                 return True
+        return self._mhover
 
     def handle_mousemotion(self, change):
         """Handle a mouse motion event from the App."""

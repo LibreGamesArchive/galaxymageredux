@@ -157,3 +157,6 @@ class Game(object):
             self.talkToAllPlayers('setPlayerTurn', self.scen_team_names[self.player_turn])
         else:
             pass
+
+    def playerVoluntaryLeave(self, avatar, args):
+        self.player_leave(avatar)

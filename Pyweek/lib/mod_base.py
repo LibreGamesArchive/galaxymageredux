@@ -7,6 +7,7 @@ class Ability(object):
         self.unit = parent
         self.cost = 0
         self.desc = 'Action <costs 0 AP>'
+        self.name = 'Action'
         self.initialize()
 
     def initialize(self):

@@ -637,3 +637,7 @@ class GameEngine(object):
 
     def setPlayerTurn(self, team):
         self.whos_turn = team
+
+    def leaveGame(self, *args):
+        self.talkToServer('playerVoluntaryLeave', None)
+        self.client.engine.cur_state = ServerLobby(self.client.engine)

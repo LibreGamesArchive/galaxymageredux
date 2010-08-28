@@ -56,14 +56,43 @@ class Game(object):
         self.commands.bg_color = (100,100,255,100)
         self.commands.font = lil_font
 
+        self.next_unit = gui.Button(self.commands, (5,5), 'Next Unit')
+        self.end_turn = gui.Button(self.commands, gui.RelativePos(to=self.next_unit, pady=25), 'End Turn')
+        self.end_turn.dispatch.bind('click', self.endMyTurn)
+        self.leave_game = gui.Button(self.commands, gui.RelativePos(to=self.end_turn, pady=25), 'Leave Game')
+        self.leave_game.dispatch.bind('click', self.queryLeaveGame)
+        self.commands_active = False
+
         self.unit_desc = gui.Container(self.app, (320, 100), (160, 375))
         self.unit_desc.bg_color = (100,100,255,100)
         self.unit_desc.font = lil_font
+        self.unit_desc_sub = gui.Container(self.unit_desc, (320,100), (0,0))
+        self.unit_desc_sub.bg_color = (0,0,0,0)
+        self.unit_desc1 = gui.Label(self.unit_desc_sub, (5,5), 'Unit Description:')
+        self.unit_desc2 = gui.Label(self.unit_desc_sub, gui.RelativePos(to=self.unit_desc1, pady=5, padx=25), 'Change')
+        self.unit_abil1 = gui.Label(self.unit_desc_sub, gui.RelativePos(to=self.unit_desc2, pady=15, padx=-25), 'Unit Abilities')
+        self.unit_abil2 = gui.Label(self.unit_desc_sub, gui.RelativePos(to=self.unit_abil1, pady=5, padx=25), 'Change')
+        self.unit_desc_sub.visible = False
+
+        self.leave_game = gui.Container(self.app, (640,480), (0,0))
+        self.leave_game.bg_color = (255,255,255,100)
+
+        self.leave_game_question = gui.Label(self.leave_game, (100, 200), 'Do you really want to leave the game?!?!')
+        self.do_leave_game = gui.Button(self.leave_game, (200, 240), 'Confirm')
+        self.do_leave_game.dispatch.bind('click', self.engine.leaveGame)
+        self.dont_leave_game = gui.Button(self.leave_game, gui.RelativePos(to=self.do_leave_game,
+                                                                           x='right', y='top', padx=5),
+                                          'Return to Game')
+        self.dont_leave_game.dispatch.bind('click', self.passLeaveGame)
+
+        self.leave_game.visible = False
 
         ###game code:
 
         self.selected_unit = None
         self.event_handler.dispatch.bind('mousedown', self.try_select_unit)
+
+        self.lock = False
 
     def handle_input_submit(self, *args):
         text = self.input_type.text
@@ -91,8 +120,13 @@ class Game(object):
             self.ui_hp.text = 'HP: %s/%s'%(unit.cur_hp, unit.hp)
             self.ui_ap.text = 'AP: %s/%s'%(unit.cur_ap, unit.action_points)
             self.ui_strength.text = 'STR: %s'%unit.strength
+
+            self.unit_desc_sub.visible = True
+            self.unit_desc2.text = unit.desc
+            self.unit_abil2.text = ', '.join([i.name for i in unit.actions.values()])
         else:
             self.unit_info_sub.visible = False
+            self.unit_desc_sub.visible = False
 
     def try_select_unit(self, button, name):
         sel = None
@@ -106,6 +140,33 @@ class Game(object):
 
         self.select_unit(sel)
 
+    def deactivate_commands(self):
+        for x in [self.next_unit, self.end_turn]:
+            x.text_color = x.text_reg_color = x.text_hover_color = x.text_click_color = (100,100,100)
+            x.bg_color = (0,0,0,0)
+    def activate_commands(self):
+        if not self.commands_active:
+            self.commands_active = True
+            for x in [self.next_unit, self.end_turn]:
+                x.text_color = (0,0,0)
+                x.text_reg_color = (0,0,0)
+                x.text_hover_color = (255,0,0)
+                x.text_click_color = (255,100,100)
+                x.bg_color = (255,255,255)
+
+    def endMyTurn(self, *args):
+        if self.engine.whos_turn == self.engine.my_team:
+            self.engine.talkToServer('playerEndTurn', None)
+            self.deactivate_commands()
+
+    def queryLeaveGame(self, *args):
+        self.leave_game.visible = True
+        self.lock = True
+        self.leave_game.focus()
+    def passLeaveGame(self, *args):
+        self.leave_game.visible = False
+        self.lock = False
+
     def update(self):
 ##        if self.engine.whos_turn == self.engine.my_team:
 ##            print 'my turn', self.engine.my_team
@@ -117,28 +178,32 @@ class Game(object):
 ##        else:
 ##            print 'his turn', self.engine.whos_turn
 
+        if self.engine.whos_turn == self.engine.my_team:
+            self.activate_commands()
+
         self.event_handler.update()
         if self.event_handler.quit:
             self.engine.client.engine.close_app() #sheesh!
             return
 
-        mx, my = self.event_handler.mouse.get_pos()
-        if mx < 5:
-            self.gfx.camera.move(-0.1, 0)
-        elif mx > 635:
-            self.gfx.camera.move(0.1, 0)
+        if not self.lock:
+            mx, my = self.event_handler.mouse.get_pos()
+            if mx < 5:
+                self.gfx.camera.move(-0.1, 0)
+            elif mx > 635:
+                self.gfx.camera.move(0.1, 0)
 
-        if my < 5:
-            self.gfx.camera.move(0, -0.1)
-        elif my > 475:
-            self.gfx.camera.move(0, 0.1)
+            if my < 5:
+                self.gfx.camera.move(0, -0.1)
+            elif my > 475:
+                self.gfx.camera.move(0, 0.1)
 
-        #TODO: change this
-        if not self.selected_unit:
-            xy = self.gfx.mapd.get_mouse_tile()
-            self.gfx.mapd.clear_highlights()
-            if xy:
-                self.gfx.mapd.add_highlight('gui_mouse-hover2.png', xy)
+            #TODO: change this
+            if not self.selected_unit:
+                xy = self.gfx.mapd.get_mouse_tile()
+                self.gfx.mapd.clear_highlights()
+                if xy:
+                    self.gfx.mapd.add_highlight('gui_mouse-hover2.png', xy)
 
 ##        if 'left' in self.event_handler.mouse.active:
 ##            if xy:
