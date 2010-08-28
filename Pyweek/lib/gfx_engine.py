@@ -106,7 +106,7 @@ class MapEntity(object):
     def render(self):
         if self.bound_to:
             x, y = self.bound_to.pos
-            y += 0.01
+            x -= 0.01
             self.pos = x,y
             if self.bound_to.dead:
                 self.kill()
@@ -158,6 +158,8 @@ class MapHandler(object):
         elif b.pos[1] < a.pos[1]:
             return 1
         elif a.pos[0] < b.pos[0]:
+            return 1
+        elif b.pos[0] < a.pos[0]:
             return -1
         return -1
 
