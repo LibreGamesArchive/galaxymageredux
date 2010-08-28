@@ -23,6 +23,9 @@ class Ability(object):
     def render_select(self):
         pass
 
+    def get_select(self):
+        pass
+
 class AbilityHandler(object):
     def __init__(self):
         self.abilities = {}

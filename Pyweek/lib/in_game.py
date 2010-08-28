@@ -41,6 +41,9 @@ class Game(object):
 
         ###game code:
 
+        self.selected_unit = None
+        self.event_handler.dispatch.bind('mousedown', self.try_select_unit)
+
     def handle_input_submit(self, *args):
         text = self.input_type.text
         if text.startswith('/list'):
@@ -56,6 +59,17 @@ class Game(object):
     def handle_input_key(self, key, name):
         if key == K_RETURN:
             self.input_cont.visible = not self.input_cont.visible
+
+    def try_select_unit(self, button, name):
+        if name == 'left':
+            xy = self.gfx.mapd.get_mouse_tile()
+            if xy:
+                for unit in self.mod.units:
+                    if unit.pos == xy:
+                        self.selected_unit = unit
+                        print unit.name
+                        return
+        self.selected_unit = None
 
     def update(self):
 
@@ -86,17 +100,18 @@ class Game(object):
             self.gfx.camera.move(0, 0.1)
 
         #TODO: change this
-        xy = self.gfx.mapd.get_mouse_tile()
-        self.gfx.mapd.clear_highlights()
-        if xy:
-            self.gfx.mapd.add_highlight('gui_mouse-hover2.png', xy)
-
-        if 'left' in self.event_handler.mouse.active:
+        if not self.selected_unit:
+            xy = self.gfx.mapd.get_mouse_tile()
+            self.gfx.mapd.clear_highlights()
             if xy:
-                for unit in self.mod.units:
-                    x,y = unit.pos
-                    if (x,y) == xy:
-                        unit.actions['walk'].render_select()
+                self.gfx.mapd.add_highlight('gui_mouse-hover2.png', xy)
+
+##        if 'left' in self.event_handler.mouse.active:
+##            if xy:
+##                for unit in self.mod.units:
+##                    x,y = unit.pos
+##                    if (x,y) == xy:
+##                        unit.actions['walk'].render_select()
 
         self.screen.fill((0,0,0))
         self.gfx.render()

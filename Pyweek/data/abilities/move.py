@@ -9,9 +9,7 @@ class Ability(BaseAbility):
         if self.unit.cur_ap >= 2: #can't be last action!
             return True
 
-    def render_select(self):
-        #TODO: add dodging of obstacles!
-        mapd = self.unit.scenario.engine.gfx.mapd #yikes!
+    def get_select(self):
         ap = self.unit.cur_ap
         cx, cy = self.unit.pos
         cx = int(cx)
@@ -30,6 +28,18 @@ class Ability(BaseAbility):
                         (cx-x,cy+y),
                         (cx-x,cy-y),
                         (cx+x,cy-y)])
+
+        return pos
+
+    def render_select(self):
+        #TODO: add dodging of obstacles!
+        mapd = self.unit.scenario.engine.gfx.mapd #yikes!
+        ap = self.unit.cur_ap
+        cx, cy = self.unit.pos
+        cx = int(cx)
+        cy = int(cy)
+
+        pos = self.get_select()
 
         mapd.clear_highlights()
         for i in set(pos):
