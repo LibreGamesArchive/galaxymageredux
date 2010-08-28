@@ -93,10 +93,10 @@ class Game(object):
 
 
         self.scenario_mess = gui.Container(self.app, (640,480), (0,0))
-        self.scenario_mess.bg_color = (100,100,255,100)
+        self.scenario_mess.bg_color = (0,0,0,0)#(100,100,255,100)
 
-        bg = gui.Container(self.scenario_mess, (630, 175), (5,200))
-        bg.bg_color = (100,100,255,255)
+        bg = gui.Container(self.scenario_mess, (630, 200), (5,100))
+        bg.bg_color = (100,100,255,175)
 
         self.scenario_mess_icon = gui.Icon(bg, (5, 5), self.gfx.images.images.values()[0])
         self.scenario_mess_mess = gui.Label(bg,
@@ -104,8 +104,9 @@ class Game(object):
                                                             pady = 5),
                                             'Say Something!')
         self.scenario_mess_mess.text_color = (255,255,255)
-        self.scenario_mess_leave = gui.Button(bg, (55, 110), 'Close')
+        self.scenario_mess_leave = gui.Button(bg, (15, 170), 'Close')
         self.scenario_mess_leave.dispatch.bind('click', self.closeScenarioMess)
+        self.scenario_mess_mess.font = lil_font
 
         self.scenario_mess.visible = False
 

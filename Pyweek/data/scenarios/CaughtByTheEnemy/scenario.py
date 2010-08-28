@@ -15,7 +15,22 @@ class Scenario(BaseScenario):
         Unit('fighter', 'badguys',('Guard', (4,15), 1))
         Unit('fighter', 'badguys',('Guard', (6,14), 1))
 
-        self.engine.setScenarioMess('Welcome', 'unit-test-fighter.gif')
+##        self.engine.setScenarioMess('Welcome', 'unit-test-fighter.gif')
+        self.start_messages = (('Welcome to the main scenario for GalaxyMage Redux~Pyweek~',
+                                None, 'Next', (9,9)),
+                               ('tasks are as follows:\nIf you are the goodguys, you are trying to free your leader.\nIf you are the badguys, try and prevent that',
+                                'unit-test-prisoner.gif', 'Next', (16,16)),
+                               ('to free the leader, the goodguys need to move a unit adjacent to your\nleaders prison, in the bottom-right corner of the map',
+                                'unit-test-prisoner.gif', 'Next', (16,16)),
+                               ('Once the leader is free, the goodguys must get him back to their keep\nat topleft corner of map before turns run out',
+                                None, 'Next', (2,2)),
+                               ('badguys win if they:    kill all units before prisoner is freed,\n    kill prisoner,\n    or turns run out',
+                                None, 'Next', (9,9)),
+                               ('Good luck!\nIf you need help, be sure to read the tutorial.txt!',
+                                None, 'close', (9,9)))
+        self.on_message = 0
+        self.at_start = True
+
 
         self.max_turns = 30
         self.turn = 1
@@ -34,9 +49,17 @@ class Scenario(BaseScenario):
         fine = False
         for i in self.engine.units:
             if i.team == 'goodguys':
-                if i.dead == False:
-                    fine = True
-                    break
+                if i == self.prisoner:
+                    if self.prisoner_free:
+                        if i.dead == False:
+                            fine = True
+                            break
+                else:
+                    if i.dead == False:
+                        fine = True
+                        break
+
+        if self.prisoner.dead: return 'badguys'
 
         if not fine:
             return 'badguys'
@@ -48,7 +71,10 @@ class Scenario(BaseScenario):
         return None #none or team/player that won
 
     def closeScenarioMess(self):
-        print 'closed :('
+        if self.at_start:
+            self.on_message += 1
+            if self.on_message >= len(self.start_messages):
+                self.at_start = False
 
     def get_goodguys(self):
         ret = []
@@ -66,6 +92,10 @@ class Scenario(BaseScenario):
         self.prisoner.have_ability('move')
 
     def update(self):
+        if self.at_start:
+            mess, icon, butt, camera = self.start_messages[self.on_message]
+            self.engine.setScenarioMess(mess, icon, butt)
+            self.engine.engine.gfx.camera.pos = camera
         whos_turn = self.engine.engine.engine.whos_turn #OMG yuck!
         self.label.text = 'Turn: %s/30'%self.turn
         if not whos_turn == self.last_turn:

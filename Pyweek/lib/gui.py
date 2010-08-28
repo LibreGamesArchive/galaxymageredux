@@ -485,12 +485,16 @@ class Label(Widget):
 
     def render(self):
         self.size = self.get_size()
-        i = self.font.render(self.text, 1, self.text_color)
-        r = i.get_rect()
-        r.topleft = self.pos.get_pos()
-        if self.bg_color:
-            self.draw_rect(self.parent.screen, r, self.bg_color)
-        self.parent.screen.blit(i, r)
+        down = 0
+        for text in self.text.split('\n'):
+            i = self.font.render(text, 1, self.text_color)
+            r = i.get_rect()
+            r.topleft = self.pos.get_pos()
+            r.top+=down
+            down += self.font.get_height()
+            if self.bg_color:
+                self.draw_rect(self.parent.screen, r, self.bg_color)
+            self.parent.screen.blit(i, r)
 
 class Button(Widget):
     def __init__(self, parent, pos, text):
