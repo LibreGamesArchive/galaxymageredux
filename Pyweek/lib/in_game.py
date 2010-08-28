@@ -26,7 +26,7 @@ class Game(object):
         self.messages.no_events = True
 
         self.input_cont = gui.Container(self.app, (320, 30), (160, 330))
-        self.input_cont.bg_color = (100,100,255,100)
+        self.input_cont.bg_color = (100,100,255,200)
         self.input_type = gui.Input(self.input_cont, 225, (5,5))
         self.input_type.bg_color = (0,0,0,0)
         self.input_butt = gui.Button(self.input_cont,
@@ -86,6 +86,10 @@ class Game(object):
         self.dont_leave_game.dispatch.bind('click', self.passLeaveGame)
 
         self.leave_game.visible = False
+
+
+        self.ui_whos_turn = gui.Label(self.app, (200, 340), 'Players <team> turn')
+        self.ui_whos_turn.font = lil_font
 
         ###game code:
 
@@ -168,18 +172,12 @@ class Game(object):
         self.lock = False
 
     def update(self):
-##        if self.engine.whos_turn == self.engine.my_team:
-##            print 'my turn', self.engine.my_team
-##            self.engine.talkToServer('playerEndTurn', None)
-##        elif self.engine.whos_turn in self.engine.free_teams:
-##            #AI player
-##            print 'AI turn', self.engine.whos_turn
-##            self.engine.talkToServer('playerEndTurn', None)
-##        else:
-##            print 'his turn', self.engine.whos_turn
-
         if self.engine.whos_turn == self.engine.my_team:
             self.activate_commands()
+
+        self.ui_whos_turn.text = 'TURN: Team "%s"' % self.engine.whos_turn
+        if self.engine.whos_turn in self.engine.free_teams:
+            self.ui_whos_turn.text += " <AI>"
 
         self.event_handler.update()
         if self.event_handler.quit:

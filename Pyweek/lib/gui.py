@@ -476,7 +476,8 @@ class Label(Widget):
 
         self.size = self.get_size()
 
-        self.text_color = (0,0,0)
+        self.text_color = (100,100,100)
+        self.bg_color = None
 
     def get_size(self):
         width, height = self.font.size(self.text)
