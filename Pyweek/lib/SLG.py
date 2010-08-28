@@ -4,7 +4,7 @@
 import net, urllib, time
 from server_game_engine import Game
 
-main_server_host = 'localhost' #change to real server later!
+main_server_host = 'galaxymageredux.game-server.cc'#'localhost' #change to real server later!
 main_server_port = 54321
 
 class Server(net.Server):
