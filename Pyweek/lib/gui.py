@@ -374,7 +374,7 @@ class Container(Widget, App):
 
     def handle_mousedown(self, button, name):
         """Callback for mouse click events from the event_handler."""
-        Widget.handle_mousedown(self, button, name)
+        x = Widget.handle_mousedown(self, button, name)
         if not self.mouse_on_me():
             return False
         if not self.visible:
@@ -383,11 +383,11 @@ class Container(Widget, App):
             if i.visible:
                 if i.handle_mousedown(button, name):
                     return True
-        return False
+        return x
 
     def handle_mouseup(self, button, name):
         """Callback for mouse release events from the event_handler."""
-        Widget.handle_mouseup(self, button, name)
+        x = Widget.handle_mouseup(self, button, name)
         if not self.mouse_on_me():
             return False
         if not self.visible:
@@ -396,7 +396,7 @@ class Container(Widget, App):
             if i.visible:
                 if i.handle_mouseup(button, name):
                     return True
-        return False
+        return x
 
     def handle_mousehold(self, button, name):
         """Callback for mouse hold events from the event_handler."""

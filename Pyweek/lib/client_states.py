@@ -275,6 +275,7 @@ class ServerLobby(State):
         w,h = self.popup_bads_label.get_size()
         self.popup_bads_cont.change_size((w+10, h+30))
         self.popup_bads_cont.dispatch.bind('unfocus', lambda:self.turn_off_widget(self.popup_bads_cont))
+        self.popup_bads_cont.dispatch.bind('click', lambda:self.turn_off_widget(self.popup_bads_cont))
 
         self.server_lobby_messages = gui.MessageBox(self.app, (440, 100),
                                                     gui.RelativePos(to=game_list_ppage, pady=30, padx=-5))

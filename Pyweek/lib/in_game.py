@@ -39,6 +39,12 @@ class Game(object):
         self.input_type.dispatch.bind('input-submit', self.handle_input_submit)
         self.input_butt.dispatch.bind('click', self.handle_input_submit)
 
+        self.unit_info = gui.Container(self.app, (150, 150), (5, 325))
+        self.unit_info.bg_color = (100,100,255,100)
+
+        self.commands = gui.Container(self.app, (150, 150), (485, 325))
+        self.commands.bg_color = (100,100,255,100)
+
         ###game code:
 
         self.selected_unit = None
