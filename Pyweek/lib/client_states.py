@@ -614,7 +614,6 @@ class GameEngine(object):
             self.talkToServer('getGameScenarioInfo', {'name':store.name, 'maxp':store.num_players, 'teams':store.teams})
 
     def stillFreeTeamNames(self, args):
-        print args
         self.free_teams = args
         self.update_player_gui()
 

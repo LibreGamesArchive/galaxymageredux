@@ -120,9 +120,7 @@ class Game(object):
         for i in self.mod.units:
             if i.team == team:
                 i.cur_ap = int(i.action_points)
-        print team
         if team == self.engine.my_team:
-            print 32
             self.activate_commands()
 
     def handle_input_submit(self, *args):

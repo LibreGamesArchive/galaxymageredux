@@ -1,4 +1,4 @@
-import load_mod_file
+import load_mod_file, gui
 import glob, os
 from math import sqrt, sin, cos, pi
 
@@ -277,7 +277,8 @@ class Scenario(object):
         access = {'Unit':self.make_unit,
                   'engine':self.engine,
                   'parent':self,
-                  'BaseScenario':BaseScenario}
+                  'BaseScenario':BaseScenario,
+                  'gui':gui}
         store = load_mod_file.load('data/scenarios/%s/scenario.py'%scenario, access)
         if store == False:
             print 'fail load scenario <%s>'%scenario

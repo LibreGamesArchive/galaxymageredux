@@ -12,7 +12,6 @@ class Scenario(BaseScenario):
         Unit('fighter', 'badguys',('Felix', (4,0), 1))
         Unit('fighter', 'badguys',('Frank', (4,1), 1))
         Unit('fighter', 'badguys',('Fritz', (4,2), 1))
-        print parent.units
 
     def winner(self):
         return None #none or team/player that won
