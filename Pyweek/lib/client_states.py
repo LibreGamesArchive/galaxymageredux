@@ -503,9 +503,12 @@ class GameRoomLobby(State):
         self.game_room_lobby_binput.dispatch.bind('click', self.game_room_submit_message)
 
         self.game_room_lobby_start = gui.Button(
-            self.app, (500, 400), 'Start Game')
+            self.app, (475, 400), 'Start Game')
         self.game_room_lobby_start.visible = False
         self.game_room_lobby_start.dispatch.bind('click', lambda self=self: self.cur_game.masterStartGame())
+
+        self.leave_game_lobby = gui.Button(self.app, gui.RelativePos(to=self.game_room_lobby_start, pady=5), 'Leave Game')
+        self.leave_game_lobby.dispatch.bind('click', self.cur_game.leaveGame)
 
     def remote_getTalkFromServer(self, command, args):
         self.cur_game.getTalkFromServer(command, args)
