@@ -6,7 +6,7 @@ class Game(object):
         self.need_scenario = True
         self.game_id = None
 
-        self.abs_max = 10 #no more players than that! Period!
+        self.abs_max = 6 #no more players than that! Period!
 
         self.players = []
         self.player_scenarios = {}
@@ -22,9 +22,13 @@ class Game(object):
 
     def is_turn(self, avatar):
         team = self.scen_team_names[self.player_turn]
-        if team in self.picked_names:
-            return self.picked_names[team] == avatar
-        else: #ai player
+##        if self.picked_names.index(avatar) == self.player_turn:
+##            return True
+##        if team in self.picked_names:
+##            return self.picked_names[team] == avatar
+        if self.players.index(avatar) == self.player_turn:
+            return True
+        elif team not in self.picked_names.values(): #ai player
             return self.is_master(avatar)
 
     def is_master(self, avatar):
@@ -155,13 +159,15 @@ class Game(object):
             self.talkToAllPlayers('playerNamesTeams', self.get_player_names_teams())
 
     def playerEndTurn(self, avatar, args):
+        print 32
         if self.is_turn(avatar):
             self.player_turn += 1
             if self.player_turn >= self.max_players:
                 self.player_turn = 0
             self.talkToAllPlayers('setPlayerTurn', self.scen_team_names[self.player_turn])
         else:
-            pass
+            print 45, avatar.name, self.scen_team_names
+            print self.picked_names, avatar
 
     def playerVoluntaryLeave(self, avatar, args):
         self.player_leave(avatar)

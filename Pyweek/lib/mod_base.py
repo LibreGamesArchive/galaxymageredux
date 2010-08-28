@@ -55,6 +55,7 @@ class Unit(object):
         self.level = 1
         self.image = ''
         self.gfx_entity = None
+        self.team_flag = None
         self.desc = 'BaseUnit desciption'
         self.boost_hp = 1
         self.boost_strength = 1
@@ -94,8 +95,10 @@ class Unit(object):
             self.hp = 0
             self.dead = True
             self.gfx_entity.kill()
+            self.team_flag.kill()
 
         self.gfx_entity.pos = self.pos
+        self.team_flag.pos = self.pos[0], self.pos[1]+0.01
 
 
 class UnitHandler(object):
@@ -144,6 +147,11 @@ class Scenario(object):
 
         self.units = []
 
+        store = load_mod_file.load('data/scenarios/%s/config.py'%scenario)
+        if store == False:
+            print 'fail load config <%s>'%scenario
+        else: self.config = store
+
         access = {'Unit':self.make_unit,
                   'engine':self.engine,
                   'parent':self,
@@ -164,7 +172,6 @@ class Scenario(object):
         self.ai_players = []
 
     def make_ai_player(self, team):
-        print 'make ai', team
         new = self.core_ai(self, team)
         self.ai_players.append(new)
 
@@ -173,6 +180,9 @@ class Scenario(object):
         new.load_stats(stats)
         new.team = team
         new.gfx_entity = self.engine.gfx.mapd.make_entity(new.image, new.pos, new.name, 'center')
+        new.team_flag = self.engine.gfx.mapd.make_entity('player-team-flag.png'+str(self.config.teams.index(team)),
+                                                       new.pos, new.name+'_flag', 'center')
+        new.update()
         self.units.append(new)
 
     def update(self):

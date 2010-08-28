@@ -17,6 +17,14 @@ def ScreenToGrid(mx, my, cx, cy):
     return (mx-cx)/tile_size[0] - (my-cy)/tile_size[1], \
            (mx-cx)/tile_size[0] + (my-cy)/tile_size[1]
 
+def color_swap(surf, old, new):
+    for x in xrange(surf.get_width()):
+        for y in xrange(surf.get_height()):
+            rgb = tuple(surf.get_at((x,y))[:3])
+            if rgb == old:
+                surf.set_at((x,y), new[:3]+(255,))
+    return surf
+
 class ImageHandler(object):
     def __init__(self):
         self.images = {}
@@ -33,6 +41,17 @@ class ImageHandler(object):
                 #already there
                 img = pygame.image.load(i).convert_alpha()
                 self.images[short] = img
+
+    def set_flags(self):
+        player_flag = 'player-team-flag.png'
+        colors = [(255,0,0), (0,255,0), (0,0,255),
+                  (255,255,0), (255,0,255), (0,255,255)]
+
+        for i in xrange(6):
+            new = self.images[player_flag].copy()
+            self.images[player_flag+str(i)] = color_swap(new,
+                                                         (127,127,127),
+                                                         colors[i])
 
 class MapEntity(object):
     def __init__(self, parent, image, pos=(0,0), name='', render_pos='real'):
@@ -125,11 +144,11 @@ class MapHandler(object):
 
     def sort_entities(self, a, b):
         if a.pos[1] < b.pos[1]:
-            return 1
-        elif b.pos[1] < a.pos[1]:
             return -1
-        elif a.pos[0] < b.pos[0]:
+        elif b.pos[1] < a.pos[1]:
             return 1
+        elif a.pos[0] < b.pos[0]:
+            return -1
         return -1
 
     def make_entity(self, image, pos, name='', render_pos='bottom'):
@@ -232,16 +251,16 @@ class Camera(object):
     def set_pos(self, x, y):
         x = x
         y = y
-##        if self.engine.mapd:
-##            if x < 0:
-##                x = 0
-##            if x >= len(self.engine.mapd.map_grid[0]):
-##                x = len(self.engine.mapd.map_grid[0])
-##
-##            if y < 0:
-##                y = 0
-##            if y >= len(self.engine.mapd.map_grid):
-##                y = len(self.engine.mapd.map_grid)
+        if self.engine.mapd:
+            if x < 0:
+                x = 0
+            if x >= len(self.engine.mapd.map_grid[0]):
+                x = len(self.engine.mapd.map_grid[0])
+
+            if y < 0:
+                y = 0
+            if y >= len(self.engine.mapd.map_grid):
+                y = len(self.engine.mapd.map_grid)
 
         self.pos = (x,y)
 
@@ -260,6 +279,7 @@ class GFXEngine(object):
         self.images = ImageHandler()
         self.images.load_dir('data/scenarios/%s/images/'%self.scenario)
         self.images.load_dir('data/images/')
+        self.images.set_flags()
 
     def load_map(self):
         self.mapd = MapHandler(self)

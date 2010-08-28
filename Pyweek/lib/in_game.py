@@ -45,10 +45,15 @@ class Game(object):
         self.unit_info_sub = gui.Container(self.unit_info, (150,150), (0,0))
         self.unit_info_sub.bg_color = (0,0,0,0)
         self.ui_icon = gui.Icon(self.unit_info_sub, (5,5), self.gfx.images.images.values()[0])
+        self.ui_icon2 = gui.Icon(self.unit_info_sub, (5,5), self.gfx.images.images.values()[0])
         self.ui_name = gui.Label(self.unit_info_sub, gui.RelativePos(to=self.ui_icon,x='right',y='top',padx=5,pady=25), 'Name')
         self.ui_hp = gui.Label(self.unit_info_sub, gui.RelativePos(to=self.ui_name, pady=5), 'HP: 10/10')
         self.ui_ap = gui.Label(self.unit_info_sub, gui.RelativePos(to=self.ui_hp, pady=5), 'AP: 10/10')
         self.ui_strength = gui.Label(self.unit_info_sub, gui.RelativePos(to=self.ui_ap, pady=5), 'STR: 10')
+        self.ui_your_unit = gui.Label(self.unit_info_sub, gui.RelativePos(to=self.ui_strength, pady=5, padx=-70),
+                                      'Unit belongs to you')
+        self.ui_your_unit.text_color = (0,0,0)
+        self.ui_your_unit.visible = False
         self.unit_info_sub.visible = False
 
         self.commands = gui.Container(self.app, (150, 150), (485, 325))
@@ -107,6 +112,8 @@ class Game(object):
         self.event_handler.dispatch.bind('keydown', self.handle_input_key)
 
         self.lock = False
+        if not self.engine.whos_turn == self.engine.my_team:
+            self.deactivate_commands()
 
     def set_turn(self, team):
         for i in self.mod.units:
@@ -158,10 +165,16 @@ class Game(object):
         if unit:
             self.unit_info_sub.visible = True
             self.ui_icon.image = self.gfx.images.images[unit.image]
+            self.ui_icon2.image = self.gfx.images.images[unit.team_flag.image]
             self.ui_name.text = unit.name
             self.ui_hp.text = 'HP: %s/%s'%(unit.cur_hp, unit.hp)
             self.ui_ap.text = 'AP: %s/%s'%(unit.cur_ap, unit.action_points)
             self.ui_strength.text = 'STR: %s'%unit.strength
+
+            if unit.team == self.engine.my_team:
+                self.ui_your_unit.visible = True
+            else:
+                self.ui_your_unit.visible = False
 
             self.unit_desc_sub.visible = True
             self.unit_desc2.text = unit.desc
