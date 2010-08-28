@@ -56,6 +56,8 @@ class Unit(object):
         self.image = ''
         self.gfx_entity = None
         self.desc = 'BaseUnit desciption'
+        self.boost_hp = 1
+        self.boost_strength = 1
         
         # Battle Attributes
         self.hp = 0
@@ -72,6 +74,9 @@ class Unit(object):
         self.cur_hp = int(self.hp)
         self.cur_ap = int(self.action_points)
         self.gid = self.last_gid
+        self.strength += self.boost_strength*(self.level-1)
+        self.hp += self.boost_hp*(self.level-1)
+        self.cur_hp = int(self.hp)
         Unit.last_gid += 1
 
     def initialize(self):
