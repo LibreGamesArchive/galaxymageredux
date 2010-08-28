@@ -1,11 +1,11 @@
 
 class Ability(BaseAbility):
     def initialize(self):
-        self.cost = 2
-        self.desc = 'Bow Attack <range: 2, cost 2 AP>'
+        self.cost = 3
+        self.desc = 'Bow Attack <range: 3, cost 3 AP>'
         self.name = 'Bow Attack'
 
-        self.range = 2
+        self.range = 3
 
     def test_available(self):
         if self.unit.cur_ap >= 2: #can't be last action!
