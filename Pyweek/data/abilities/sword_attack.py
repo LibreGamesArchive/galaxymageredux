@@ -2,56 +2,40 @@
 class Ability(BaseAbility):
     def initialize(self):
         self.cost = 1
-        self.desc = 'Move <cost 1 AP>'
-        self.name = 'Move'
+        self.desc = 'Attack <cost all AP>'
+        self.name = 'Attack'
 
     def test_available(self):
-        if self.unit.cur_ap >= 2: #can't be last action!
-            return True
+        if self.unit.cur_ap >= 1: #can't be last action!
+            if self.get_select():
+                return True
 
     def test_acceptable(self, target):
         return target in self.get_select()
 
-    def _get_blocked_tiles(self):
-        tiles = []
-        for i in self.unit.scenario.units:
-            if i.team != self.unit.team:
-                tiles.append(i.pos)
-
-        for i in self.unit.scenario.engine.gfx.mapd.entities:
-            if i.name == 'blocking':
-                tiles.append(i.pos)
-
-        passable = []
-        for i in self.unit.scenario.units:
-            if i.team == self.unit.team:
-                if not i in tiles:
-                    passable.append(i.pos)
-
-        return tiles, passable
-
     def get_select(self):
-        ap = self.unit.cur_ap-1
         cx, cy = self.unit.pos
         cx = int(cx)
         cy = int(cy)
 
-        pos = []
-
-        blocked, passable = self._get_blocked_tiles()
         mapd = self.unit.scenario.engine.gfx.mapd #yikes!
 
-        for y in xrange(ap*2+1):
-            y -= ap
-            for x in xrange(ap*2+1-y):
-                x -= ap
+        pos = []
+
+        units = self.unit.scenario.units
+
+        for y in xrange(3):
+            y -= 1
+            for x in xrange(3):
+                x -= 1
                 if (x,y) == (0, 0):
                     continue
 
-                if abs(x) + abs(y) <= ap:
-                    n = cx+x, cy+y
-                    if mapd.in_bounds(n) and (not n in blocked+passable) and self.get_path((cx,cy), n, blocked):
-                        pos.append((cx+x,cy+y))
+                n = cx+x, cy+y
+                if mapd.in_bounds(n):
+                    for i in units:
+                        if i.pos == n and i.team != self.unit.team:
+                            pos.append(n)
 
         return pos
 
@@ -71,12 +55,13 @@ class Ability(BaseAbility):
                 mapd.add_highlight('gui_mouse-hover2.png', i)
 
     def perform(self, target):
-        xx, xy = self.unit.pos
-        self.unit.pos = target
-        price = abs(target[0]-xx)+abs(target[1]-xy)
-        self.unit.cur_ap -= price
-
-        self.unit.update()
+        units = self.unit.scenario.units
+        for i in units:
+            if i.pos == target and i.team != self.unit.team:
+                i.cur_hp -= int(self.unit.strength*0.2)
+                self.unit.cur_ap = 0
+                i.update()
+                self.unit.update()
 
 
     #A* stuff!

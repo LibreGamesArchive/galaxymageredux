@@ -147,7 +147,7 @@ class Game(object):
         self.select_action.visible = False
         act = None
         for i in self.selected_unit.actions:
-            if i.name == value:
+            if i.desc == value:
                 act = i
                 break
         if act:
@@ -175,7 +175,7 @@ class Game(object):
                 self.ui_your_unit.visible = True
                 if self.engine.whos_turn == self.engine.my_team:
                     self.select_action.visible = True
-                    self.select_action.options = [(i.name, not i.test_available()) for i in unit.actions]
+                    self.select_action.options = [(i.desc, not i.test_available()) for i in unit.actions]
                     self.select_action.build_options()
 
                     self.select_action.pos = gui.AbsolutePos((350, 200))
@@ -242,7 +242,7 @@ class Game(object):
         for i in self.mod.units:
             if i == self.selected_unit:
                 continue
-            if i.cur_ap:
+            if i.cur_ap and i.team == self.engine.my_team and True in [a.test_available() for a in i.actions]:
                 self.select_unit(i)
                 return
 
@@ -274,6 +274,13 @@ class Game(object):
 
         unit.gfx_entity.pos = unit.pos
         self.select_unit(unit)
+        good = False
+        for i in self.select_action.options:
+            if i[1] == False:
+                good = True
+                break
+        if not good:
+            self.select_action.visible = False
 
     def update(self):
         self.mod.update()#right up here at top before anything else!
