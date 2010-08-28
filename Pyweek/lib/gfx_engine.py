@@ -200,9 +200,18 @@ class Camera(object):
         self.pos = (0,0)
         self.engine = engine
 
+    def get_real_pos(self):
+        if self.engine.mapd:
+            tw,th = self.engine.mapd.tile_size
+        else:
+            tw, th = tile_size
+        sx, sy = self.pos
+        return (int(sx*tw*0.5 + sy*tw*0.5 + tw*0.5),
+                int(-sx*th*0.5 + sy*th*0.5 + th*0.5))
+
     def get_shift_pos(self):
-        return (320-int(self.pos[0]*self.engine.mapd.tile_size[0]),
-                240-int(self.pos[1]*self.engine.mapd.tile_size[1]))
+        px, py = self.get_real_pos()
+        return (320-px,240-py)
 
     def move(self, x, y):
         x = self.pos[0] + x

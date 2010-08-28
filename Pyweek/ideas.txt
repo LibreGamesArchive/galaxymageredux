@@ -70,12 +70,12 @@ Make new popup - that is bound to mouse pos, and bind to disabled clicks #not ha
 
 All unit actions are abilities #DONE
 
-when action is selected, send a serverRequestAction(name, unit_id)
-server query master to test if it is acceptable
-master send serverMasterDoAction(name, unit_id) if acceptable
+when action is selected, send a serverRequestAction(name, unit_id) #DONE
+server query master to test if it is acceptable #DONE
+master send serverMasterDoAction(name, unit_id) if acceptable #DONE
 
-select unit with left click
-either show options with right click - or better, when selected - show options
+select unit with left click #DONE
+either show options with right click - or better, when selected - show options #DONE
 
 map handler highlights list - (tile, color) vals #DONE
 map_handler.clear_highlights() #DONE
@@ -100,20 +100,20 @@ Action attributes:
 	<action specific vars>
 
 Scenario methods:
-	have_winner() -> if do, master submit gameWinner action, then server reset game action
+	have_winner() -> if do, master submit gameWinner action, then server reset game action #DONE
 
-Need A* code for ai... in case we want pathing (necessary for blockign entities)
+Need A* code for ai... in case we want pathing (necessary for blockign entities) #not happening
 
 Entity.destroy #DONE
 
 /list and /kick actions from message box for master #DONE
 
-AI class calls update each time it's turn
-AI has access to the engine - obviously
-AI scenario mod needs to handle the cases for individual units...
+AI class calls update each time it's turn #DONE!
+AI has access to the engine - obviously #DONE!
+AI scenario mod needs to handle the cases for individual units... #DONE!
 
-Units need to update when they move/die
+Units need to update when they move/die #DONE!
 
-On game over, show who won screen, then destroy game and take everyone to the main lobby again
+On game over, show who won screen, then destroy game and take everyone to the main lobby again #DONE!
 
 Refactor client code to swap between states nicer #DONE

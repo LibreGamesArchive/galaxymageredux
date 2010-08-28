@@ -174,11 +174,7 @@ class Game(object):
                 self.select_action.options = [(i.name, not i.test_available()) for i in unit.actions]
                 self.select_action.build_options()
 
-                sx,sy = self.select_action.size
-                px, py = 300, 200
-                px = min((px, 640-sx))
-                py = min((py, 480-sy))
-                self.select_action.pos = gui.AbsolutePos((px, py))
+                self.select_action.pos = gui.AbsolutePos((350, 200))
                 self.select_action.focus()
 
         else:
