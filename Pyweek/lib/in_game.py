@@ -148,11 +148,11 @@ class Game(object):
             self.gfx.camera.set_pos(*unit.pos)
 
             self.select_action.visible = True
-            self.select_action.options = [(i.name, i.test_available()) for i in unit.actions]
+            self.select_action.options = [(i.name, not i.test_available()) for i in unit.actions]
             self.select_action.build_options()
 
             sx,sy = self.select_action.size
-            px, py = 320, 200
+            px, py = 300, 200
             px = min((px, 640-sx))
             py = min((py, 480-sy))
             self.select_action.pos = gui.AbsolutePos((px, py))

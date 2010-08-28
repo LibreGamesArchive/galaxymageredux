@@ -7,7 +7,6 @@ class Ability(BaseAbility):
         self.name = 'Move'
 
     def test_available(self):
-        mapd = self.unit.scenario.engine.gfx.mapd #yikes!
         if self.unit.cur_ap >= 2: #can't be last action!
             return True
 
