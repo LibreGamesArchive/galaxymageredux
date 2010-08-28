@@ -3,8 +3,15 @@
 class Scenario(BaseScenario):
     def initialize(self):
         #this is where we determine our own variables
-        Unit('fighter', 'goodguys',
-             ('Bob', (2,1), 1))
+        # Good Guys Team
+        Unit('fighter', 'goodguys',('Bob', (0,0), 1))
+        Unit('fighter', 'goodguys',('Rob', (0,1), 1))
+        Unit('fighter', 'goodguys',('Cob', (0,2), 1))
+        
+        # Bad Guys Team
+        Unit('fighter', 'badguys',('Felix', (4,0), 1))
+        Unit('fighter', 'badguys',('Frank', (4,1), 1))
+        Unit('fighter', 'badguys',('Fritz', (4,2), 1))
         print parent.units
 
     def winner(self):
