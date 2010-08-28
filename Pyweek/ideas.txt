@@ -63,10 +63,10 @@ If owner leaves, everyone should already have their own copy of each player, so 
 
 
 ####Need to be done!
-Add disabled/disabled_bg_color/etc. state for menu options.
-Make game list and in-game action select user disabled items.
-When item is clicked, fire event with arg of disabled
-Make new popup - that is bound to mouse pos, and bind to disabled clicks
+Add disabled/disabled_bg_color/etc. state for menu options. #done
+Make game list and in-game action select user disabled items. #done
+When item is clicked, fire event with arg of disabled #done
+Make new popup - that is bound to mouse pos, and bind to disabled clicks #not happening
 
 All unit actions are abilities #DONE
 

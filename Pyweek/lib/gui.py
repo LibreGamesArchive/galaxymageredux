@@ -916,6 +916,92 @@ class Menu(Container):
 
         self.change_size((width, height))
 
+class MenuDisableEntry(Widget):
+    def __init__(self, parent, pos, text, dis):
+        Widget.__init__(self, parent, pos)
+
+        self.text = text
+
+        self.size = self.get_size()
+
+        self.disabled = dis
+        if self.disabled:
+            self.text_color = self.parent.entry_dis_text_reg_color
+            self.dispatch.bind('hover', lambda: self.swap_text_color(self.parent.entry_dis_text_hover_color))
+            self.dispatch.bind('click', lambda: self.swap_text_color(self.parent.entry_dis_text_hover_color))
+            self.dispatch.bind('press', lambda: self.swap_text_color(self.parent.entry_dis_text_click_color))
+            self.dispatch.bind('press-return', lambda: self.swap_text_color(self.parent.entry_dis_text_click_color))
+            self.dispatch.bind('unhover', lambda: self.swap_text_color(self.parent.entry_dis_text_reg_color))
+        else:
+            self.text_color = self.parent.entry_text_reg_color
+            self.dispatch.bind('hover', lambda: self.swap_text_color(self.parent.entry_text_hover_color))
+            self.dispatch.bind('click', lambda: self.swap_text_color(self.parent.entry_text_hover_color))
+            self.dispatch.bind('press', lambda: self.swap_text_color(self.parent.entry_text_click_color))
+            self.dispatch.bind('press-return', lambda: self.swap_text_color(self.parent.entry_text_click_color))
+            self.dispatch.bind('unhover', lambda: self.swap_text_color(self.parent.entry_text_reg_color))
+        self.dispatch.bind('unhover', self.keep_off_held_if_unhover)
+
+    def swap_text_color(self, new):
+        self.text_color = new
+    def keep_off_held_if_unhover(self):
+        self._mhold = False
+
+    def get_size(self):
+        width, height = self.parent.font.size(self.text)
+        return width, height
+
+    def render(self):
+        i = self.parent.font.render(self.text, 1, self.text_color)
+        r = pygame.rect.Rect(self.pos.get_pos(), self.size)
+        if self.disabled:
+            bg = self.parent.entry_dis_bg_color
+        else:
+            bg = self.parent.entry_bg_color
+        if bg:
+            self.draw_rect(self.parent.screen, r, bg)
+        self.parent.screen.blit(i, r)
+
+class DisableMenu(Container):
+    def __init__(self, parent, pos, options=[], padding=(0,0)):
+        Container.__init__(self, parent, (1,1), pos)
+
+        self.entry_text_reg_color = (0,0,0)
+        self.entry_text_hover_color = (75,75,75)
+        self.entry_text_click_color = (150,150,150)
+        self.entry_bg_color = (255,255,255)
+        self.entry_dis_bg_color = (0,0,0)
+        self.entry_dis_text_reg_color = (100,100,100)
+        self.entry_dis_text_hover_color = (100,100,100)
+        self.entry_dis_text_click_color = (100,100,100)
+
+        self.options = options
+        self.padding = padding
+
+        self.build_options()
+
+    def build_options(self):
+        self.widgets = []
+        width = 0
+        height = 0
+
+        for opt in self.options:
+            opt, dis = opt
+            if self.widgets:
+                pos = RelativePos(to=self.widgets[0], pady=self.padding[1])
+            else:
+                pos = AbsolutePos(self.padding)
+            new = MenuDisableEntry(self, pos, opt, dis)
+            new.dispatch.bind('click', lambda:self.dispatch.fire('select', self.widgets[0].text, self.widgets[0].disabled))
+
+            width = max(width, new.get_size()[0]+self.padding[0])
+            height = new.pos.get_pos()[1]+new.get_size()[1]
+
+
+        for i in self.widgets:
+            i.size = width, i.size[1]
+
+        self.change_size((width, height))
+
 class DropDownMenu(DropDown):
     def __init__(self, parent, pos, text, options=[], padding=(0,0)):
         child = Menu(parent, RelativePos(to=self), options, padding)

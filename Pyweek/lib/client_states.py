@@ -242,7 +242,7 @@ class ServerLobby(State):
         self.game_list_cont.font = lil_font
         self.game_list_cont.bg_color = (200,100,100)
 
-        self.game_list_select = gui.Menu(self.game_list_cont, (0,0), padding=(2,2))
+        self.game_list_select = gui.DisableMenu(self.game_list_cont, (0,0), padding=(2,2))
         self.game_list_select.entry_bg_color = (200,75,75)
         self.game_list_select.dispatch.bind('select', self.handle_game_list_select)
 
@@ -316,7 +316,7 @@ class ServerLobby(State):
     def turn_on_widget(self, widg):
         widg.visible = True
 
-    def handle_game_list_select(self, value):
+    def handle_game_list_select(self, value, disabled):
         game = self.game_list_list[value]
         game_id, name, scenario, master, players, max_players, in_game = game
 
@@ -349,9 +349,11 @@ class ServerLobby(State):
             l += '(' + str(players) + ' / ' + str(max_players) + ')'
             if in_game or players==max_players:
                 l+= ' -- CLOSED'
+                dis = True
             else:
                 l+= ' -- OPEN'
-            opts.append(l)
+                dis = False
+            opts.append((l, dis))
 
         self.game_list_select.options = opts
         self.game_list_select.build_options()
