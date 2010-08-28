@@ -28,6 +28,7 @@ class Game(object):
         self.input_cont.bg_color = (100,100,255,255)
         self.input_type = gui.Input(self.input_cont, 225, (5,5))
         self.input_type.bg_color = (0,0,0,0)
+        self.input_type.text_color = (0,0,0)
         self.input_butt = gui.Button(self.input_cont,
                                      gui.RelativePos(to=self.input_type, x='right', y='top', padx=5),
                                      'Submit')
