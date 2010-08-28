@@ -15,17 +15,17 @@ B. Playing GalaxyMageRedux
 
 1. Connecting to a Server
 You play Galaxy Mage by starting the run_client.py script. It will ask for your
-Username (can be anything), the server (localhost if you are playing by yourself,
+Username (can be anything, at least 4 chars long), the server (localhost if you are playing by yourself,
 or the address of a remote server), and the port number of the server you are 
 connecting to. If you connect you'll be taken to the Server Lobby
 
 2. Server Lobby
 Here you can see the users connected to the server, the games on the server,
-and the chat are for the server. To begin a game either click on one of the games
+and the chat for the server. To begin a game either click on one of the games
 that are joinable or click on Create a new Game.
 
 3. Creating a Game
-You will be asked for a name for a game and you can choose on of the available
+You will be asked for a name for a game and you can choose one of the available
 scenarios. You can find out how to add or create new scenarios below in C. Modding
 GalaxyMageRedux.
 
@@ -56,8 +56,9 @@ back to the Server Lobby.
 
 C. Modding GalaxyMageRedux
 
-Galaxy Mage Redux is composed of scenarios, abilites, images, and units. Each
-has their own folder under the data folder in the main GalaxyMage Redux folder.
+Galaxy Mage Redux is composed of scenarios, abilites, images, and units.
+There is a main folder for each of these in /data/
+Also, scenario specific abilities, images and units are found in /data/scenarios/<scenario>/
 
 1. Images
 The images folder holds all the sprites and tile images. Sprites may be PNG or
