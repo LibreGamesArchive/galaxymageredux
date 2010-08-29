@@ -1,0 +1,130 @@
+what does gui need to do?
+menu-list, button, icons, text input, container
+
+two server classes, one accepts other servers connecting to it, lists them, and for users displays current servers.
+Other server allow you to make a game room (which you then control) or join a game waiting to start.
+
+Two clients, on connects to server list server, gets list, waits for user to pick one, then disconnects.
+Other client connects to server picked.
+
+Need a client for the SLS server to test if a new game server runs correctly
+
+
+
+
+Game Server lobby:
+show all games (name, scenario, master, players/max)
+select game to play by double-clicking or selecting/hitting join
+Grey out full/running rooms?
+If try to join a room with a scenario player doesn't have, refuse/popup:
+	You don't have scenario <name>
+Create Game button - popup container with:
+	name - input
+	scenario - dropdown
+	make room - button
+
+Game lobby:
+#get info from scenario - always main to start
+display scenario name, max_players
+show cur players/team (all enemies)
+Show master
+//For master show add ai button by empty teams
+AI auto-fills empty places
+For master show kick player button next to all players
+Display chat box/input box/button
+For all users display switch team button next to empty teams
+If change scenario:
+	If too many players - kick ai first, then kick newest players (with a prompt saying why)
+	assign people to teams based on join order
+For master display Start Game button
+If user doesn't have scenario
+
+
+In-Game:
+Load Scenario:
+	images from main dir or scenario one
+	scenario code (main, units)
+Units:
+	units control their own actions (ie each can have different)
+	the gui simply queries the unit for what actions it can do
+	Each player updates their own units/status based on the action performed
+		thus hacking only affects the hacker ( }:) )
+Startup:
+	Units can be heros (only get one) or soldiers (any number)
+	All have a cost and each team gets a certain number of points to spend
+	Once you have your units you can place them in your start area (highlighted)
+
+Once the game is going it should be simply each unit doing actions, and teams ending turn...
+
+AI:
+owning played controls the AI players...
+If owner leaves, everyone should already have their own copy of each player, so the next one can just become the owner...
+
+
+
+####Need to be done!
+Add disabled/disabled_bg_color/etc. state for menu options. #done
+Make game list and in-game action select user disabled items. #done
+When item is clicked, fire event with arg of disabled #done
+Make new popup - that is bound to mouse pos, and bind to disabled clicks #not happening
+
+All unit actions are abilities #DONE
+
+when action is selected, send a serverRequestAction(name, unit_id) #DONE
+server query master to test if it is acceptable #DONE
+master send serverMasterDoAction(name, unit_id) if acceptable #DONE
+
+select unit with left click #DONE
+either show options with right click - or better, when selected - show options #DONE
+
+map handler highlights list - (tile, color) vals #DONE
+map_handler.clear_highlights() #DONE
+
+Actions have methods: #DONE
+	test_available() - whether action can even be performed or not
+	test_acceptable(target) - whether target (x,y) is acceptable
+	perform(target) - if test_acceptable(target) perform action
+
+Units have attributes: #DONE
+	hp
+	strength
+	action_points
+	actions = {action:Action(self)}
+	dead
+
+Actions have access to unit and game object #DONE
+Action attributes:
+	unit
+	game_object (access to the game_object itself)
+
+	<action specific vars>
+
+Scenario methods:
+	have_winner() -> if do, master submit gameWinner action, then server reset game action #DONE
+
+Need A* code for ai... in case we want pathing (necessary for blocking entities) #DONE
+
+Entity.destroy #DONE
+
+/list and /kick actions from message box for master #DONE
+
+AI class calls update each time it's turn #DONE!
+AI has access to the engine - obviously #DONE!
+AI scenario mod needs to handle the cases for individual units... #DONE!
+
+Units need to update when they move/die #DONE!
+
+On game over, show who won screen, then destroy game and take everyone to the main lobby again #DONE!
+
+Refactor client code to swap between states nicer #DONE
+
+
+Bad move if unit is dead! #Done!
+scenario needs access to gui #Done
+ai base_functions (end_my_turn, do_action, get_my_units, get_enemy_units) #done!
+move check blocking #Done
+scenario needs a message box for saying things (not messages) #Done
+'Caught' scenario needs max_turns, cur_turn, and gui element for it #Done
+Game over screen needs line that allows you to say which player name won (colored) #Needs testing!
+bind map_entites together #Done!
+map_enties have dead attribute #Done!
