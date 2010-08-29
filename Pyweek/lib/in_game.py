@@ -345,7 +345,6 @@ class Game(object):
             self.engine.client.engine.cur_state = self.engine.goto_state(self.engine.client.engine, #YUCK!
                                                                first, second, (255,0,0))
 
-        print('my team:'+ self.engine.my_team)
         if self.engine.whos_turn == self.engine.my_team:
             self.activate_commands()
         else:
@@ -353,7 +352,6 @@ class Game(object):
 
         self.ui_whos_turn.text = 'TURN: Team "%s"' % self.engine.whos_turn
         
-        print(self.engine.free_teams)
         if self.engine.whos_turn in self.engine.free_teams:
             self.ui_whos_turn.text += " <AI>"
 
