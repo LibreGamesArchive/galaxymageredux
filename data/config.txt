@@ -1,6 +1,0 @@
-name='reduxian'
-FPS=True
-sound=False
-fullscreen=False
-verbose_logging=False
-resolution=(800, 600)

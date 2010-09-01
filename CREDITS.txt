@@ -1,7 +1,0 @@
-Contributors:
-    A. Joseph Hager <ajhager@gmail.com> - Programming, Design, Art
-    Matthew Roe (RB[0]) <roebros@gmail.com> - Programming, Design
-    Markus Martin <archwyrm@gmail.com> - Programming, Design
-
-Thank you:
-    Colin McMillen - For your idea and hardwork on GalaxyMage.
