@@ -338,6 +338,8 @@ class Screen(object):
         return int(mx*rx), int(my*ry)
 
 
+#### Basic 2d data structures ####
+
 class BaseTexture(object):
     _free = []
     def __init__(self):
@@ -488,16 +490,41 @@ class AnimatedTexture(object):
 
         self.textures[self.cur_frame].bind()
 
+    def bind_frame(self, frame):
+        self.textures[frame].bind()
+
 
 class TextureClone(object):
     def __init__(self, tex):
         self.tex = tex
+
+        self.size = self.tex.size
+        self.size_mult = self.tex.size_mult
 
     def bind(self):
         self.tex.bind()
 
     def coord(self, x, y):
         return self.tex.coord(x,y)
+
+class AnimatedTextureClone(TextureClone):
+    def __init__(self, tex):
+        TextureClone.__init__(self, tex)
+
+        self.ptime = time.time()
+        self.cur_frame = 0
+
+    def bind(self):
+        self.check_swap()
+        self.tex.bind_frame(self.cur_frame)
+
+    def check_swap(self):
+        if time.time() - self.ptime > self.tex.durations[self.cur_frame]:
+            self.cur_frame += 1
+            if self.cur_frame > len(self.tex.textures):
+                self.cur_frame = 0
+
+            self.ptime = time.time()
 
 class TextureHandler(object):
     def __init__(self):
@@ -519,4 +546,364 @@ class TextureHandler(object):
                     new._from_file(i)
                     self.textures[short] = new
 
-        
+    def get_texture(self, name):
+        if name in self.textures:
+            tex = self.textures[name]
+            if isinstance(tex, BaseTexture):
+                return TextureClone(tex)
+            else:
+                return AnimatedTextureClone(tex)
+
+    def free_textures(self):
+        for i in self.textures.values():
+            i.free_texture()
+        self.textures = {}
+
+
+class DisplayList(object):
+    """An object to compile and store an OpenGL display list"""
+    def __init__(self):
+        """Creat the list"""
+        self.gl_list = glGenLists(1)
+
+    def begin(self):
+        """Begin recording to the list - anything rendered after this will be compiled into the list and not actually rendered"""
+        glNewList(self.gl_list, GL_COMPILE)
+
+    def end(self):
+        """End recording"""
+        glEndList()
+
+    def render(self):
+        """Render the display list"""
+        glCallList(self.gl_list)
+
+    def __del__(self):
+        """Clear the display list data"""
+        try:
+            glDeleteLists(self.gl_list, 1)
+        except:
+            pass #already cleared!
+
+class VertexArray(object):
+    """An object to store and render an OpenGL vertex array of vertices, colors and texture coords"""
+    def __init__(self, render_type=None, max_size=100):
+        """Create the array
+           render_type is the OpenGL constant used in rendering, ie GL_POLYGON, GL_TRINAGLES, etc.
+           max_size is the size of the array"""
+        if render_type is None:
+            render_type = GL_QUADS
+        self.render_type = render_type
+        self.texture = BlankTexture()
+
+        self.max_size = max_size
+
+        self.verts = numpy.zeros((max_size, 3), "f")
+        self.colors = numpy.zeros((max_size, 4), "f")
+        self.texcs = numpy.zeros((max_size, 2), "f")
+        self.norms = numpy.array([[0,1,0]]*max_size, "f")
+
+    def render(self):
+        """Render the array"""
+        self.texture.bind()
+
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_COLOR_ARRAY)
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+        glEnableClientState(GL_NORMAL_ARRAY)
+
+        glVertexPointerf(self.verts)
+        glColorPointerf(self.colors)
+        glTexCoordPointerf(self.texcs)
+        glNormalPointerf(self.norms)
+
+        glDrawArrays(self.render_type, 0, self.max_size)
+
+        glDisableClientState(GL_VERTEX_ARRAY)
+        glDisableClientState(GL_COLOR_ARRAY)
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+        glDisableClientState(GL_NORMAL_ARRAY)
+
+    def reset_verts(self, data):
+        self.verts = numpy.array(data, "f")
+        self.max_size = len(data)
+
+    def reset_colors(self, data):
+        self.colors = numpy.array(data, "f")
+        self.max_size = len(data)
+
+    def reset_texcs(self, data):
+        self.texcs = numpy.array(data, "f")
+        self.max_size = len(data)
+
+    def reset_norms(self, data):
+        self.norms = numpy.array(data, "f")
+        self.max_size = len(data)
+
+    def update_verts(self, index, new):
+        self.verts[index] = new
+
+    def update_colors(self, index, new):
+        self.colors[index] = new
+
+    def update_texcs(self, index, new):
+        self.texcs[index] = new
+
+    def update_norms(self, index, new):
+        self.norms[index] = new
+
+    def resize(self, max_size):
+        self.verts = numpy.resize(self.verts, (max_size, 3))
+        self.colors = numpy.resize(self.colors, (max_size, 4))
+        self.norms = numpy.resize(self.norms, (max_size, 3))
+        self.texcs = numpy.resize(self.texcs, (max_size, 2))
+        self.max_size = max_size
+
+class VBOArray(object):
+    def __init__(self, render_type=None, max_size=100, usage="static", cache_changes=False):
+        """Create the array
+           render_type is the OpenGL constant used in rendering, ie GL_POLYGON, GL_TRINAGLES, etc.
+           max_size is the size of the array
+           usage can be static, dynamic or stream (affecting render vs. modify speeds)
+           cache_changes makes any changes between renderings be stored,
+               and then only one modification is performed.
+               NOTE: doing this actually modifies the entire buffer data, just efficiently
+                     so this is only recommended if you are modifying a tremendous amount of points each frame!"""
+
+        if not VBO_AVAILABLE:
+            raise AttributeError("Vertex buffer objects not available!")
+
+        self.usage = ("GL_"+usage+"_DRAW").upper()
+        uses = {"GL_STATIC_DRAW":GL_STATIC_DRAW,
+                "GL_DYNAMIC_DRAW":GL_DYNAMIC_DRAW,
+                "GL_STREAM_DRAW":GL_STREAM_DRAW}
+        self.usage_gl = uses[self.usage]
+
+        self.cache_changes = cache_changes
+        self._cached_cv = []
+        self._cached_cc = []
+        self._cached_ct = []
+        self._cached_cn = []
+
+        if render_type is None:
+            render_type = GL_QUADS
+        self.render_type = render_type
+        self.texture = BlankTexture()
+
+        self.max_size = max_size
+
+        self.verts = vbo.VBO(numpy.zeros((max_size, 3), "f"), self.usage)
+        self.colors = vbo.VBO(numpy.zeros((max_size, 4), "f"), self.usage)
+        self.texcs = vbo.VBO(numpy.zeros((max_size, 2), "f"), self.usage)
+        self.norms = vbo.VBO(numpy.array([[0,1,0]]*max_size, "f"), self.usage)
+
+    def render(self):
+        """Render the array"""
+        if self.cache_changes:
+            if self._cached_cv or self._cached_cc or self._cached_ct:
+                for i in self._cached_cv:
+                    self.verts.data[i[0]] = i[1]
+                self.verts.bind()
+                glBufferData(GL_ARRAY_BUFFER, self.verts.data, self.usage_gl)
+                self._cached_cv = []
+
+                for i in self._cached_cc:
+                    self.colors.data[i[0]] = i[1]
+                self.colors.bind()
+                glBufferData(GL_ARRAY_BUFFER, self.colors.data, self.usage_gl)
+                self._cached_cc = []
+
+                for i in self._cached_ct:
+                    self.texcs.data[i[0]] = i[1]
+                self.texcs.bind()
+                glBufferData(GL_ARRAY_BUFFER, self.texcs.data, self.usage_gl)
+                self._cached_ct = []
+
+                for i in self._cached_cn:
+                    self.norms.data[i[0]] = i[1]
+                self.norms.bind()
+                glBufferData(GL_ARRAY_BUFFER, self.norms.data, self.usage_gl)
+                self._cached_cn = []
+        self.texture.bind()
+
+        self.verts.bind()
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glVertexPointerf(self.verts)
+
+        self.colors.bind()
+        glEnableClientState(GL_COLOR_ARRAY)
+        glColorPointerf(self.colors)
+
+        self.texcs.bind()
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+        glTexCoordPointerf(self.texcs)
+
+        self.norms.bind()
+        glEnableClientState(GL_NORMAL_ARRAY)
+        glNormalPointerf(self.norms)
+
+        glDrawArrays(self.render_type, 0, self.max_size)
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glDisableClientState(GL_VERTEX_ARRAY)
+        glDisableClientState(GL_COLOR_ARRAY)
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+        glDisableClientState(GL_NORMAL_ARRAY)
+
+    def reset_verts(self, data):
+        self.verts.set_array(numpy.array(data, "f"))
+        self.max_size = len(data)
+
+    def reset_colors(self, data):
+        self.colors.set_array(numpy.array(data, "f"))
+        self.max_size = len(data)
+
+    def reset_texcs(self, data):
+        self.texcs.set_array(numpy.array(data, "f"))
+        self.max_size = len(data)
+
+    def reset_norms(self, data):
+        self.norms.set_array(numpy.array(data, "f"))
+        self.max_size = len(data)
+
+    def update_verts(self, index, new):
+        if self.cache_changes:
+            self._cached_cv.append([index, new])
+        else:
+            self.verts.bind()
+            #index multiplier is
+            #4*len(new) - so since verts have 3 points, we get 12
+            glBufferSubData(GL_ARRAY_BUFFER, 12*index, numpy.array(new, "f"))
+            self.verts.data[index] = new
+
+    def update_colors(self, index, new):
+        if self.cache_changes:
+            self._cached_cc.append([index, new])
+        else:
+            self.colors.bind()
+            glBufferSubData(GL_ARRAY_BUFFER, 16*index, numpy.array(new, "f"))
+            self.colors.data[index] = new
+
+    def update_texcs(self, index, new):
+        if self.cache_changes:
+            self._cached_ct.append([index, new])
+        else:
+            self.texcs.bind()
+            glBufferSubData(GL_ARRAY_BUFFER, 8*index, numpy.array(new, "f"))
+            self.texcs.data[index] = new
+
+    def update_norms(self, index, new):
+        if self.cache_changes:
+            self._cached_cn.append([index, new])
+        else:
+            self.norms.bind()
+            glBufferSubData(GL_ARRAY_BUFFER, 12*index, numpy.array(new, "f"))
+            self.norms.data[index] = new
+
+    def __del__(self):
+        bufs = []
+        for i in (self.verts, self.colors, self.texcs, self.norms):
+            try:
+                i.delete()
+            except:
+                pass #pyggel.quit() was called and we can no longer access the functions!
+
+    def resize(self, max_size):
+        self.max_size = max_size
+        d = numpy.resize(self.verts.data, (max_size, 3))
+        self.verts.set_array(d)
+
+        d = numpy.resize(self.colors.data, (max_size, 4))
+        self.colors.set_array(d)
+
+        d = numpy.resize(self.texcs.data, (max_size, 2))
+        self.texcs.set_array(d)
+
+        d = numpy.resize(self.norms.data, (max_size, 3))
+        self.norms.set_array(d)
+
+def get_best_array_type(render_type=None, max_size=10,
+                        opt=0):
+    """This function returns the best possible array type for what you need.
+       render_type is the OpenGL constant used in rendering, ie GL_POLYGON, GL_TRINAGLES, etc.
+       max_size is the number of individual points in the array
+       opt is how the array is optimized, starting at 0 for fast access to 5 for fast rendering
+           5 also makes use of a cached VBO (if possible) - so it is very fast rendering and modifying
+           *if* you are modifying a very large number of points - otherwise it is slower at modifying"""
+
+    assert opt >= 0 and opt <= 5
+
+    if not VBO_AVAILABLE:
+        return VertexArray(render_type, max_size)
+
+    if opt == 0:
+        return VertexArray(render_type, max_size)
+    elif opt == 1:
+        return VBOArray(render_type, max_size, "stream")
+    elif opt == 2:
+        return VBOArray(render_type, max_size, "dynamic")
+    elif opt == 3:
+        return VBOArray(render_type, max_size, "static")
+    else:
+        return VBOArray(render_type, max_size, "static", True)
+
+
+#### Higher level drawing routines ####
+
+class Image2D(object):
+    def __init__(self, texture, area=None, dlist=None):
+        self.texture = texture
+        if area == None:
+            area = 0,0,self.texture.size[0], self.texture.size[1]
+        self.area = area
+
+        self.dlist = dlist
+        if not dlist:
+            self._compile()
+
+    def _compile(self):
+        #Maybe changeme - just using display lists for images atm
+        #they are lighter code-wise
+        self.dlist = DisplayList()
+
+        topleft = self.texture.coord(self.area[0],
+                                     self.area[1])
+        topright = self.texture.coord(self.area[2],
+                                      self.area[1])
+        bottomleft = self.texture.coord(self.area[0],
+                                        self.area[3])
+        bottomright = self.texture.coord(self.area[1],
+                                         self.area[3])
+
+        #render
+        self.dlist.begin()
+
+        self.texture.bind()
+        glBegin(GL_QUADS)
+        glTexCoord2f(topleft)
+        glVertex2f(0,0)
+        glTexCoord2f(topright)
+        glVertex2f(1,0)
+        glTexCoord2f(bottomright)
+        glVertex2f(1,1)
+        glTexCoord2f(bottomleft)
+        glVertex2f(0,1)
+
+        self.dlist.end()
+
+    def get_rect(self):
+        return pygame.Rect((0,0), self.texture.size)
+
+    def sub_image(self, area):
+        x,y,w,h = area
+        x+=self.area[0]
+        y+=self.area[1]
+        w = min(self.area[2], x+w)
+        h = min(self.area[3], y+h)
+        return Image(self.texture, (x,y,w,h))
+
+    def copy(self):
+        return Image(self.texture, self.area)
+
+    def render(self, pos):
+        pass
