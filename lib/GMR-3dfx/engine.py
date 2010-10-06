@@ -105,24 +105,28 @@ class Display(object):
     def build(self):
         pygame.init()
 
+        self.set_icon()
+        self.set_caption()
+        self.set_screen()
+
         #this has to be set here...
         global MAX_TEXTURE_SIZE
         MAX_TEXTURE_SIZE = min((glGetIntegerv(GL_MAX_TEXTURE_SIZE),
                                 MAX_TEXTURE_SIZE))
 
-        self.set_icon()
-        self.set_caption()
-        self.set_screen()
-
     def clear(self):
-        pass
+        glDisable(GL_SCISSOR_TEST)
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+        glEnable(GL_SCISSOR_TEST)
 
     def refresh(self):
-        pass
+        pygame.display.flip()
 
     def destroy(self):
         #destroy display
-        pass
+        self.clear()
+        glFlush()
+        pygame.quit()
 
     def init_opengl(self):
         glEnable(GL_TEXTURE_2D)
@@ -140,6 +144,12 @@ class Display(object):
         glEnable(GL_BLEND)
 
         glPointSize(1)
+
+        glAlphaFunc(GL_GEQUAL, .5)
+        glTexEnvi(GL_TETURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+##        glFrontFact(GL_CCW)
+##        glCullFace(GL_BACK)
+##        elEnable(GL_CULL_FACE)
 
 
     #Functions for applying updates/changes to attributes
@@ -228,6 +238,10 @@ class Display(object):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         glDisable(GL_DEPTH_TEST)
+
+        rx = 1.0 * self.screen.screen_size[0] / self.screen.screen_size_2d[0]
+        ry = 1.0 * self.screen.screen_size[1] / self.screen.screen_size_2d[1]
+        glScalef(rx, ry, 1)
 
     def set_3d(self):
         glMatrixMode(GL_PROJECTION)
@@ -377,6 +391,7 @@ class BaseTexture(object):
             nw *= 2
         while nh < y and nh < MAX_TEXTURE_SIZE:
             nh *= 2
+
         return nw, nh
 
     def _from_file(self, filename):
@@ -391,13 +406,18 @@ class BaseTexture(object):
         """Compiles image data into texture data"""
         self.get_free_tex()
 
-        size = self._get_next_biggest(*image.get_size())
-        maxs = max_tex_size()
-        if max(size) > maxs:
-            image = pygame.transform.scale(image, (maxs, maxs))
-            size = maxs, maxs
+        size = image.get_size()
+        size2 = self._get_next_biggest(*size)
+        x1,y1 = size
+        if size2[0] < x1:
+            x1 = size2[0]
+        if size2[1] < y1:
+            y1 = size2[1]
+        if (x1,y1) != size:
+            size = (x1,y1)
+            image = pygame.transform.scale(image, size)
 
-        new = pygame.Surface((min((maxs, size[0])), min((maxs, size[1]))))
+        new = pygame.Surface(size2)
         new.blit(image, (0,0))
 
         tdata = pygame.image.tostring(new, "RGBA", 0)
@@ -436,7 +456,7 @@ class BaseTexture(object):
         glBindTexture(GL_TEXTURE_2D, self.gl_tex)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        Texture.bound = self.gl_tex
+
         if self.repeat:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
@@ -454,6 +474,8 @@ class AnimatedTexture(object):
     def __init__(self):
         self.textures = []
         self.durations = []
+        self.size = (0,0)
+        self.size_mult = (1,1)
 
         self.ptime = time.time()
         self.cur_frame = 0
@@ -477,13 +499,15 @@ class AnimatedTexture(object):
             frame, dur = frame
             self.durations.append(dur)
             image = BaseTexture()
-            image._from_image(image)
+            image._from_image(frame)
             self.textures.append(image)
+        self.size = self.textures[0].size
+        self.size_mult = self.textures[0].size_mult
 
     def bind(self):
         if time.time() - self.ptime > self.durations[self.cur_frame]:
             self.cur_frame += 1
-            if self.cur_frame > len(self.textures):
+            if self.cur_frame >= len(self.textures):
                 self.cur_frame = 0
 
             self.ptime = time.time()
@@ -492,6 +516,9 @@ class AnimatedTexture(object):
 
     def bind_frame(self, frame):
         self.textures[frame].bind()
+
+    def coord(self, x, y):
+        return self.textures[0].coord(x,y)
 
 
 class TextureClone(object):
@@ -521,7 +548,7 @@ class AnimatedTextureClone(TextureClone):
     def check_swap(self):
         if time.time() - self.ptime > self.tex.durations[self.cur_frame]:
             self.cur_frame += 1
-            if self.cur_frame > len(self.tex.textures):
+            if self.cur_frame >= len(self.tex.textures):
                 self.cur_frame = 0
 
             self.ptime = time.time()
@@ -855,7 +882,12 @@ class Image2D(object):
         self.texture = texture
         if area == None:
             area = 0,0,self.texture.size[0], self.texture.size[1]
-        self.area = area
+
+        a = float(area[0]) / self.texture.size[0] if area[0] else 0
+        b = float(area[1]) / self.texture.size[1] if area[1] else 0
+        c = float(area[2]) / self.texture.size[0] if area[2] else 0
+        d = float(area[3]) / self.texture.size[1] if area[3] else 0
+        self.area = a,b,c,d
 
         self.dlist = dlist
         if not dlist:
@@ -875,19 +907,31 @@ class Image2D(object):
         bottomright = self.texture.coord(self.area[1],
                                          self.area[3])
 
+        w,h = self.texture.size
+
         #render
         self.dlist.begin()
 
         self.texture.bind()
+        glColor4f(1,1,1,1)
         glBegin(GL_QUADS)
-        glTexCoord2f(topleft)
-        glVertex2f(0,0)
-        glTexCoord2f(topright)
-        glVertex2f(1,0)
-        glTexCoord2f(bottomright)
-        glVertex2f(1,1)
-        glTexCoord2f(bottomleft)
-        glVertex2f(0,1)
+##        glTexCoord2f(*topleft)
+##        glVertex3f(0,0,0)
+##        glTexCoord2f(*bottomleft)
+##        glVertex3f(0,h,0)
+##        glTexCoord2f(*bottomright)
+##        glVertex3f(w,h,0)
+##        glTexCoord2f(*topright)
+##        glVertex3f(w,0,0)
+        glTexCoord2f(0,0)
+        glVertex3f(0,0,0)
+        glTexCoord2f(0,1)
+        glVertex3f(0,20,0)
+        glTexCoord2f(1,1)
+        glVertex3f(20,20,0)
+        glTexCoord2f(1,0)
+        glVertex3f(20,0,0)
+        glEnd()
 
         self.dlist.end()
 
@@ -906,4 +950,7 @@ class Image2D(object):
         return Image(self.texture, self.area)
 
     def render(self, pos):
-        pass
+        glPushMatrix()
+        glTranslatef(pos[0], pos[1], 0)
+        self.dlist.render()
+        glPopMatrix()

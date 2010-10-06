@@ -1,0 +1,26 @@
+Need editors for all of these.
+
+gimg - Galaxymage-image
+
+supports RGBA
+Frames
+Durations (set and random[range])
+Action/facing-bound animation sequences
+compress size with something...
+
+
+gobj
+
+Like gimg - except for 3d objects
+frames, durations, action-bound
+all data stored in one file (woot)
+
+
+gimg editor:
+can load multiple files for arranging, or a sprite sheet.
+order frames, set durations, actions, etc.
+
+
+gobj editor:
+load single obj file - breaking into objects
+allow rotation/movement of objects - saved as "frames"
