@@ -16,6 +16,8 @@ i4 = i3.copy((16, 14, 55, 64))
 
 test.set_2d()
 test.set_lighting(False)
+
+test.screen.push_clip2d((60,60,160,100))
 i.render((50,50))
 i2.render((112,50))
 i3.render((144,50))

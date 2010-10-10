@@ -86,6 +86,16 @@ def clamp(min, max, val):
     if val > max:
         val = max
     return val
+def clamp_area(to, val):
+    x1,y1,x2,y2 = val
+    ox1,oy1,ox2,oy2 = to
+
+    x1 = clamp(ox1, ox2, x1)
+    x2 = clamp(ox1, ox2, x2)
+    y1 = clamp(oy1, oy2, y1)
+    y2 = clamp(oy1, oy2, y2)
+
+    return (x1,y1,x2,y2)
 
 
 #display controller
@@ -322,19 +332,16 @@ class Screen(object):
     def push_clip(self, new):
         """Push a new rendering clip onto the stack - used to limit rendering to a small area."""
         if self.clips: #we have an old one to compare to...
-            a,b,c,d = new
-            e,f,g,h = self.clips[-1] #last
-            new = (max((a, e)), max((b, f)), min((c, g)), min((d, h)))
+            new = clamp_area(self.clips[-1], new)
         self.clips.append(new)
         glScissor(*new)
 
-    def push_clip2d(self, pos, size):
+    def push_clip2d(self, new):
         """Convert a 2d pos/size rect into GL coords for clipping."""
         rx = 1.0 * self.screen_size[0] / self.screen_size_2d[0]
         ry = 1.0 * self.screen_size[1] / self.screen_size_2d[1]
 
-        x, y = pos
-        w, h = size
+        x, y, w, h = new
 
         self.push_clip((int(x*rx), self.screen_size[1]-int(y*ry)-int(h*ry), int(w*rx), int(h*ry)))
 
@@ -368,6 +375,7 @@ class BaseTexture(object):
         self.gl_tex = None
         self.size = (0,0)
         self.size_mult = (1,1)
+        self.area = (0,0,1,1)
 
         self.tex_data = None
         self.repeat = False
@@ -432,6 +440,7 @@ class BaseTexture(object):
         w1, h1 = image.get_size()
         w2, h2 = new.get_size()
         self.size = w1, h1
+        self.area = (0,0,w1,h1)
 
         self.size_mult = (w1*1.0/w2,
                           h1*1.0/h2)
@@ -480,7 +489,7 @@ class BaseTexture(object):
         return x*self.size_mult[0], y*self.size_mult[1]
 
     def get_region(self, area):
-        return TextureRegion(self, area)
+        return TextureRegion(self, clamp_area(self.area, area))
 
 class TextureRegion(object):
     def __init__(self, tex, area):
@@ -513,16 +522,7 @@ class TextureRegion(object):
         return self.tex.coord(x,y)
 
     def get_region(self, area):
-        x1,y1,x2,y2 = area
-
-        ox1, oy1, ox2, oy2
-
-        x1 = clamp(ox1, ox2, x1)
-        x2 = clamp(ox1, ox2, x2)
-        y1 = clamp(oy1, oy2, y1)
-        y2 = clamp(oy1, oy2, y2)
-
-        return TextureRegion(self, (x1,y1,x2,y2))
+        return TextureRegion(self, clamp_area(self.area, area))
 
 
 class TextureClone(object):
@@ -531,6 +531,7 @@ class TextureClone(object):
         self.gl_tex = self.tex.gl_tex
 
         self.size = self.tex.size
+        self.area = self.tex.area
         self.repeat = self.tex.repeat
 
     def bind(self):
@@ -813,6 +814,7 @@ class AnimatedTexture(object):
         self.durations = []
         self.size = (0,0)
         self.size_mult = (1,1)
+        self.area = (0,0,1,1)
 
         self.ptime = time.time()
         self.cur_frame = 0
@@ -840,6 +842,7 @@ class AnimatedTexture(object):
             self.textures.append(image)
         self.size = self.textures[0].size
         self.size_mult = self.textures[0].size_mult
+        self.area = self.textures[0].area
 
     def bind(self):
         if time.time() - self.ptime > self.durations[self.cur_frame]:
@@ -858,7 +861,7 @@ class AnimatedTexture(object):
         return self.textures[0].coord(x,y)
 
     def get_region(self, area):
-        return AnimatedTextureRegion(self, area)
+        return AnimatedTextureRegion(self, clamp_area(self.area, area))
 
 class AnimatedTextureClone(TextureClone):
     def __init__(self, tex):
@@ -880,7 +883,7 @@ class AnimatedTextureClone(TextureClone):
             self.ptime = time.time()
 
     def get_region(self, area):
-        return self.tex.get_region(self, area)
+        return self.tex.get_region(self, clamp_area(self.area, area))
 
 class AnimatedTextureRegion(object):
     def __init__(self, tex, area):
@@ -925,16 +928,7 @@ class AnimatedTextureRegion(object):
         return self.tex.coord(x,y)
 
     def get_region(self, area):
-        x1,y1,x2,y2 = area
-
-        ox1, oy1, ox2, oy2
-
-        x1 = clamp(ox1, ox2, x1)
-        x2 = clamp(ox1, ox2, x2)
-        y1 = clamp(oy1, oy2, y1)
-        y2 = clamp(oy1, oy2, y2)
-
-        return AnimatedTextureRegion(self, (x1,y1,x2,y2))
+        return AnimatedTextureRegion(self, clamp_area(self.area, area))
 
 def get_best_array_type(render_type=None, max_size=10,
                         opt=0):
