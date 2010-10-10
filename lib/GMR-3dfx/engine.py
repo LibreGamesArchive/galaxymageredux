@@ -114,6 +114,8 @@ class Display(object):
         MAX_TEXTURE_SIZE = min((glGetIntegerv(GL_MAX_TEXTURE_SIZE),
                                 MAX_TEXTURE_SIZE))
 
+        self.init_opengl()
+
     def clear(self):
         glDisable(GL_SCISSOR_TEST)
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
@@ -146,10 +148,12 @@ class Display(object):
         glPointSize(1)
 
         glAlphaFunc(GL_GEQUAL, .5)
-        glTexEnvi(GL_TETURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
-##        glFrontFact(GL_CCW)
-##        glCullFace(GL_BACK)
-##        elEnable(GL_CULL_FACE)
+        glClearColor(0,0,0,0)
+
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+        glFrontFace(GL_CCW)
+        glCullFace(GL_BACK)
+        glEnable(GL_CULL_FACE)
 
 
     #Functions for applying updates/changes to attributes
@@ -280,12 +284,6 @@ class Screen(object):
         self.view_far = 100.0
 
         self.clear_color = (0,0,0,0)
-
-        self.cursor = None
-        self.cursor_visible = True
-        self.cursor_center = False
-
-        self.have_init = False
 
         self.clips = [(0,0,self.screen_size[0],self.screen_size[1])]
 
