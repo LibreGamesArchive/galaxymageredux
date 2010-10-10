@@ -73,10 +73,19 @@ def set_debug(boolean):
 class MissingModule(Exception):
     pass
 
+class MissingData(Exception):
+    pass
 
-#misc classes
+
+#misc classes/functions
 class PYGGEL_NOCHANGE(object):
     pass
+def clamp(min, max, val):
+    if val < min:
+        val = min
+    if val > max:
+        val = max
+    return val
 
 
 #display controller
@@ -350,7 +359,7 @@ class Screen(object):
         return int(mx*rx), int(my*ry)
 
 
-#### Basic 2d data structures ####
+#### Basic data structures ####
 
 class BaseTexture(object):
     _free = []
@@ -466,65 +475,63 @@ class BaseTexture(object):
 
     def coord(self, x, y):
         """Convert x,y coord to fit real tex"""
+        x = 1.0*x / self.size[0] if x else 0
+        y = 1.0*y / self.size[1] if y else 0
         return x*self.size_mult[0], y*self.size_mult[1]
 
-class AnimatedTexture(object):
-    def __init__(self):
-        self.textures = []
-        self.durations = []
-        self.size = (0,0)
-        self.size_mult = (1,1)
+    def get_region(self, area):
+        return TextureRegion(self, area)
 
-        self.ptime = time.time()
-        self.cur_frame = 0
+class TextureRegion(object):
+    def __init__(self, tex, area):
+        self.tex = tex
+        self.gl_tex = self.tex.gl_tex
+        self.area = area
+        self.repeat = False
 
-    def _from_file(self, filename):
-        self._from_image(GIFImage.GIFImage(filename))
-
-    def _from_image(self, image):
-        self._compile(image)
-
-    def free_texture(self):
-        for i in self.textures:
-            i.free_texture()
-        self.textures = []
-        self.durations = []
-
-    def _compile(self, image):
-        self.textures = []
-        self.durations = []
-        for frame in image.frames:
-            frame, dur = frame
-            self.durations.append(dur)
-            image = BaseTexture()
-            image._from_image(frame)
-            self.textures.append(image)
-        self.size = self.textures[0].size
-        self.size_mult = self.textures[0].size_mult
+        x = self.area[2] - self.area[0]
+        y = self.area[3] - self.area[1]
+        self.size = x, y
 
     def bind(self):
-        if time.time() - self.ptime > self.durations[self.cur_frame]:
-            self.cur_frame += 1
-            if self.cur_frame >= len(self.textures):
-                self.cur_frame = 0
+        glBindTexture(GL_TEXTURE_2D, self.gl_tex)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-            self.ptime = time.time()
-
-        self.textures[self.cur_frame].bind()
-
-    def bind_frame(self, frame):
-        self.textures[frame].bind()
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
 
     def coord(self, x, y):
-        return self.textures[0].coord(x,y)
+        x1,y1,x2,y2 = self.area
+
+        x += x1
+        y += y1
+
+        x = clamp(x1,x2, x)
+        y = clamp(y1,y2, y)
+        return self.tex.coord(x,y)
+
+    def get_region(self, area):
+        x1,y1,x2,y2 = area
+
+        ox1, oy1, ox2, oy2
+
+        x1 = clamp(ox1, ox2, x1)
+        x2 = clamp(ox1, ox2, x2)
+        y1 = clamp(oy1, oy2, y1)
+        y2 = clamp(oy1, oy2, y2)
+
+        return TextureRegion(self, (x1,y1,x2,y2))
 
 
 class TextureClone(object):
     def __init__(self, tex):
         self.tex = tex
+        self.gl_tex = self.tex.gl_tex
 
         self.size = self.tex.size
-        self.size_mult = self.tex.size_mult
+        self.repeat = self.tex.repeat
 
     def bind(self):
         self.tex.bind()
@@ -532,58 +539,8 @@ class TextureClone(object):
     def coord(self, x, y):
         return self.tex.coord(x,y)
 
-class AnimatedTextureClone(TextureClone):
-    def __init__(self, tex):
-        TextureClone.__init__(self, tex)
-
-        self.ptime = time.time()
-        self.cur_frame = 0
-
-    def bind(self):
-        self.check_swap()
-        self.tex.bind_frame(self.cur_frame)
-
-    def check_swap(self):
-        if time.time() - self.ptime > self.tex.durations[self.cur_frame]:
-            self.cur_frame += 1
-            if self.cur_frame >= len(self.tex.textures):
-                self.cur_frame = 0
-
-            self.ptime = time.time()
-
-class TextureHandler(object):
-    def __init__(self):
-        self.textures = {}
-
-    def load_dir(self, dire):
-        for i in os.listdir(dire):
-            ii = i.split('.')[-1]
-            if ii.lower() in ('png', 'bmp', 'jpg'):
-                short = os.path.split(i)[1]
-                if not short in self.textures:
-                    new = BaseTexture()
-                    new._from_file(i)
-                    self.textures[short] = new
-            if ii.lower() == 'gif':
-                short = os.path.split(i)[1]
-                if not short in self.textures:
-                    new = AnimatedTexture()
-                    new._from_file(i)
-                    self.textures[short] = new
-
-    def get_texture(self, name):
-        if name in self.textures:
-            tex = self.textures[name]
-            if isinstance(tex, BaseTexture):
-                return TextureClone(tex)
-            else:
-                return AnimatedTextureClone(tex)
-
-    def free_textures(self):
-        for i in self.textures.values():
-            i.free_texture()
-        self.textures = {}
-
+    def get_region(self, area):
+        return self.tex.get_region(area)
 
 class DisplayList(object):
     """An object to compile and store an OpenGL display list"""
@@ -847,6 +804,138 @@ class VBOArray(object):
         d = numpy.resize(self.norms.data, (max_size, 3))
         self.norms.set_array(d)
 
+
+#### Higher level data structures ####
+
+class AnimatedTexture(object):
+    def __init__(self):
+        self.textures = []
+        self.durations = []
+        self.size = (0,0)
+        self.size_mult = (1,1)
+
+        self.ptime = time.time()
+        self.cur_frame = 0
+
+    def _from_file(self, filename):
+        self._from_image(GIFImage.GIFImage(filename))
+
+    def _from_image(self, image):
+        self._compile(image)
+
+    def free_texture(self):
+        for i in self.textures:
+            i.free_texture()
+        self.textures = []
+        self.durations = []
+
+    def _compile(self, image):
+        self.textures = []
+        self.durations = []
+        for frame in image.frames:
+            frame, dur = frame
+            self.durations.append(dur)
+            image = BaseTexture()
+            image._from_image(frame)
+            self.textures.append(image)
+        self.size = self.textures[0].size
+        self.size_mult = self.textures[0].size_mult
+
+    def bind(self):
+        if time.time() - self.ptime > self.durations[self.cur_frame]:
+            self.cur_frame += 1
+            if self.cur_frame >= len(self.textures):
+                self.cur_frame = 0
+
+            self.ptime = time.time()
+
+        self.textures[self.cur_frame].bind()
+
+    def bind_frame(self, frame):
+        self.textures[frame].bind()
+
+    def coord(self, x, y):
+        return self.textures[0].coord(x,y)
+
+    def get_region(self, area):
+        return AnimatedTextureRegion(self, area)
+
+class AnimatedTextureClone(TextureClone):
+    def __init__(self, tex):
+        TextureClone.__init__(self, tex)
+
+        self.ptime = time.time()
+        self.cur_frame = 0
+
+    def bind(self):
+        self.check_swap()
+        self.tex.bind_frame(self.cur_frame)
+
+    def check_swap(self):
+        if time.time() - self.ptime > self.tex.durations[self.cur_frame]:
+            self.cur_frame += 1
+            if self.cur_frame >= len(self.tex.textures):
+                self.cur_frame = 0
+
+            self.ptime = time.time()
+
+    def get_region(self, area):
+        return self.tex.get_region(self, area)
+
+class AnimatedTextureRegion(object):
+    def __init__(self, tex, area):
+        self.tex = tex
+
+        self.textures = tex.textures
+        self.durations = tex.durations
+        self.area = area
+        self.repeat = False
+
+        x = self.area[2] - self.area[0]
+        y = self.area[3] - self.area[1]
+        self.size = x, y
+
+        self.ptime = time.time()
+        self.cur_frame = 0
+
+    def bind(self):
+        if time.time() - self.ptime > self.tex.durations[self.cur_frame]:
+            self.cur_frame += 1
+            if self.cur_frame >= len(self.tex.textures):
+                self.cur_frame = 0
+
+            self.ptime = time.time()
+
+        glBindTexture(GL_TEXTURE_2D, self.textures[self.cur_frame].gl_tex)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
+
+    def coord(self, x, y):
+        x1,y1,x2,y2 = self.area
+
+        x += x1
+        y += y1
+
+        x = clamp(x1,x2, x)
+        y = clamp(y1,y2, y)
+        return self.tex.coord(x,y)
+
+    def get_region(self, area):
+        x1,y1,x2,y2 = area
+
+        ox1, oy1, ox2, oy2
+
+        x1 = clamp(ox1, ox2, x1)
+        x2 = clamp(ox1, ox2, x2)
+        y1 = clamp(oy1, oy2, y1)
+        y2 = clamp(oy1, oy2, y2)
+
+        return AnimatedTextureRegion(self, (x1,y1,x2,y2))
+
 def get_best_array_type(render_type=None, max_size=10,
                         opt=0):
     """This function returns the best possible array type for what you need.
@@ -873,19 +962,56 @@ def get_best_array_type(render_type=None, max_size=10,
         return VBOArray(render_type, max_size, "static", True)
 
 
+def load_texture(name):
+    iname = name.split('.')[-1].lower()
+    if iname in ('png', 'bmp', 'jpg'):
+        short = os.path.split(name)[1]
+        new = BaseTexture()
+        new._from_file(name)
+        return new
+    if iname == 'gif':
+        short = os.path.split(name)[1]
+        new = AnimatedTexture()
+        new._from_file(name)
+        return new
+    raise MissingData('No file "%s"'%name)
+
+class TextureHandler(object):
+    def __init__(self):
+        self.textures = {}
+
+    def load_dir(self, dire, replace=False):
+        for i in os.listdir(dire):
+            self.load_texture(i, replace)
+
+    def load_texture(self, name, replace=False):
+        if name.split('.')[-1].lower() in ('png', 'bmp', 'jpg', 'gif'):
+            short = os.path.split(name)[1]
+            if replace or (not short in self.textures):
+                self.textures[short] = load_texture(name)
+
+    def get_texture(self, name):
+        if name in self.textures:
+            tex = self.textures[name]
+            if isinstance(tex, BaseTexture):
+                return TextureClone(tex)
+            else:
+                return AnimatedTextureClone(tex)
+
+    def free_textures(self):
+        for i in self.textures.values():
+            i.free_texture()
+        self.textures = {}
+
+
 #### Higher level drawing routines ####
 
 class Image2D(object):
     def __init__(self, texture, area=None, dlist=None):
-        self.texture = texture
         if area == None:
-            area = 0,0,self.texture.size[0], self.texture.size[1]
-
-        a = float(area[0]) / self.texture.size[0] if area[0] else 0
-        b = float(area[1]) / self.texture.size[1] if area[1] else 0
-        c = float(area[2]) / self.texture.size[0] if area[2] else 0
-        d = float(area[3]) / self.texture.size[1] if area[3] else 0
-        self.area = a,b,c,d
+            self.texture = texture
+        else:
+            self.texture = texture.get_region(area)
 
         self.dlist = dlist
         if not dlist:
@@ -896,16 +1022,11 @@ class Image2D(object):
         #they are lighter code-wise
         self.dlist = DisplayList()
 
-        topleft = self.texture.coord(self.area[0],
-                                     self.area[1])
-        topright = self.texture.coord(self.area[2],
-                                      self.area[1])
-        bottomleft = self.texture.coord(self.area[0],
-                                        self.area[3])
-        bottomright = self.texture.coord(self.area[2],
-                                         self.area[3])
-
         w,h = self.texture.size
+        topleft = self.texture.coord(0, 0)
+        topright = self.texture.coord(w,0)
+        bottomleft = self.texture.coord(0,h)
+        bottomright = self.texture.coord(w,h)
 
         #render
         self.dlist.begin()
@@ -928,19 +1049,22 @@ class Image2D(object):
     def get_rect(self):
         return pygame.Rect((0,0), self.texture.size)
 
-    def sub_image(self, area):
-        x,y,w,h = area
-        x+=self.area[0]
-        y+=self.area[1]
-        w = min(self.area[2], x+w)
-        h = min(self.area[3], y+h)
-        return Image(self.texture, (x,y,w,h))
+    def copy(self, area=None):
+        if area:
+            tex = self.texture.get_region(area)
+        else:
+            tex = self.texture
+        return Image2D(tex)
 
-    def copy(self):
-        return Image(self.texture, self.area)
+    def clone(self):
+        """Reference copy"""
+        return Image2D(self.texture, None, self.dlist)
 
     def render(self, pos):
         glPushMatrix()
         glTranslatef(pos[0], pos[1], 0)
         self.dlist.render()
         glPopMatrix()
+
+def load_image2D(name, area=None):
+    return Image2D(load_texture(name), area)

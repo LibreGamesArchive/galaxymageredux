@@ -1,0 +1,13 @@
+
+Make Textures/image loaders helper functions - DONE
+Fonts!!!
+Draw functions (rect, line for now)
+
+TextureRegion - binds parent texture, but coords to it's bounds
+			can be used anywhere a texture is - DONE
+
+draw_rect(pos, size, color, texture)
+draw_lines([(start, end)...], color, width)
+
+Areas - basically just clip screen to their dimensions...
+	To replace the screens/surfs of pygame/gui
