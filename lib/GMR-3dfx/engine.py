@@ -902,7 +902,7 @@ class Image2D(object):
                                       self.area[1])
         bottomleft = self.texture.coord(self.area[0],
                                         self.area[3])
-        bottomright = self.texture.coord(self.area[1],
+        bottomright = self.texture.coord(self.area[2],
                                          self.area[3])
 
         w,h = self.texture.size
@@ -913,22 +913,14 @@ class Image2D(object):
         self.texture.bind()
         glColor4f(1,1,1,1)
         glBegin(GL_QUADS)
-##        glTexCoord2f(*topleft)
-##        glVertex3f(0,0,0)
-##        glTexCoord2f(*bottomleft)
-##        glVertex3f(0,h,0)
-##        glTexCoord2f(*bottomright)
-##        glVertex3f(w,h,0)
-##        glTexCoord2f(*topright)
-##        glVertex3f(w,0,0)
-        glTexCoord2f(0,0)
+        glTexCoord2f(*topleft)
         glVertex3f(0,0,0)
-        glTexCoord2f(0,1)
-        glVertex3f(0,20,0)
-        glTexCoord2f(1,1)
-        glVertex3f(20,20,0)
-        glTexCoord2f(1,0)
-        glVertex3f(20,0,0)
+        glTexCoord2f(*bottomleft)
+        glVertex3f(0,h,0)
+        glTexCoord2f(*bottomright)
+        glVertex3f(w,h,0)
+        glTexCoord2f(*topright)
+        glVertex3f(w,0,0)
         glEnd()
 
         self.dlist.end()
