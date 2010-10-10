@@ -12,6 +12,8 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+import math
+
 import os
 
 try:
@@ -108,7 +110,7 @@ class Display(object):
                  enable_psyco=True, icon_image=None,
                  fullscreen=False, hwrender=True,
                  caption="..."):
-        if screen_size and screen_size_2d:
+        if screen_size and not screen_size_2d:
             screen_size_2d = screen_size
 
         if enable_psyco and PSY_AVAILABLE:
@@ -392,7 +394,8 @@ class BaseTexture(object):
             self.gl_tex = glGenTextures(1)
 
     def free_texture(self):
-        BaseTexture._free.append(self.gl_tex)
+        if not self.gl_tex in BaseTexture._free:
+            BaseTexture._free.append(self.gl_tex)
         self.size = (0,0)
         self.tex_data = None
         self.gl_tex = None
@@ -419,23 +422,29 @@ class BaseTexture(object):
         """Creates a texture based on a raw Pygame Surface."""
         self._compile(image)
 
+    def empty(self, size, color=(0,0,0,0)):
+        image = pygame.Surface(size).convert_alpha()
+        image.fill(color)
+        self._from_image(image)
+
     def _compile(self, image):
         """Compiles image data into texture data"""
         self.get_free_tex()
 
         size = image.get_size()
         size2 = self._get_next_biggest(*size)
-        x1,y1 = size
-        if size2[0] < x1:
-            x1 = size2[0]
-        if size2[1] < y1:
-            y1 = size2[1]
-        if (x1,y1) != size:
-            size = (x1,y1)
-            image = pygame.transform.scale(image, size)
+        if size != size2:
+            x1,y1 = size
+            x1 = max((size2[0], x1))
+            y1 = max((size2[1], y1))
+            if (x1,y1) != size:
+                image = pygame.transform.scale(image, (x1, y1))
 
-        new = pygame.Surface(size2)
-        new.blit(image, (0,0))
+            new = pygame.Surface(size2).convert_alpha()
+            new.fill((0,0,0,0))
+            new.blit(image, (0,0))
+        else:
+            new = image
 
         tdata = pygame.image.tostring(new, "RGBA", 0)
 
@@ -496,6 +505,9 @@ class BaseTexture(object):
 
     def get_region(self, area):
         return TextureRegion(self, clamp_area(self.area, area))
+
+    def __del__(self):
+        self.free_texture()
 
 class TextureRegion(object):
     def __init__(self, tex, area):
@@ -1040,7 +1052,6 @@ class Image2D(object):
         self.dlist.begin()
 
         self.texture.bind()
-        glColor4f(1,1,1,1)
         glBegin(GL_QUADS)
         glTexCoord2f(*topleft)
         glVertex3f(0,0,0)
@@ -1071,8 +1082,44 @@ class Image2D(object):
     def render(self, pos):
         glPushMatrix()
         glTranslatef(pos[0], pos[1], 0)
+        glColor4f(1,1,1,1)
         self.dlist.render()
         glPopMatrix()
 
 def load_image2D(name, area=None):
     return Image2D(load_texture(name), area)
+
+class Font2D(object):
+    def __init__(self, name=None):
+        self.name = name
+
+
+        self._compile()
+
+    def _compile(self):
+        printable_chars = "abcdefghijklmnopqrstuvwxyz`1234567890-=[]\\;',./ "+'ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}|:"<>?'
+
+        num = len(printable_chars)
+        rows = 10
+        pygame_font = pygame.font.Font(self.name, 72)
+        ind = 100
+
+        surf = pygame.Surface((1024, 1024)).convert_alpha()
+        surf.fill((0,0,0,0))
+
+        char_map = {}
+
+        on = 0
+        for y in xrange(rows):
+            for x in xrange(rows):
+                if on < num:
+                    char = printable_chars[on]
+                    glyph = pygame_font.render(char, 1, (255,255,255))
+                    surf.blit(glyph, (x*ind, y*ind))
+                    char_map[char] = (x*ind, y*ind, glyph.get_width(), glyph.get_height())
+                    on += 1
+
+        surf = pygame.transform.scale(surf, (512,512))
+
+        self.tex = BaseTexture()
+        self.tex._from_image(surf)

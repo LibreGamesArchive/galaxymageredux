@@ -20,8 +20,13 @@ test.set_lighting(False)
 test.screen.push_clip2d((60,60,160,100))
 i.render((50,50))
 i2.render((112,50))
-i3.render((144,50))
+i3.render((112,50))
 i4.render((206, 50))
+test.screen.pop_clip()
+
+f = engine.Font2D()
+i5 = Image2D(f.tex)
+i5.render((0,0))
 
 test.refresh()
 
