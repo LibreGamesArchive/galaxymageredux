@@ -1099,12 +1099,14 @@ class Font2D(object):
     def _compile(self):
         printable_chars = "abcdefghijklmnopqrstuvwxyz`1234567890-=[]\\;',./ "+'ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}|:"<>?'
 
+        texs = min((1024, MAX_TEXTURE_SIZE))
+
         num = len(printable_chars)
         rows = 10
-        pygame_font = pygame.font.Font(self.name, 72)
-        ind = 100
+        pygame_font = pygame.font.Font(self.name, int(texs/rows*0.75))
+        ind = int(texs/rows)
 
-        surf = pygame.Surface((1024, 1024)).convert_alpha()
+        surf = pygame.Surface((texs, texs)).convert_alpha()
         surf.fill((0,0,0,0))
 
         char_map = {}
@@ -1118,8 +1120,6 @@ class Font2D(object):
                     surf.blit(glyph, (x*ind, y*ind))
                     char_map[char] = (x*ind, y*ind, glyph.get_width(), glyph.get_height())
                     on += 1
-
-        surf = pygame.transform.scale(surf, (512,512))
 
         self.tex = BaseTexture()
         self.tex._from_image(surf)
