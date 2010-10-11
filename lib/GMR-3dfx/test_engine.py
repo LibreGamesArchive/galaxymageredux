@@ -25,9 +25,9 @@ i4.render((206, 50))
 test.screen.pop_clip()
 
 f = engine.Font2D()
-i5 = Image2D(f.tex)
-glScalef(2,2,2)
-i5.render((0,0))
+##i5 = Image2D(f.tex)
+##i5.render((0,0))
+f.render("Hello World", (10,10), 32)
 
 test.refresh()
 

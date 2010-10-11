@@ -1050,8 +1050,6 @@ class Image2D(object):
 
         #render
         self.dlist.begin()
-
-        self.texture.bind()
         glBegin(GL_QUADS)
         glTexCoord2f(*topleft)
         glVertex3f(0,0,0)
@@ -1083,6 +1081,7 @@ class Image2D(object):
         glPushMatrix()
         glTranslatef(pos[0], pos[1], 0)
         glColor4f(1,1,1,1)
+        self.texture.bind()
         self.dlist.render()
         glPopMatrix()
 
@@ -1090,8 +1089,9 @@ def load_image2D(name, area=None):
     return Image2D(load_texture(name), area)
 
 class Font2D(object):
-    def __init__(self, name=None):
+    def __init__(self, name=None, tex_size=1024):
         self.name = name
+        self.tex_size = tex_size
 
 
         self._compile()
@@ -1099,11 +1099,12 @@ class Font2D(object):
     def _compile(self):
         printable_chars = "abcdefghijklmnopqrstuvwxyz`1234567890-=[]\\;',./ "+'ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}|:"<>?'
 
-        texs = min((1024, MAX_TEXTURE_SIZE))
+        texs = min((self.tex_size, MAX_TEXTURE_SIZE))
 
         num = len(printable_chars)
         rows = 10
-        pygame_font = pygame.font.Font(self.name, int(texs/rows*0.75))
+        fsize = int(texs/rows*0.9)
+        pygame_font = pygame.font.Font(self.name, fsize)
         ind = int(texs/rows)
 
         surf = pygame.Surface((texs, texs)).convert_alpha()
@@ -1123,3 +1124,28 @@ class Font2D(object):
 
         self.tex = BaseTexture()
         self.tex._from_image(surf)
+        glyph_map = {}
+
+        for i in char_map:
+            x,y,w,h = char_map[i]
+            glyph_map[i] = Image2D(self.tex.get_region((x,y,x+w,y+h)))
+
+        self.char_map = char_map
+        self.glyph_map = glyph_map
+        self.fsize = fsize
+
+    def render(self, string, pos, size=None):
+        if size == None:
+            size = self.fsize
+        scale = size*1.0/self.fsize
+        glPushMatrix()
+        glScalef(scale,scale,1)
+        glTranslatef(pos[0], pos[1], 0)
+
+        ind = 0
+        for char in string:
+            glyph = self.glyph_map[char]
+            glyph.render((ind, 0))
+            ind += glyph.texture.size[0]
+
+        glPopMatrix()
