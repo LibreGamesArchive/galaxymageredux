@@ -101,9 +101,19 @@ def clamp_area(to, val):
 
 
 #display controller
+global __display
+__display = None #can only have one
+def get_display():
+    global __display
+    return __display
+def set_display(display):
+    global __display
+    __display = display
+
 class Display(object):
     """This object controls initialization, modification, and destroying of the display"""
     def __init__(self):
+        self.blank_texture = None
         self.screen = Screen()
 
     def setup(self, screen_size=None, screen_size_2d=None,
@@ -124,6 +134,9 @@ class Display(object):
         self.screen.caption = caption
 
     def build(self):
+        if get_display():
+            raise Exception("can only have one display active at one time!")
+        set_display(self)
         pygame.init()
 
         self.set_icon()
@@ -136,6 +149,9 @@ class Display(object):
                                 MAX_TEXTURE_SIZE))
 
         self.init_opengl()
+
+        self.blank_texture = BaseTexture()
+        self.blank_texture.empty((2,2), (255,255,255,255))
 
     def clear(self):
         glDisable(GL_SCISSOR_TEST)
@@ -150,6 +166,8 @@ class Display(object):
         self.clear()
         glFlush()
         pygame.quit()
+        set_display(None)
+        self.blank_texture = None
 
     def init_opengl(self):
         glEnable(GL_TEXTURE_2D)
@@ -1149,3 +1167,42 @@ class Font2D(object):
             ind += glyph.texture.size[0]
 
         glPopMatrix()
+
+def draw_rect2d(area, color=(1,1,1,1), texture=None, tex_scale=True):
+    area = pygame.Rect(area)
+
+    if not texture:
+        texture = get_display().blank_texture
+        topleft = topright = bottomleft = bottomright = (0,0)
+    else:
+        if tex_scale:
+            w = texture.size[0]
+            h = texture.size[1]
+        else:
+            w = clamp(0, texture.size[0], area.width)
+            h = clamp(0, texture.size[1], area.height)
+        topleft = texture.coord(0, 0)
+        topright = texture.coord(w,0)
+        bottomleft = texture.coord(0,h)
+        bottomright = texture.coord(w,h)
+    texture.bind()
+
+    glColor4f(*color)
+    glBegin(GL_QUADS)
+    glTexCoord2f(*topleft)
+    glVertex3f(area.left, area.top, 0)
+    glTexCoord2f(*bottomleft)
+    glVertex3f(area.left, area.bottom, 0)
+    glTexCoord2f(*bottomright)
+    glVertex3f(area.right, area.bottom, 0)
+    glTexCoord2f(*topright)
+    glVertex3f(area.right, area.top, 0)
+    glEnd()
+
+def draw_lines2d(pairs, color=(1,1,1,1)):
+    glColor4f(*color)
+    glBegin(GL_LINES)
+    for pair in pairs:
+        glVertex3f(pair[0][0], pair[0][1], 0)
+        glVertex3f(pair[1][0], pair[1][1], 0)
+    glEnd()

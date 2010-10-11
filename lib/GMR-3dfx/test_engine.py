@@ -25,9 +25,13 @@ i4.render((206, 50))
 test.screen.pop_clip()
 
 f = engine.Font2D()
-##i5 = Image2D(f.tex)
-##i5.render((0,0))
 f.render("Hello World", (10,10), 32)
+
+engine.draw_rect2d((50,200,100,100), texture=test.blank_texture)
+
+engine.draw_lines2d([((0,0), (500,500)),
+                     ((500,0), (0,500))],
+                    (1,0,0,.5))
 
 test.refresh()
 
