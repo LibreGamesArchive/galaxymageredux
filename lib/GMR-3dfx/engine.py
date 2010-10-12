@@ -1095,10 +1095,10 @@ class Image2D(object):
         """Reference copy"""
         return Image2D(self.texture, None, self.dlist)
 
-    def render(self, pos):
+    def render(self, pos, colorize=(1,1,1,1)):
         glPushMatrix()
         glTranslatef(pos[0], pos[1], 0)
-        glColor4f(1,1,1,1)
+        glColor4f(*colorize)
         self.texture.bind()
         self.dlist.render()
         glPopMatrix()
@@ -1152,18 +1152,32 @@ class Font2D(object):
         self.glyph_map = glyph_map
         self.fsize = fsize
 
-    def render(self, string, pos, size=None):
+    def check_size(self, string, size=None):
+        if size == None:
+            size = self.fsize
+
+        scale = size*1.0/self.fsize
+        height = 0
+        width = 0
+        for char in string:
+            glyph = self.glyph_map[char]
+            height = max((height, glyph.texture.size[1]))
+            width += glyph.texture.size[0]
+
+        return width, height
+
+    def render(self, string, pos, color=(1,1,1,1), size=None):
         if size == None:
             size = self.fsize
         scale = size*1.0/self.fsize
         glPushMatrix()
-        glScalef(scale,scale,1)
         glTranslatef(pos[0], pos[1], 0)
+        glScalef(scale,scale,1)
 
         ind = 0
         for char in string:
             glyph = self.glyph_map[char]
-            glyph.render((ind, 0))
+            glyph.render((ind, 0), color)
             ind += glyph.texture.size[0]
 
         glPopMatrix()
@@ -1173,18 +1187,17 @@ def draw_rect2d(area, color=(1,1,1,1), texture=None, tex_scale=True):
 
     if not texture:
         texture = get_display().blank_texture
-        topleft = topright = bottomleft = bottomright = (0,0)
+
+    if tex_scale:
+        w = texture.size[0]
+        h = texture.size[1]
     else:
-        if tex_scale:
-            w = texture.size[0]
-            h = texture.size[1]
-        else:
-            w = clamp(0, texture.size[0], area.width)
-            h = clamp(0, texture.size[1], area.height)
-        topleft = texture.coord(0, 0)
-        topright = texture.coord(w,0)
-        bottomleft = texture.coord(0,h)
-        bottomright = texture.coord(w,h)
+        w = clamp(0, texture.size[0], area.width)
+        h = clamp(0, texture.size[1], area.height)
+    topleft = texture.coord(0, 0)
+    topright = texture.coord(w,0)
+    bottomleft = texture.coord(0,h)
+    bottomright = texture.coord(w,h)
     texture.bind()
 
     glColor4f(*color)

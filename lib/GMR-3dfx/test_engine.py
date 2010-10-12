@@ -1,38 +1,49 @@
-import engine
+import engine, event
 from engine import *
 
-test = engine.Display()
-test.setup(screen_size=(800,600))
-test.build()
-test.clear()
+def main():
+    test = engine.Display()
+    test.setup(screen_size=(800,600))
+    test.build()
 
-t = engine.TextureHandler()
-t.load_dir("")
+    t = engine.TextureHandler()
+    t.load_dir("")
 
-i = engine.Image2D(t.get_texture('floor-dungeon-blue.png'))
-i2 = i.copy((16,0,48,32))
-i3 = engine.load_image2D('unit-test-archer.gif')
-i4 = i3.copy((16, 14, 55, 64))
+    i = engine.Image2D(t.get_texture('floor-dungeon-blue.png'))
+    i2 = i.copy((16,0,48,32))
+    i3 = engine.load_image2D('unit-test-archer.gif')
+    i4 = i3.copy((16, 14, 55, 64))
 
-test.set_2d()
-test.set_lighting(False)
+    test.set_2d()
+    test.set_lighting(False)
 
-test.screen.push_clip2d((60,60,160,100))
-i.render((50,50))
-i2.render((112,50))
-i3.render((112,50))
-i4.render((206, 50))
-test.screen.pop_clip()
+    event_handler = event.Handler()
 
-f = engine.Font2D()
-f.render("Hello World", (10,10), 32)
+    f = engine.Font2D()
 
-engine.draw_rect2d((50,200,100,100), texture=test.blank_texture)
+    while 1:
+        event_handler.update()
+        if event_handler.quit:
+            test.destroy()
+            return None
 
-engine.draw_lines2d([((0,0), (500,500)),
-                     ((500,0), (0,500))],
-                    (1,0,0,.5))
+        test.clear()
 
-test.refresh()
+        test.screen.push_clip2d((60,60,160,100))
+        i.render((50,50))
+        i2.render((112,50))
+        i3.render((112,50))
+        i4.render((206, 50))
+        test.screen.pop_clip()
 
-##test.destroy()
+        f.render("Hello World", (10,10), (1,1,0,1), 32)
+
+        engine.draw_rect2d((50,200,100,100))
+
+        engine.draw_lines2d([((0,0), (500,500)),
+                             ((500,0), (0,500))],
+                            (1,0,0,.5))
+
+        test.refresh()
+
+main()
