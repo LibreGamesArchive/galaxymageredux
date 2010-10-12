@@ -339,9 +339,6 @@ class Widget(object):
     def render(self):
         pass
 
-    def draw_rect(self, rect, color):
-        engine.draw_rect2d(rect, color)
-
 
 class Container(Widget, App):
     def __init__(self, parent, size, pos):
@@ -448,8 +445,8 @@ class Container(Widget, App):
         glPushMatrix()
         x,y = self.pos.get_pos()
         glTranslatef(x,y,0)
-        self.draw_rect(pygame.Rect((0,0),self.size),
-                       self.bg_color)
+        engine.draw_rect2d(pygame.Rect((0,0),self.size),
+                           self.bg_color)
 
         self.widgets.reverse()
         for i in self.widgets:
@@ -483,20 +480,20 @@ class Label(Widget):
         self.size = self.get_size()
 
         self.text_color = (0,0,0,1)
-        self.bg_color = None
 
     def get_size(self):
-        width, height = self.font.check_size(self.text)
+        width, height = self.font.get_size(self.text, 32)
         return width, height
 
     def render(self):
+        self.size = self.get_size()
         down = 0
         for text in self.text.split('\n'):
             r = pygame.Rect(self.pos.get_pos(),
-                            self.font.check_size(text, 32))
+                            self.size)
             r.top += down
             if self.bg_color:
-                engine.draw_rect(r, self.bg_color)
+                engine.draw_rect2d(r, self.bg_color)
             self.font.render(text, r.topleft, self.text_color, 32)
 
 class Button(Widget):
@@ -505,14 +502,14 @@ class Button(Widget):
 
         self.text = text
 
-        self.bg_color = (255,255,255,255)
+        self.bg_color = (1,1,1,1)
 
         self.size = self.get_size()
 
-        self.text_color = (0,0,0)
-        self.text_reg_color = (0,0,0)
-        self.text_hover_color = (255,0,0)
-        self.text_click_color = (255,100,100)
+        self.text_color = (0,0,0,1)
+        self.text_reg_color = (0,0,0,1)
+        self.text_hover_color = (1,0,0,1)
+        self.text_click_color = (1,0.5,0.5,1)
 
         self.dispatch.bind('hover', lambda: self.swap_text_color(self.text_hover_color))
         self.dispatch.bind('click', lambda: self.swap_text_color(self.text_hover_color))
@@ -524,17 +521,16 @@ class Button(Widget):
         self.text_color = new
 
     def get_size(self):
-        width, height = self.font.size(self.text)
+        width, height = self.font.get_size(self.text, 32)
         return width, height
 
     def render(self):
         self.size = self.get_size()
-        i = self.font.render(self.text, 1, self.text_color)
-        r = i.get_rect()
-        r.topleft = self.pos.get_pos()
+
+        r = pygame.Rect(self.pos.get_pos(), self.size)
         if self.bg_color:
-            self.draw_rect(self.parent.screen, r, self.bg_color)
-        self.parent.screen.blit(i, r)
+            engine.draw_rect2d(r, self.bg_color)
+        self.font.render(self.text, r.topleft, self.text_color, 32)
 
 class MessageBoxLabel(Widget):
     def __init__(self, parent, text):
@@ -545,15 +541,14 @@ class MessageBoxLabel(Widget):
         self.size = self.get_size()
 
     def get_size(self):
-        return self.font.size(self.text)
+        return self.font.get_size(self.text, 32)
 
     def render(self):
         self.size = self.get_size()
         if self.parent.entry_bg_color:
-            self.draw_rect(self.parent.screen,
-                           pygame.Rect(self.pos.get_pos(), self.size),
-                           self.parent.entry_bg_color)
-        self.parent.screen.blit(self.font.render(self.text, 1, self.parent.text_color), self.pos.get_pos())
+            engine.draw_rect2d(pygame.Rect(self.pos.get_pos(), self.size),
+                               self.parent.entry_bg_color)
+        self.font.render(self.text, self.pos.get_pos(), self.parent.text_color, 32)
 
 class MessageBox(Container):
     def __init__(self, parent, size, pos, max_lines=10):
@@ -566,7 +561,7 @@ class MessageBox(Container):
     def add_line(self, text):
         MessageBoxLabel(self, text)
 
-        height = self.font.get_height()
+        height = self.font.get_height(32)
 
         lasty = self.size[1] - height
         for i in self.widgets:

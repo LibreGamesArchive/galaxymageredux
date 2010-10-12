@@ -479,6 +479,7 @@ class BaseTexture(object):
         self._from_tex_data()
 
     def _from_tex_data(self):
+        BaseTexture._bound = self.gl_tex
         glBindTexture(GL_TEXTURE_2D, self.gl_tex)
         tdata, w, h = self.tex_data
 
@@ -540,6 +541,7 @@ class TextureRegion(object):
 
     def bind(self):
         if self.gl_tex != BaseTexture._bound:
+            BaseTexture._bound = self.gl_tex
             glBindTexture(GL_TEXTURE_2D, self.gl_tex)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
@@ -1098,7 +1100,7 @@ class Image2D(object):
     def render(self, pos, colorize=(1,1,1,1)):
         glPushMatrix()
         glTranslatef(pos[0], pos[1], 0)
-        glColor4f(*colorize)
+        glColor4f(*Color(colorize).get_rgba1())
         self.texture.bind()
         self.dlist.render()
         glPopMatrix()
@@ -1122,7 +1124,7 @@ class Font2D(object):
         num = len(printable_chars)
         rows = 10
         fsize = int(texs/rows*0.9)
-        pygame_font = pygame.font.Font(self.name, fsize)
+        self.pygame_font = pygame.font.Font(self.name, fsize)
         ind = int(texs/rows)
 
         surf = pygame.Surface((texs, texs)).convert_alpha()
@@ -1135,7 +1137,7 @@ class Font2D(object):
             for x in xrange(rows):
                 if on < num:
                     char = printable_chars[on]
-                    glyph = pygame_font.render(char, 1, (255,255,255))
+                    glyph = self.pygame_font.render(char, 1, (255,255,255))
                     surf.blit(glyph, (x*ind, y*ind))
                     char_map[char] = (x*ind, y*ind, glyph.get_width(), glyph.get_height())
                     on += 1
@@ -1152,7 +1154,7 @@ class Font2D(object):
         self.glyph_map = glyph_map
         self.fsize = fsize
 
-    def check_size(self, string, size=None):
+    def get_size(self, string, size=None):
         if size == None:
             size = self.fsize
 
@@ -1164,7 +1166,16 @@ class Font2D(object):
             height = max((height, glyph.texture.size[1]))
             width += glyph.texture.size[0]
 
-        return width, height
+        return width*scale, height*scale
+
+    def get_height(self, size=None):
+        if size == None:
+            size = self.fsize
+
+        scale = size*1.0/self.fsize
+        height = self.pygame_font.get_height()
+
+        return height * scale
 
     def render(self, string, pos, color=(1,1,1,1), size=None):
         if size == None:
@@ -1185,7 +1196,7 @@ class Font2D(object):
 def draw_rect2d(area, color=(1,1,1,1), texture=None, tex_scale=True):
     area = pygame.Rect(area)
 
-    if not texture:
+    if texture==None:
         texture = get_display().blank_texture
 
     if tex_scale:
@@ -1200,7 +1211,7 @@ def draw_rect2d(area, color=(1,1,1,1), texture=None, tex_scale=True):
     bottomright = texture.coord(w,h)
     texture.bind()
 
-    glColor4f(*color)
+    glColor4f(*Color(color).get_rgba1())
     glBegin(GL_QUADS)
     glTexCoord2f(*topleft)
     glVertex3f(area.left, area.top, 0)
@@ -1213,9 +1224,47 @@ def draw_rect2d(area, color=(1,1,1,1), texture=None, tex_scale=True):
     glEnd()
 
 def draw_lines2d(pairs, color=(1,1,1,1)):
-    glColor4f(*color)
+    glColor4f(*Color(color).get_rgba1())
     glBegin(GL_LINES)
     for pair in pairs:
         glVertex3f(pair[0][0], pair[0][1], 0)
         glVertex3f(pair[1][0], pair[1][1], 0)
     glEnd()
+
+class Color(object):
+    def __init__(self, val, form="rgba1"):
+        if isinstance(val, Color):
+            self.r, self.g, self.b, self.a = val.r, val.g, val.b, val.a
+        elif len(val) == 3:
+            r,g,b = val
+            if form == "rgba1":
+                a = 1
+            elif form == "rgba255":
+                a = 255
+            else:
+                raise Exception("form must be 'rgba1' or 'rgba255'")
+        else:
+            r,g,b,a = val
+
+        if form == "rgba255":
+            r,g,b,a = map(self.convert_255_to_1, (r,g,b,a))
+
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+
+    def convert_255_to_1(self, val):
+        return val*1.0/255 if val else 0
+
+    def get_rgb1(self):
+        return self.r, self.g, self.b
+
+    def get_rgb255(self):
+        return map(int, (self.r*255, self.g*255, self.b*255))
+
+    def get_rgba1(self):
+        return self.r, self.g, self.b, self.a
+
+    def get_rgba255(self):
+        return map(int, (self.r*255, self.g*255, self.b*255, self.a*255))

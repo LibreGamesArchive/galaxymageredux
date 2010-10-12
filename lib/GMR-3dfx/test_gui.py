@@ -25,6 +25,14 @@ def main():
     gui.Icon(some_cont, (0,0), engine.load_image2D('unit-test-archer.gif'))
     gui.Label(some_cont, (0, 75), "Hello Hello?")
 
+    butt = gui.Button(some_cont, (75,5), "test")
+    text_box = gui.MessageBox(main_app, (300,100), (50, 200))
+    text_box.bg_color = (1,0,0,0.5)
+    butt.dispatch.bind('click',
+                       lambda: text_box.add_line(
+                           'test'+str(random.randint(0,45))))
+
+
 
     while 1:
         event_handler.update()
