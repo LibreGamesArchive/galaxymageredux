@@ -24,6 +24,7 @@ class App(object):
             self.bg_color = (0,0,0,0)
 
         self.font = engine.Font2D(None)
+        self.font_size = 32
         self.visible = True
 
     def activate(self):
@@ -173,6 +174,7 @@ class Widget(object):
 
         self.visible = True
         self.font = self.parent.get_font()
+        self.font_size = self.parent.font_size
 
         self._mhold = False
         self._mhover = False
@@ -339,6 +341,27 @@ class Widget(object):
     def render(self):
         pass
 
+    def draw_rect(self, rect, color):
+        engine.draw_rect2d(rect, color)
+
+    def draw_text(self, text, pos, color):
+        down = self.font.get_height(self.font_size)
+        x,y = pos
+        for t in text.split('\n'):
+            self.font.render(t, (x,y), color, self.font_size)
+            y += down
+
+    def get_text_size(self):
+        width = 0
+        height = 0
+        down = self.font.get_height(self.font_size)
+        for t in self.text.split('\n'):
+            w,h = self.font.get_size(t, self.font_size)
+            width = max((width, w))
+            height += down
+
+        return width, height
+
 
 class Container(Widget, App):
     def __init__(self, parent, size, pos):
@@ -445,8 +468,8 @@ class Container(Widget, App):
         glPushMatrix()
         x,y = self.pos.get_pos()
         glTranslatef(x,y,0)
-        engine.draw_rect2d(pygame.Rect((0,0),self.size),
-                           self.bg_color)
+        self.draw_rect(pygame.Rect((0,0),self.size),
+                       self.bg_color)
 
         self.widgets.reverse()
         for i in self.widgets:
@@ -482,19 +505,16 @@ class Label(Widget):
         self.text_color = (0,0,0,1)
 
     def get_size(self):
-        width, height = self.font.get_size(self.text, 32)
-        return width, height
+        return self.get_text_size()
 
     def render(self):
         self.size = self.get_size()
         down = 0
-        for text in self.text.split('\n'):
-            r = pygame.Rect(self.pos.get_pos(),
-                            self.size)
-            r.top += down
-            if self.bg_color:
-                engine.draw_rect2d(r, self.bg_color)
-            self.font.render(text, r.topleft, self.text_color, 32)
+        if self.bg_color:
+            self.draw_rect(pygame.Rect(self.pos.get_pos(),
+                                       self.size),
+                           self.bg_color)
+        self.draw_text(self.text, self.pos.get_pos(), self.text_color)
 
 class Button(Widget):
     def __init__(self, parent, pos, text):
@@ -521,16 +541,15 @@ class Button(Widget):
         self.text_color = new
 
     def get_size(self):
-        width, height = self.font.get_size(self.text, 32)
-        return width, height
+        return self.get_text_size()
 
     def render(self):
         self.size = self.get_size()
 
         r = pygame.Rect(self.pos.get_pos(), self.size)
         if self.bg_color:
-            engine.draw_rect2d(r, self.bg_color)
-        self.font.render(self.text, r.topleft, self.text_color, 32)
+            self.draw_rect(r, self.bg_color)
+        self.draw_text(self.text, r.topleft, self.text_color)
 
 class MessageBoxLabel(Widget):
     def __init__(self, parent, text):
@@ -546,9 +565,9 @@ class MessageBoxLabel(Widget):
     def render(self):
         self.size = self.get_size()
         if self.parent.entry_bg_color:
-            engine.draw_rect2d(pygame.Rect(self.pos.get_pos(), self.size),
-                               self.parent.entry_bg_color)
-        self.font.render(self.text, self.pos.get_pos(), self.parent.text_color, 32)
+            self.draw_rect(pygame.Rect(self.pos.get_pos(), self.size),
+                           self.parent.entry_bg_color)
+        self.draw_text(self.text, self.pos.get_pos(), self.parent.text_color)
 
 class MessageBox(Container):
     def __init__(self, parent, size, pos, max_lines=10):

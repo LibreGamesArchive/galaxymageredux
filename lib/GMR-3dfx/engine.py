@@ -1235,6 +1235,8 @@ class Color(object):
     def __init__(self, val, form="rgba1"):
         if isinstance(val, Color):
             self.r, self.g, self.b, self.a = val.r, val.g, val.b, val.a
+        elif val == None:
+            r,g,b,a = 0,0,0,0
         elif len(val) == 3:
             r,g,b = val
             if form == "rgba1":
