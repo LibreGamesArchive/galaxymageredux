@@ -29,7 +29,7 @@ def main():
 
         test.clear()
 
-        test.screen.push_clip2d((60,60,160,100))
+        test.screen.push_clip((60,60,160,100))
         i.render((50,50))
         i2.render((112,50))
         i3.render((112,50))

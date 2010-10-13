@@ -301,6 +301,31 @@ class Display(object):
 
 
 #screen/opengl/pygame params controller
+class Clip(object):
+    def __init__(self, area, screen):
+        self.area = area
+        self.screen = screen
+        if self.screen.clips:
+            self.parent = self.screen.clips[-1]
+        else:
+            self.parent = None
+
+    def get_clip(self):
+        rx = 1.0 * self.screen.screen_size[0] / self.screen.screen_size_2d[0]
+        ry = 1.0 * self.screen.screen_size[1] / self.screen.screen_size_2d[1]
+
+        x, y, w, h = self.area
+        if self.parent:
+            ox, oy, ow, oh = self.parent.area
+            x += ox
+            y += oy
+            if x + w > ox + ow:
+                w = ox + ow - x
+            if y + h > oy + oh:
+                h = oy + oh - y
+
+        return (int(x*rx), self.screen.screen_size[1]-int(y*ry)-int(h*ry), int(w*rx), int(h*ry))        
+
 class Screen(object):
     """A simple object to store screen settings."""
     def __init__(self):
@@ -324,7 +349,8 @@ class Screen(object):
 
         self.clear_color = (0,0,0,0)
 
-        self.clips = [(0,0,self.screen_size[0],self.screen_size[1])]
+        self.clips = []
+        self.push_clip((0,0,self.screen_size_2d[0], self.screen_size_2d[1]))
 
     def set_size(self, size, size2d):
         """Set the screen size."""
@@ -335,7 +361,8 @@ class Screen(object):
             self.rect2d = pygame.rect.Rect(0,0,*size2d)
 
         size = self.screen_size
-        self.clips = [(0,0,size[0],size[1])]
+        self.clips = []
+        self.push_clip((0,0,self.screen_size_2d[0], self.screen_size_2d[1]))
         self.rect = pygame.rect.Rect(0,0,*size)
 
         return self.screen_size
@@ -351,26 +378,16 @@ class Screen(object):
 
     def push_clip(self, new):
         """Push a new rendering clip onto the stack - used to limit rendering to a small area."""
-        if self.clips: #we have an old one to compare to...
-            new = clamp_area(self.clips[-1], new)
+        new = Clip(new, self)
         self.clips.append(new)
-        glScissor(*new)
-
-    def push_clip2d(self, new):
-        """Convert a 2d pos/size rect into GL coords for clipping."""
-        rx = 1.0 * self.screen_size[0] / self.screen_size_2d[0]
-        ry = 1.0 * self.screen_size[1] / self.screen_size_2d[1]
-
-        x, y, w, h = new
-
-        self.push_clip((int(x*rx), self.screen_size[1]-int(y*ry)-int(h*ry), int(w*rx), int(h*ry)))
+        glScissor(*new.get_clip())
 
     def pop_clip(self):
         """Pop the last clip off the stack."""
         if len(self.clips) == 1:
             return #don't pop the starting clip!
         self.clips.pop()
-        glScissor(*self.clips[-1])
+        glScissor(*self.clips[-1].get_clip())
 
     def get_mouse_pos(self):
         """Return mouse pos in relation to the real screen size."""
@@ -1109,9 +1126,10 @@ def load_image2D(name, area=None):
     return Image2D(load_texture(name), area)
 
 class Font2D(object):
-    def __init__(self, name=None, tex_size=1024):
+    def __init__(self, name=None, tex_size=1024, def_size=32):
         self.name = name
         self.tex_size = tex_size
+        self.def_size = def_size
 
 
         self._compile()
@@ -1156,7 +1174,7 @@ class Font2D(object):
 
     def get_size(self, string, size=None):
         if size == None:
-            size = self.fsize
+            size = self.def_size
 
         scale = size*1.0/self.fsize
         height = 0
@@ -1170,7 +1188,7 @@ class Font2D(object):
 
     def get_height(self, size=None):
         if size == None:
-            size = self.fsize
+            size = self.def_size
 
         scale = size*1.0/self.fsize
         height = self.pygame_font.get_height()
@@ -1179,7 +1197,7 @@ class Font2D(object):
 
     def render(self, string, pos, color=(1,1,1,1), size=None):
         if size == None:
-            size = self.fsize
+            size = self.def_size
         scale = size*1.0/self.fsize
         glPushMatrix()
         glTranslatef(pos[0], pos[1], 0)
@@ -1234,7 +1252,7 @@ def draw_lines2d(pairs, color=(1,1,1,1)):
 class Color(object):
     def __init__(self, val, form="rgba1"):
         if isinstance(val, Color):
-            self.r, self.g, self.b, self.a = val.r, val.g, val.b, val.a
+            r, g, b, a = val.r, val.g, val.b, val.a
         elif val == None:
             r,g,b,a = 0,0,0,0
         elif len(val) == 3:

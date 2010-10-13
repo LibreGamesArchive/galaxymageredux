@@ -16,7 +16,7 @@ def main():
     test.set_lighting(False)
 
     event_handler = event.Handler()
-    main_app = gui.App(test.screen, event_handler)
+    main_app = gui.App(event_handler)
     main_app.bg_color = (1,1,1,0.5)
 
     some_cont = gui.Container(main_app, (300,100), (50,50))
@@ -32,6 +32,7 @@ def main():
                        lambda: text_box.add_line(
                            'test'+str(random.randint(0,45))))
 
+    inp = gui.Input(some_cont, 290, (5,25))
 
 
     while 1:

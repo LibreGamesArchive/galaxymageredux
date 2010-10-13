@@ -9,9 +9,9 @@ import time
 printable_chars = "abcdefghijklmnopqrstuvwxyz`1234567890-=[]\\;',./ "+'ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}|:"<>?'
 
 class App(object):
-    def __init__(self, screen, event_handler, bg_image=None):
+    def __init__(self, event_handler, bg_image=None):
 
-        self.screen = screen
+        self.screen = engine.get_display().screen
         self.event_handler = event_handler
         self.event_handler.gui = self
         self.event_handler.all_guis.append(self)
@@ -24,7 +24,7 @@ class App(object):
             self.bg_color = (0,0,0,0)
 
         self.font = engine.Font2D(None)
-        self.font_size = 32
+        self.font.def_size = 32
         self.visible = True
 
     def activate(self):
@@ -164,6 +164,8 @@ class Widget(object):
         self.parent = parent
         self.parent.add_widget(self)
 
+        self.screen = self.parent.screen
+
         if type(pos) is type([]) or type(pos) is type((1,2)):
             self.pos = AbsolutePos(pos)
         else:
@@ -174,7 +176,6 @@ class Widget(object):
 
         self.visible = True
         self.font = self.parent.get_font()
-        self.font_size = self.parent.font_size
 
         self._mhold = False
         self._mhover = False
@@ -345,18 +346,18 @@ class Widget(object):
         engine.draw_rect2d(rect, color)
 
     def draw_text(self, text, pos, color):
-        down = self.font.get_height(self.font_size)
+        down = self.font.get_height()
         x,y = pos
         for t in text.split('\n'):
-            self.font.render(t, (x,y), color, self.font_size)
+            self.font.render(t, (x,y), color)
             y += down
 
     def get_text_size(self):
         width = 0
         height = 0
-        down = self.font.get_height(self.font_size)
+        down = self.font.get_height()
         for t in self.text.split('\n'):
-            w,h = self.font.get_size(t, self.font_size)
+            w,h = self.font.get_size(t)
             width = max((width, w))
             height += down
 
@@ -374,7 +375,6 @@ class Container(Widget, App):
 
         self.font = self.parent.get_font()
 
-        self.screen = self.parent.screen
         self.bg_color = (0,0,0,0)
 
         self.dispatch.bind("unhover", self.unhover_all_widgets)
@@ -463,7 +463,7 @@ class Container(Widget, App):
         return App.handle_keyhold(self, key, string)
 
     def render(self):
-        self.screen.push_clip2d(pygame.Rect(self.pos.get_pos(),
+        self.screen.push_clip(pygame.Rect(self.pos.get_pos(),
                                           self.size))
         glPushMatrix()
         x,y = self.pos.get_pos()
@@ -600,8 +600,8 @@ class Input(Widget):
         self.max_chars = max_chars
         self.size = self.get_size()
 
-        self.bg_color = (100,100,100)
-        self.text_color = (255,0,0)
+        self.bg_color = engine.Color((100,100,100), 'rgba255')
+        self.text_color = engine.Color((255,255,0), 'rgba255')
 
         self.dispatch.bind('keypress', self.handle_key)
         self.always_active = True
@@ -651,7 +651,7 @@ class Input(Widget):
         return self.width, self.font.get_height()
 
     def get_cursor_real_x(self):
-        x = self.font.size(self.text[0:self.cursor_pos])[0]
+        x = self.font.get_size(self.text[0:self.cursor_pos])[0]
         shift = 0
         if x > self.width:
             shift = x - self.width + 3
@@ -663,20 +663,19 @@ class Input(Widget):
 
         x, shift = self.get_cursor_real_x()
 
-        self.draw_rect(self.parent.screen, pygame.Rect(self.pos.get_pos(), self.size), self.bg_color)
+        self.draw_rect(pygame.Rect(self.pos.get_pos(), self.size), self.bg_color)
+        sx, sy = self.pos.get_pos()
+        self.screen.push_clip(pygame.Rect((sx, sy), self.size))
+        self.draw_text(self.text, (sx-shift, sy), self.text_color)
+        self.screen.pop_clip()
 
-        self.parent.screen.subsurface(self.pos.get_pos(), self.size).blit(
-            self.font.render(self.text, 1, self.text_color), (-shift, 0))
 
         if time.time() - self.flash_timer > self.flash_space:
             self.flash_timer = time.time()
             self.flashed = not self.flashed
 
         if self.key_active and self.flashed:
-            surf = pygame.Surface((2,self.size[1]-2)).convert_alpha()
-            surf.fill(self.text_color)
-            self.parent.screen.subsurface(self.pos.get_pos(), self.size).blit(
-                surf, (x-shift, 1))
+            self.draw_rect(pygame.Rect(sx+x-shift+1, sy+1, 2, self.size[1]-2), self.text_color)
 
 class RelativePos(object):
     """makes a position relative to the parent"""
