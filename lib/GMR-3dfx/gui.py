@@ -352,11 +352,11 @@ class Widget(object):
             self.font.render(t, (x,y), color)
             y += down
 
-    def get_text_size(self):
+    def get_text_size(self, text):
         width = 0
         height = 0
         down = self.font.get_height()
-        for t in self.text.split('\n'):
+        for t in text.split('\n'):
             w,h = self.font.get_size(t)
             width = max((width, w))
             height += down
@@ -381,7 +381,7 @@ class Container(Widget, App):
 
     def change_size(self, new):
         self.size = new
-        self.screen = pygame.Surface(new).convert_alpha()
+##        self.screen = pygame.Surface(new).convert_alpha()
 
     def unhover_all_widgets(self):
         for i in self.widgets:
@@ -505,7 +505,7 @@ class Label(Widget):
         self.text_color = (0,0,0,1)
 
     def get_size(self):
-        return self.get_text_size()
+        return self.get_text_size(self.text)
 
     def render(self):
         self.size = self.get_size()
@@ -541,7 +541,7 @@ class Button(Widget):
         self.text_color = new
 
     def get_size(self):
-        return self.get_text_size()
+        return self.get_text_size(self.text)
 
     def render(self):
         self.size = self.get_size()
@@ -800,7 +800,6 @@ class PopUp(Widget):
         x,y = pos
         down = self.font.get_height()
         for line in self.comp_text:
-##            self.parent.screen.blit(self.font.render(line, 1, self.text_color), (pos[0], pos[1]+down))
             self.font.render(line, (x,y), self.text_color)
             y += down
 
@@ -837,22 +836,20 @@ class ListEntry(Widget):
         self.size = self.get_size()
 
     def get_size(self):
-        width, height = self.parent.font.size(self.text)
+        width, height = self.parent.font.get_size(self.text)
         return width, height
 
     def render(self):
-        i = self.parent.font.render(self.text, 1, self.parent.entry_text_color)
-        r = pygame.rect.Rect(self.pos.get_pos(), self.size)
+        r = pygame.Rect(self.pos.get_pos(), self.size)
         if self.parent.entry_bg_color:
-            self.draw_rect(self.parent.screen, r, self.parent.entry_bg_color)
-        self.parent.screen.blit(i, r)
-
+            self.draw_rect(r, self.parent.entry_bg_color)
+        self.draw_text(self.text, r.topleft, self.parent.entry_bg_color)
 class List(Container):
     def __init__(self, parent, pos, entries=[], padding=(0,0)):
         Container.__init__(self, parent, (1,1), pos)
 
-        self.entry_text_color = (0,0,0)
-        self.entry_bg_color = (255,255,255)
+        self.entry_text_color = (0,0,0,1)
+        self.entry_bg_color = (1,1,1,1)
 
         self.entries = entries
         self.padding = padding
@@ -904,24 +901,23 @@ class MenuEntry(Widget):
         self._mhold = False
 
     def get_size(self):
-        width, height = self.parent.font.size(self.text)
+        width, height = self.parent.font.get_size(self.text)
         return width, height
 
     def render(self):
-        i = self.parent.font.render(self.text, 1, self.text_color)
         r = pygame.rect.Rect(self.pos.get_pos(), self.size)
         if self.parent.entry_bg_color:
-            self.draw_rect(self.parent.screen, r, self.parent.entry_bg_color)
-        self.parent.screen.blit(i, r)
+            self.draw_rect(r, self.parent.entry_bg_color)
+        self.draw_text(self.text, r.topleft, self.text_color)
 
 class Menu(Container):
     def __init__(self, parent, pos, options=[], padding=(0,0)):
         Container.__init__(self, parent, (1,1), pos)
 
-        self.entry_text_reg_color = (0,0,0)
-        self.entry_text_hover_color = (75,75,75)
-        self.entry_text_click_color = (150,150,150)
-        self.entry_bg_color = (255,255,255)
+        self.entry_text_reg_color = engine.Color((0,0,0), 'rgba255')
+        self.entry_text_hover_color = engine.Color((75,75,75), 'rgba255')
+        self.entry_text_click_color = engine.Color((150,150,150), 'rgba255')
+        self.entry_bg_color = engine.Color((255,255,255), 'rgba255')
 
         self.options = options
         self.padding = padding
@@ -981,32 +977,31 @@ class MenuDisableEntry(Widget):
         self._mhold = False
 
     def get_size(self):
-        width, height = self.parent.font.size(self.text)
+        width, height = self.parent.font.get_size(self.text)
         return width, height
 
     def render(self):
-        i = self.parent.font.render(self.text, 1, self.text_color)
         r = pygame.rect.Rect(self.pos.get_pos(), self.size)
         if self.disabled:
             bg = self.parent.entry_dis_bg_color
         else:
             bg = self.parent.entry_bg_color
         if bg:
-            self.draw_rect(self.parent.screen, r, bg)
-        self.parent.screen.blit(i, r)
+            self.draw_rect(r, bg)
+        self.draw_text(self.text, r.topleft, self.text_color)
 
 class DisableMenu(Container):
     def __init__(self, parent, pos, options=[], padding=(0,0)):
         Container.__init__(self, parent, (1,1), pos)
 
-        self.entry_text_reg_color = (0,0,0)
-        self.entry_text_hover_color = (75,75,75)
-        self.entry_text_click_color = (150,150,150)
-        self.entry_bg_color = (255,255,255)
-        self.entry_dis_bg_color = (0,0,0)
-        self.entry_dis_text_reg_color = (100,100,100)
-        self.entry_dis_text_hover_color = (100,100,100)
-        self.entry_dis_text_click_color = (100,100,100)
+        self.entry_text_reg_color = engine.Color((0,0,0), 'rgba255')
+        self.entry_text_hover_color = engine.Color((75,75,75), 'rgba255')
+        self.entry_text_click_color = engine.Color((150,150,150), 'rgba255')
+        self.entry_bg_color = engine.Color((255,255,255), 'rgba255')
+        self.entry_dis_bg_color = engine.Color((0,0,0), 'rgba255')
+        self.entry_dis_text_reg_color = engine.Color((100,100,100), 'rgba255')
+        self.entry_dis_text_hover_color = engine.Color((100,100,100), 'rgba255')
+        self.entry_dis_text_click_color = engine.Color((100,100,100), 'rgba255')
 
         self.options = options
         self.padding = padding
@@ -1063,27 +1058,26 @@ class GameRoomLobbyPlayers(Container):
                 pos = RelativePos(to=last, pady=5)
             else:
                 pos = (5,5)
-            #new = Container(self, (self.size[0]-10, 24), pos)
+
             x = Label(self, pos, name)
-            x.bg_color = (0,0,0)
-            x.text_color = (100,100,100)
+            x.bg_color = engine.Color((0,0,0), 'rgba255')
+            x.text_color = engine.Color((100,100,100), 'rgba255')
             last = x
             x = Label(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Team:')
-            x.bg_color = (0,0,0)
-            x.text_color = (100,100,100)
+            x.bg_color = engine.Color((0,0,0), 'rgba255')
+            x.text_color = engine.Color((100,100,100), 'rgba255')
             if game.player_name == name:
                 self.pt = x = DropDownMenu(self, RelativePos(to=x, padx=5, x='right',y='top'),
                                      team, [team]+free_teams)
                 self.pt.dispatch.bind('select', self.swap_team_widg)
             else:
                 x = Label(self, RelativePos(to=x, padx=5, x='right',y='top'), team)
-                x.bg_color = (0,0,0)
-                x.text_color = (100,100,100)
+                x.bg_color = engine.Color((0,0,0), 'rgba255')
+                x.text_color = engine.Color((100,100,100), 'rgba255')
             
             if game.am_master and not game.player_name==name:
                 x = Button(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Kick')
                 x.dispatch.bind('click', lambda name=name: self.dispatch.fire('kick', name))
 
     def swap_team_widg(self, value):
-##        self.pt.text = value
         self.dispatch.fire('change-team', value)

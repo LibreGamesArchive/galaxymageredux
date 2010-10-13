@@ -37,6 +37,14 @@ def main():
     popup = gui.PopUp(butt, text="adds text to the message box below", width=100)
     popup.bg_color = engine.Color((255,255,255,100), 'rgba255')
 
+    drop = gui.DropDown(main_app, (5, 5), "press me!")
+    drop.setChild(gui.Label(main_app, (0,0), 'woah!'))
+
+    menu = gui.Menu(main_app, gui.RelativePos(to=text_box), ['abc', '123', 'come on now!'])
+    menu2 = gui.DropDownMenu(main_app, gui.RelativePos(x="right", y="top", to=menu), 'clickme!', ['abc', '123', 'come on now!'])
+    menu.dispatch.bind('select', print_val)
+
+
     while 1:
         event_handler.update()
 
