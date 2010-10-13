@@ -12,6 +12,8 @@ from pygame.locals import *
 import string
 import time
 
+printable_chars = "abcdefghijklmnopqrstuvwxyz`1234567890-=[]\\;',./ "+'ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}|:"<>?'
+
 class Keyboard(object):
     """A simple class to store keyboard events."""
     def __init__(self):
