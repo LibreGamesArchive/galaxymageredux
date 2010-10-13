@@ -32,8 +32,10 @@ def main():
                        lambda: text_box.add_line(
                            'test'+str(random.randint(0,45))))
 
-    inp = gui.Input(some_cont, 290, (5,25))
+    inp = gui.Input(main_app, 290, (55,155))
 
+    popup = gui.PopUp(butt, text="adds text to the message box below", width=100)
+    popup.bg_color = engine.Color((255,255,255,100), 'rgba255')
 
     while 1:
         event_handler.update()

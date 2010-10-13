@@ -560,7 +560,7 @@ class MessageBoxLabel(Widget):
         self.size = self.get_size()
 
     def get_size(self):
-        return self.font.get_size(self.text, 32)
+        return self.font.get_size(self.text)
 
     def render(self):
         self.size = self.get_size()
@@ -580,7 +580,7 @@ class MessageBox(Container):
     def add_line(self, text):
         MessageBoxLabel(self, text)
 
-        height = self.font.get_height(32)
+        height = self.font.get_height()
 
         lasty = self.size[1] - height
         for i in self.widgets:
@@ -740,9 +740,10 @@ class PopUp(Widget):
         self.attached_to = parent
         self.pos.to = self.attached_to
         self.text = text
-        self.text_color = (0,0,0)
+        self.text_color = (0,0,0,1)
 
         self.width = width
+        self.compile_text()
         self.size = self.get_size()
 
         self.bg_color = None
@@ -774,7 +775,7 @@ class PopUp(Widget):
         cur_line = words[0]
         words.pop(0)
         while words:
-            if self.font.size(cur_line+" "+words[0])[0] > self.width:
+            if self.font.get_size(cur_line+" "+words[0])[0] > self.width:
                 if cur_line: lines.append(cur_line)
                 cur_line = words[0]
             else:
@@ -785,7 +786,6 @@ class PopUp(Widget):
         self.comp_text = lines
 
     def get_size(self):
-        self.compile_text()
         x = self.width
         y = self.font.get_height() * len(self.comp_text)
 
@@ -794,12 +794,15 @@ class PopUp(Widget):
     def render(self):
         self.size = self.get_size()
         pos = self.pos.get_real_pos()
-        self.draw_rect(self.parent.screen, pygame.Rect(pos, self.size), self.bg_color)
+        if self.bg_color:
+            self.draw_rect(pygame.Rect(pos, self.size), self.bg_color)
 
-        down = 0
+        x,y = pos
+        down = self.font.get_height()
         for line in self.comp_text:
-            self.parent.screen.blit(self.font.render(line, 1, self.text_color), (pos[0], pos[1]+down))
-            down += self.font.get_height()
+##            self.parent.screen.blit(self.font.render(line, 1, self.text_color), (pos[0], pos[1]+down))
+            self.font.render(line, (x,y), self.text_color)
+            y += down
 
 
 class DropDown(Button):

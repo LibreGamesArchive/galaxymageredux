@@ -1211,6 +1211,43 @@ class Font2D(object):
 
         glPopMatrix()
 
+    def make_size(self, size=None):
+        return Font2Dcopy(self, size)
+
+class Font2Dcopy(object):
+    """References another font, but stores a dif def_size"""
+    def __init__(self, other, def_size=None):
+        self.other = other
+        self.name = other.name
+        self.tex_size = other.tex_size
+        if def_size:
+            self.def_size = def_size
+        else:
+            self.def_size = other.def_size
+
+        self.tex = other.tex
+
+        self.char_map = other.char_map
+        self.glyph_map = other.glyph_map
+        self.fsize = other.fsize
+
+    def get_size(self, string, size=None):
+        if size == None:
+            size = self.def_size
+
+        return self.other.get_size(string, size)
+
+    def get_height(self, size=None):
+        if size == None:
+            size = self.def_size
+
+        return self.other.get_height(size)
+
+    def render(self, string, pos, color=(1,1,1,1), size=None):
+        if size == None:
+            size = self.def_size
+        self.other.render(string, pos, color, size)
+
 def draw_rect2d(area, color=(1,1,1,1), texture=None, tex_scale=True):
     area = pygame.Rect(area)
 
