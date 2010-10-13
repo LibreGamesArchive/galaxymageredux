@@ -11,7 +11,7 @@ printable_chars = "abcdefghijklmnopqrstuvwxyz`1234567890-=[]\\;',./ "+'ABCDEFGHI
 class App(object):
     def __init__(self, event_handler, bg_image=None):
 
-        self.screen = engine.get_display().screen
+        self.screen = engine.display.get_display().screen
         self.event_handler = event_handler
         self.event_handler.gui = self
         self.event_handler.all_guis.append(self)
@@ -23,7 +23,7 @@ class App(object):
         else:
             self.bg_color = (0,0,0,0)
 
-        self.font = engine.Font2D(None)
+        self.font = engine.font.Font2D(None)
         self.font.def_size = 32
         self.visible = True
 
@@ -151,7 +151,7 @@ class App(object):
         if self.bg_image:
             self.bg_image.render((0,0), self.bg_color)
         else:
-            engine.draw_rect2d(pygame.Rect((0,0), self.screen.screen_size_2d),
+            engine.draw.rect2d(pygame.Rect((0,0), self.screen.screen_size_2d),
                                self.bg_color)
 
         self.widgets.reverse()
@@ -343,7 +343,7 @@ class Widget(object):
         pass
 
     def draw_rect(self, rect, color):
-        engine.draw_rect2d(rect, color)
+        engine.draw.rect2d(rect, color)
 
     def draw_text(self, text, pos, color):
         down = self.font.get_height()
@@ -600,8 +600,8 @@ class Input(Widget):
         self.max_chars = max_chars
         self.size = self.get_size()
 
-        self.bg_color = engine.Color((100,100,100), 'rgba255')
-        self.text_color = engine.Color((255,255,0), 'rgba255')
+        self.bg_color = engine.misc.Color((100,100,100), 'rgba255')
+        self.text_color = engine.misc.Color((255,255,0), 'rgba255')
 
         self.dispatch.bind('keypress', self.handle_key)
         self.always_active = True
@@ -914,10 +914,10 @@ class Menu(Container):
     def __init__(self, parent, pos, options=[], padding=(0,0)):
         Container.__init__(self, parent, (1,1), pos)
 
-        self.entry_text_reg_color = engine.Color((0,0,0), 'rgba255')
-        self.entry_text_hover_color = engine.Color((75,75,75), 'rgba255')
-        self.entry_text_click_color = engine.Color((150,150,150), 'rgba255')
-        self.entry_bg_color = engine.Color((255,255,255), 'rgba255')
+        self.entry_text_reg_color = engine.misc.Color((0,0,0), 'rgba255')
+        self.entry_text_hover_color = engine.misc.Color((75,75,75), 'rgba255')
+        self.entry_text_click_color = engine.misc.Color((150,150,150), 'rgba255')
+        self.entry_bg_color = engine.misc.Color((255,255,255), 'rgba255')
 
         self.options = options
         self.padding = padding
@@ -994,14 +994,14 @@ class DisableMenu(Container):
     def __init__(self, parent, pos, options=[], padding=(0,0)):
         Container.__init__(self, parent, (1,1), pos)
 
-        self.entry_text_reg_color = engine.Color((0,0,0), 'rgba255')
-        self.entry_text_hover_color = engine.Color((75,75,75), 'rgba255')
-        self.entry_text_click_color = engine.Color((150,150,150), 'rgba255')
-        self.entry_bg_color = engine.Color((255,255,255), 'rgba255')
-        self.entry_dis_bg_color = engine.Color((0,0,0), 'rgba255')
-        self.entry_dis_text_reg_color = engine.Color((100,100,100), 'rgba255')
-        self.entry_dis_text_hover_color = engine.Color((100,100,100), 'rgba255')
-        self.entry_dis_text_click_color = engine.Color((100,100,100), 'rgba255')
+        self.entry_text_reg_color = engine.misc.Color((0,0,0), 'rgba255')
+        self.entry_text_hover_color = engine.misc.Color((75,75,75), 'rgba255')
+        self.entry_text_click_color = engine.misc.Color((150,150,150), 'rgba255')
+        self.entry_bg_color = engine.misc.Color((255,255,255), 'rgba255')
+        self.entry_dis_bg_color = engine.misc.Color((0,0,0), 'rgba255')
+        self.entry_dis_text_reg_color = engine.misc.Color((100,100,100), 'rgba255')
+        self.entry_dis_text_hover_color = engine.misc.Color((100,100,100), 'rgba255')
+        self.entry_dis_text_click_color = engine.misc.Color((100,100,100), 'rgba255')
 
         self.options = options
         self.padding = padding
@@ -1060,20 +1060,20 @@ class GameRoomLobbyPlayers(Container):
                 pos = (5,5)
 
             x = Label(self, pos, name)
-            x.bg_color = engine.Color((0,0,0), 'rgba255')
-            x.text_color = engine.Color((100,100,100), 'rgba255')
+            x.bg_color = engine.misc.Color((0,0,0), 'rgba255')
+            x.text_color = engine.misc.Color((100,100,100), 'rgba255')
             last = x
             x = Label(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Team:')
-            x.bg_color = engine.Color((0,0,0), 'rgba255')
-            x.text_color = engine.Color((100,100,100), 'rgba255')
+            x.bg_color = engine.misc.Color((0,0,0), 'rgba255')
+            x.text_color = engine.misc.Color((100,100,100), 'rgba255')
             if game.player_name == name:
                 self.pt = x = DropDownMenu(self, RelativePos(to=x, padx=5, x='right',y='top'),
                                      team, [team]+free_teams)
                 self.pt.dispatch.bind('select', self.swap_team_widg)
             else:
                 x = Label(self, RelativePos(to=x, padx=5, x='right',y='top'), team)
-                x.bg_color = engine.Color((0,0,0), 'rgba255')
-                x.text_color = engine.Color((100,100,100), 'rgba255')
+                x.bg_color = engine.misc.Color((0,0,0), 'rgba255')
+                x.text_color = engine.misc.Color((100,100,100), 'rgba255')
             
             if game.am_master and not game.player_name==name:
                 x = Button(self, RelativePos(to=x, padx=20, x='right',y='top'), 'Kick')

@@ -2,16 +2,16 @@ import engine, event
 from engine import *
 
 def main():
-    test = engine.Display()
+    test = engine.display.Display()
     test.setup(screen_size=(800,600))
     test.build()
 
-    t = engine.TextureHandler()
+    t = engine.helpers.TextureHandler()
     t.load_dir("")
 
-    i = engine.Image2D(t.get_texture('floor-dungeon-blue.png'))
+    i = engine.image.Image2D(t.get_texture('floor-dungeon-blue.png'))
     i2 = i.copy((16,0,48,32))
-    i3 = engine.load_image2D('unit-test-archer.gif')
+    i3 = engine.helpers.load_image2D('unit-test-archer.gif')
     i4 = i3.copy((16, 14, 55, 64))
 
     test.set_2d()
@@ -19,7 +19,7 @@ def main():
 
     event_handler = event.Handler()
 
-    f = engine.Font2D()
+    f = engine.font.Font2D()
 
     while 1:
         event_handler.update()
@@ -38,9 +38,9 @@ def main():
 
         f.render("Hello World", (10,10), (1,1,0,1), 32)
 
-        engine.draw_rect2d((50,200,100,100))
+        engine.draw.rect2d((50,200,100,100))
 
-        engine.draw_lines2d([((0,0), (500,500)),
+        engine.draw.lines2d([((0,0), (500,500)),
                              ((500,0), (0,500))],
                             (1,0,0,.5))
 

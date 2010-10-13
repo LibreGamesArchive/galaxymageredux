@@ -7,7 +7,7 @@ def print_val(val):
     print val
 
 def main():
-    test = engine.Display()
+    test = engine.display.Display()
     test.setup(screen_size=(640,480))
     test.build()
     test.clear()
@@ -22,7 +22,7 @@ def main():
     some_cont = gui.Container(main_app, (300,100), (50,50))
     some_cont.bg_color = (1,0,0,1)
 
-    gui.Icon(some_cont, (0,0), engine.load_image2D('unit-test-archer.gif'))
+    gui.Icon(some_cont, (0,0), engine.helpers.load_image2D('unit-test-archer.gif'))
     gui.Label(some_cont, (0, 75), "Hello Hello?")
 
     butt = gui.Button(some_cont, (75,5), "test\nclick")
@@ -35,7 +35,7 @@ def main():
     inp = gui.Input(main_app, 290, (55,155))
 
     popup = gui.PopUp(butt, text="adds text to the message box below", width=100)
-    popup.bg_color = engine.Color((255,255,255,100), 'rgba255')
+    popup.bg_color = engine.misc.Color((255,255,255,100), 'rgba255')
 
     drop = gui.DropDown(main_app, (5, 5), "press me!")
     drop.setChild(gui.Label(main_app, (0,0), 'woah!'))
