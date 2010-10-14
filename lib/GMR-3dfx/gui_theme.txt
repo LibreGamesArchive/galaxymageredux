@@ -14,17 +14,26 @@ Button.quit {
 	font: None 20
 	background: image some_image.png
 	background-color: 1,1,1
-	border: image some_image2.png 5
+	border: block 5
+}
+
+Label {
+	font: None 100
+}
+
+Container.special#Button.test{
+	font: None 45
 }
 
 
 /* Description of attributes
 
-ClassName.<special name> {
+ClassName.<special name>#sub-classes {
 	var: value args ...
 }
 
 font: Name size
 background: type[solid or image (pathname)]
-border: type[solid (size) or image (pathname, size)]
+border: type[solid (size) or image (pathname, size) or block (size)]
+	  block takes background image and takes the size of the edges, and scales the inside only...
 */
