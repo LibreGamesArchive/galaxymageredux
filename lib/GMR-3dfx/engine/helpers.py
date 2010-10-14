@@ -2,6 +2,7 @@ import texture
 import animated_texture
 import storage
 import image
+import font
 
 import include
 from include import *
@@ -74,3 +75,35 @@ class TextureHandler(object):
         for i in self.textures.values():
             i.free_texture()
         self.textures = {}
+
+class FontHandler2D(object):
+    def __init__(self):
+        self.fonts = {}
+
+    def load_font(self, name, tex_size=1024, def_size=32, replace=False):
+        if name == None:
+            if replace or (not name in self.fonts):
+                self.fonts[name] = font.Font2D(name,
+                                               text_size,
+                                               def_size)
+        elif name.split('.')[-1].lower() == 'ttf':
+            short = os.path.split(name)[1]
+            if replace or (not short in self.fonts):
+                self.fonts[short] = font.Font2D(name,
+                                                text_size,
+                                                def_size)
+
+    def load_dir(self, dir, tex_size=1024, def_size=32, replace=False):
+        for i in os.listdir(dire):
+            self.load_font(i, tex_size, def_size, replace)
+
+    def get_font(self, name, size=None):
+        if not size:
+            size = self.def_size
+        if name in self.fonts:
+            return self.fonts[name].make_size(size)
+
+    def free_fonts(self):
+        self.fonts = {} #cross fingers
+        #potential mem leak if textures aren't really freed...
+

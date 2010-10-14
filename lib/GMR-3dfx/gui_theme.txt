@@ -1,0 +1,30 @@
+
+*data_dir {dir: . font_tex 1024 font_size 32}
+
+
+Button {
+	font: None 32
+	background: solid color
+	background-color: 0,0,0,1
+	border: solid 1
+	border-color: 1,0,0,1
+}
+
+Button.quit {
+	font: None 20
+	background: image some_image.png
+	background-color: 1,1,1
+	border: image some_image2.png 5
+}
+
+
+/* Description of attributes
+
+ClassName.<special name> {
+	var: value args ...
+}
+
+font: Name size
+background: type[solid or image (pathname)]
+border: type[solid (size) or image (pathname, size)]
+*/

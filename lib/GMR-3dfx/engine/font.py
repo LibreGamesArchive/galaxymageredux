@@ -12,7 +12,6 @@ class Font2D(object):
         self.tex_size = tex_size
         self.def_size = def_size
 
-
         self._compile()
 
     def _compile(self):
