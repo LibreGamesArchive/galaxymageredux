@@ -74,19 +74,24 @@ class Theme(object):
             name, values = block.split('{')
             name = name.strip()
 
-            last = self.root_element
+            lasts = []
 
-            for name in name.split("#"):
-                if "." in name:
-                    widg, spec = name.split(".")
-                else:
-                    widg = name
-                    spec = None
+            for name in name.split(','):
+                name = name.strip()
+                last = self.root_element
 
-                if name in last.sub_vals:
-                    last = last.get_element(widg, spec)
-                else:
-                    last = last.add_element(widg, spec, {})
+                for name in name.split("#"):
+                    if "." in name:
+                        widg, spec = name.split(".")
+                    else:
+                        widg = name
+                        spec = None
+
+                    if name in last.sub_vals:
+                        last = last.get_element(widg, spec)
+                    else:
+                        last = last.add_element(widg, spec, {})
+                lasts.append(last)
 
             lines = values.split("\n")
             _vars = {}
@@ -100,7 +105,8 @@ class Theme(object):
                 vals = vals.split()
 
                 _vars[var] = vals
-            last.update_vals(_vars)
+            for last in lasts:
+                last.update_vals(_vars)
 
     def get_root(self):
         return self.root_element
@@ -111,9 +117,6 @@ class Theme(object):
             dir = '.'
             font_tex = 1024
             font_size = 32
-##            self.textures.load_dir(dir, False)
-##            self.fonts.load_dir(dir, font_tex, font_size, False)
-##            self.fonts.load_font(None, font_tex, font_size, False)
 
         for var in data_dir.vals:
             value = data_dir.vals[var]
@@ -128,9 +131,6 @@ class Theme(object):
                     font_tex = value.pop(0)
                 elif new == 'font_size':
                     font_size = value.pop(0)
-##            self.textures.load_dir(dir, False)
-##            self.fonts.load_dir(dir, font_tex, font_size, False)
-##            self.fonts.load_font(None, font_tex, font_size, False)
 
 
 def print_children(element, tab=""):
@@ -143,4 +143,5 @@ def print_children(element, tab=""):
 
 t = Theme('gui_theme.txt')
 print_children(t.root_element)
-t.load_data()
+##t.load_data()
+##print t.get_root().get_element("Button", None).get_val('background')

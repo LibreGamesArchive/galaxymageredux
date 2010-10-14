@@ -2,7 +2,9 @@
 *data_dir {dir: . font_tex 1024 font_size 32}
 
 
-Button {
+/*set the defaults...*/
+Button, Button.random, Button.quit,
+Container.special#Button.test {
 	font: None 32
 	background: solid color
 	background-color: 0,0,0,1
