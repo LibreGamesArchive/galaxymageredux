@@ -6,5 +6,6 @@ if not working_dir in sys.path:
 
 import engine
 from engine import *
+from engine.misc import Color
 
 import event

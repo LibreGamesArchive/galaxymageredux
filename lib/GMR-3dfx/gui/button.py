@@ -1,8 +1,9 @@
 import widget
 
 class Button(widget.Widget):
-    def __init__(self, parent, pos, text):
-        widget.Widget.__init__(self, parent, pos)
+    widget_type = "Button"
+    def __init__(self, parent, pos, text, name=None):
+        widget.Widget.__init__(self, parent, pos, name)
 
         self.text = text
 

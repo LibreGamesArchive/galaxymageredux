@@ -3,8 +3,9 @@ from include import *
 import app, widget
 
 class Container(widget.Widget, app.App):
-    def __init__(self, parent, size, pos):
-        widget.Widget.__init__(self, parent, pos)
+    widget_type = "Container"
+    def __init__(self, parent, size, pos, name=None):
+        widget.Widget.__init__(self, parent, pos, name)
         self.size = size
         self.widgets = []
 

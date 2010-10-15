@@ -1,18 +1,24 @@
-from gui.include import *
+from include import *
 from engine.helpers import TextureHandler, FontHandler2D
 
 class ThemeElement(object):
-    def __init__(self, theme, parent, name, spec, vals):
+    def __init__(self, main_theme, parent, name, spec, vals):
         self.parent = parent
-        self.theme_parent = theme
+        self.main_theme = main_theme
         self.name = name
         self.spec = spec
         self.vals = vals
 
         if self.parent == None:
-            self.parent_element = ThemeElement(self.theme_parent,self,None,None,{})
+            self.parent_element = ThemeElement(self.main_theme,self,None,None,{})
 
         self.sub_vals = {}
+
+    def get_texture(self, name):
+        return self.main_theme.textures.get_texture(name)
+
+    def get_font(self, name):
+        return self.main_theme.fonts.get_font(name)
 
     def update_vals(self, new):
         self.vals.update(new)
@@ -37,18 +43,23 @@ class ThemeElement(object):
 
     def add_element(self, name, spec, vals):
         if not name in self.sub_vals:
-            self.sub_vals[name] = {None:ThemeElement(self.theme_parent, self, name, None, {})}
+            self.sub_vals[name] = {None:ThemeElement(self.main_theme, self, name, None, {})}
 
         if not spec in self.sub_vals[name]:
-            self.sub_vals[name][spec] = ThemeElement(self.theme_parent, self, name, spec, {})
+            self.sub_vals[name][spec] = ThemeElement(self.main_theme, self, name, spec, {})
 
         self.sub_vals[name][spec].update_vals(vals)
         return self.sub_vals[name][spec]
 
+    def get_root(self):
+        if self.parent == None:
+            return ThemeElementCopy(self)
+        return self.parent.get_root()
+
 class ThemeElementCopy(ThemeElement):
     def __init__(self, element):
         self.parent = element.parent
-        self.theme_parent = element.theme_parent
+        self.main_theme = element.main_theme
         self.name = str(element.name)
         self.spec = str(element.spec)
         self.vals = dict(element.vals)
@@ -59,15 +70,29 @@ class ThemeElementCopy(ThemeElement):
         self.sub_vals = element.sub_vals
 
 class Theme(object):
-    def __init__(self, theme):
+    def __init__(self, theme, texture_handler=None, font_handler=None):
         if isinstance(theme, Theme):
             #copy vals
             self.theme_name = theme.theme_name
-            self.textures = theme.textures
-            self.fonts = theme.fonts
+            if texture_handler == None:
+                self.textures = theme.textures
+            else:
+                self.textures = texture_handler
+            if font_handler == None:
+                self.fonts = theme.fonts
+            else:
+                self.fonts = font_handler
             self.root_element = theme.root_element
         else:
             self.theme_name = theme
+            if texture_handler == None:
+                self.textures = TextureHandler()
+            else:
+                self.textures = texture_handler
+            if font_handler == None:
+                self.fonts = FontHandler2D()
+            else:
+                self.fonts = font_handler
             self._compile()
 
     def build_array(self, val):
@@ -81,19 +106,18 @@ class Theme(object):
         return ret
 
     def to_number(self, val):
+        if val == "None": return None
         try: return int(val)
-        except:
-            try: return float(val)
-            except: return val
+        except:pass
+        try: return float(val)
+        except: pass
+
+        return val
 
     def _compile(self):
-        self.textures = TextureHandler()
-        self.fonts = FontHandler2D()
         self.root_element = ThemeElement(self, None, None, None, {})
 
         text = file(self.theme_name, 'rU').read()
-        text = text.replace("\r", "\n")
-        text = text.replace("\r\n", "\n")
         text = text.replace("(", " ( ")
         text = text.replace(")", " ) ")
 
@@ -130,7 +154,7 @@ class Theme(object):
                         last = last.add_element(widg, spec, {})
                 lasts.append(last)
 
-            lines = values.split("\n")
+            lines = values.split(";")
             _vars = {}
 
             for line in lines:
@@ -151,6 +175,8 @@ class Theme(object):
                         add = False
                         if cur_val:
                             new_vals.append(self.build_array(cur_val))
+                        else:
+                            new_vals.append("")
                     else:
                         if arr:
                             cur_val += " "+i
@@ -166,12 +192,18 @@ class Theme(object):
     def get_root(self):
         return self.root_element
 
+    def get_element(self, name, spec=None):
+        return self.root_element.get_element(name, spec)
+
     def load_data(self):
         data_dir = self.root_element.get_element('*data_dir')
         if not data_dir.vals:
             dir = '.'
             font_tex = 1024
             font_size = 32
+
+            self.textures.load_dir(dir)
+            self.fonts.load_dir(dir, font_tex, font_size)
 
         for var in data_dir.vals:
             value = data_dir.vals[var]
@@ -187,6 +219,10 @@ class Theme(object):
                 elif new == 'font_size':
                     font_size = value.pop(0)
 
+            self.textures.load_dir(dir)
+            self.fonts.load_dir(dir, font_tex, font_size)
+            self.fonts.load_font(None, font_tex, font_size)
+
 
 def print_children(element, tab=""):
     print tab+str(element.name)+'.'+str(element.spec)
@@ -196,14 +232,14 @@ def print_children(element, tab=""):
         for x in element.sub_vals[i]:
             print_children(element.sub_vals[i][x], tab+":    ")
 
-t = Theme('gui_theme.txt')
-print_children(t.root_element)
+##t = Theme('gui_theme.txt')
+##print_children(t.root_element)
 ##t.load_data()
 ##print t.get_root().get_element("Button", None).get_val('background')
-
-a = t.get_root().get_element("Button", "quit")
-a.set_val("font", ["None", 120])
-
-b = t.get_root().get_element("Button", "quit")
-
-print a.get_val("font"), b.get_val("font")
+##
+##a = t.get_root().get_element("Button", "quit")
+##a.set_val("font", ["None", 120])
+##
+##b = t.get_root().get_element("Button", "quit")
+##
+##print a.get_val("font"), b.get_val("font")

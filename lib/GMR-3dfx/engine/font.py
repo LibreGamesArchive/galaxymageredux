@@ -92,6 +92,8 @@ class Font2D(object):
         glPopMatrix()
 
     def make_size(self, size=None):
+        if size == None:
+            size = self.def_size
         return Font2Dcopy(self, size)
 
 class Font2Dcopy(object):
@@ -127,3 +129,8 @@ class Font2Dcopy(object):
         if size == None:
             size = self.def_size
         self.other.render(string, pos, color, size)
+
+    def make_size(self, size=None):
+        if size == None:
+            size = self.def_size
+        return Font2Dcopy(self.other, size)

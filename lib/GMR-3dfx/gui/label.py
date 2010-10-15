@@ -1,16 +1,12 @@
 import widget
 
 class Label(widget.Widget):
-    def __init__(self, parent, pos, text):
-        widget.Widget.__init__(self, parent, pos)
+    widget_type = 'Label'
+    def __init__(self, parent, pos, text, name=None):
+        widget.Widget.__init__(self, parent, pos, name)
 
         self.text = text
-
-        self.bg_color = (1,1,1,1)
-
         self.size = self.get_size()
-
-        self.text_color = (0,0,0,1)
 
     def get_size(self):
         return self.get_text_size(self.text)
@@ -18,7 +14,7 @@ class Label(widget.Widget):
     def render(self):
         self.size = self.get_size()
         down = 0
-        if self.bg_color:
-            self.draw_rect(self.get_rect(),
-                           self.bg_color)
-        self.draw_text(self.text, self.pos.get_pos(), self.text_color)
+        x,y = self.pos.get_pos()
+        w,h = self.size
+        self.draw_canvas_border((x,y,w,h), 'background', 'border')
+        self.draw_text(self.text, self.pos.get_pos())

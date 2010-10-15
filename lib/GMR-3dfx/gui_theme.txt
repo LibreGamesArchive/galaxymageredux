@@ -1,29 +1,25 @@
 
-*data_dir {dir: . font_tex 1024 font_size 32}
+/* set data directories, var can be anything (in this case dir) for multiple dirs
+   "." is the dir we are loading
+   font_tex sets size of font texture - higher is better for larger font sizes
+   font_size is the default glyph size for fonts */
+*data_dir {dir: . font_tex 1024 font_size 32;}
 
 
-/*set the defaults...*/
-Button, Button.random, Button.quit,
-Container.special#Button.test {
-	font: None 32
-	background: solid color (0,0,0,1)
-	border: solid 1 color (0.5,0,0,1)
+/* set the defaults... */
+App {
+	background: solid color (1,0,0,0.5); /* solid background red 50% transparent */
+	font: None 32; /* None=default 32 is size */
 }
 
-Button.quit {
-	font: None 20
-	background: image some_image.png
-	background-color: (1,1,1)
-	border: block 5
+Icon.archer {
+	image: ./unit-test-archer.gif; /*load image, must use ./ first since we loaded . dir */
 }
 
 Label {
-	font: None 100
-}
-
-Container.special#Button.test{
-	font: None 45
-	text: (press this to test!)
+	font: None 32;
+	border: solid 5 color (0,1,0,1);
+	padding: (5, 5, 5, 5);
 }
 
 
@@ -34,7 +30,8 @@ ClassName.<special name>#sub-classes {
 }
 
 font: Name size
-background: type[solid or image (pathname)]
-border: type[solid (size) or image (pathname, size) or block (size)]
-	  block takes background image and takes the size of the edges, and scales the inside only...
+background: type[solid or image (pathname) or block (pathname, left, top, width, height)]
+	block renders only part of the image
+border: type[solid (size) or block (pathname, size)]
+	  block takes sides off image and renders those as border
 */

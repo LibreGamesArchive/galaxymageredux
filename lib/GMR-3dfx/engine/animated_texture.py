@@ -97,6 +97,8 @@ class Texture(object):
         self.size_mult = (1,1)
         self.area = (0,0,1,1)
 
+        self.repeat = False
+
         self.ptime = time.time()
         self.cur_frame = 0
 
@@ -149,7 +151,14 @@ class Texture(object):
 
 class TextureClone(texture.TextureClone):
     def __init__(self, tex):
-        texture.TextureClone.__init__(self, tex)
+        self.tex = tex
+
+        self.textures = tex.textures
+        self.durations = tex.durations
+
+        self.size = self.tex.size
+        self.area = self.tex.area
+        self.repeat = False
 
         self.ptime = time.time()
         self.cur_frame = 0
