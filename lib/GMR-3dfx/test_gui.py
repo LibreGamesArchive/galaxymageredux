@@ -28,6 +28,7 @@ def main():
 ##
 ##    gui.Icon(some_cont, (0,0), engine.helpers.load_image2D('unit-test-archer.gif'))
     gui.Icon(main_app, (0,0), 'archer')
+    gui.Icon(main_app, (75,0), 'base')
 ##    gui.Label(some_cont, (0, 75), "Hello Hello?")
     gui.Label(main_app, (0, 75), "Hello Hello?")
 ##

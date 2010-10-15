@@ -24,7 +24,6 @@ class Widget(object):
 
         self.theme = self.parent.theme.get_element(self.widget_type,
                                                    self.widget_name)
-##        theme.print_children(self.theme)
 
         self.size = 0,0
         self.dispatch = event.Dispatcher()
@@ -200,6 +199,40 @@ class Widget(object):
     def draw_rect(self, rect, color, texture=None):
         engine.draw.rect2d(rect, color, texture)
 
+    def draw_border(self, rect, border):
+        rect = pygame.Rect(rect)
+        left, right, top, bottom = border
+        #each - texture, color, size
+
+        #render borders
+        i = left[0]
+        if i != None:
+            i = i.get_region((0,top[2],left[2],i.size[1]-bottom[2]))
+        self.draw_rect((rect.left, rect.top+top[2], left[2], rect.height-top[2]-bottom[2]),
+                       left[1], i)
+
+        i = right[0]
+        if i != None:
+            i = i.get_region((i.size[0]-right[2],top[2],i.size[0],i.size[1]-bottom[2]))
+        self.draw_rect((rect.right-right[2], rect.top+top[2], right[2], rect.height-top[2]-bottom[2]),
+                       right[1], i)
+
+        i = top[0]
+        if i != None:
+            n = i.get_region((0,0,i.size[0],top[2]))
+        else:
+            n = i
+        self.draw_rect((rect.left, rect.top, rect.width, top[2]),
+                       top[1], n)
+
+        i = bottom[0]
+        if i != None:
+            n = i.get_region((0,i.size[1]-bottom[2],i.size[0],i.size[1]))
+        else:
+            n = i
+        self.draw_rect((rect.left, rect.bottom-bottom[2], rect.width, bottom[2]),
+                       bottom[1], n)
+
     def draw_canvas_border(self, rect, canvas, border):
         rect = pygame.Rect(rect)
         canvas = self.get_canvas(canvas)
@@ -208,53 +241,29 @@ class Widget(object):
             left, right, top, bottom = border
             #each - texture, color, size
 
-            #render borders
-            i = left[0]
-            if i != None:
-                i = i.get_region(0,top[2],left[2],i.size[1]-top[2]-bottom[2])
-            self.draw_rect((rect.left, rect.top+top[2], left[2], rect.height-top[2]-bottom[2]),
-                           left[1], i)
-
-            i = right[0]
-            if i != None:
-                i = i.get_region(i.size[0]-right[2],top[2],right[2],i.size[1]-top[2]-bottom[2])
-            self.draw_rect((rect.right-right[2], rect.top+top[2], right[2], rect.height-top[2]-bottom[2]),
-                           right[1], i)
-
-            i = top[0]
-            if i != None:
-                i = i.get_region(0,0,i.size[0],top[2])
-            self.draw_rect((rect.left, rect.top, rect.width, top[2]),
-                           top[1], i)
-
-            i = bottom[0]
-            if i != None:
-                i = i.get_region(0,i.size[1]-bottom[2],i.size[0],bottom[2])
-            self.draw_rect((rect.left, rect.bottom-bottom[2], rect.width, bottom[2]),
-                           bottom[1], i)
-
             l,t,w,h = rect
             l += left[2]
             t += top[2]
             w -= left[2] + right[2]
             h -= top[2] + bottom[2]
             self.draw_rect(pygame.Rect(l,t,w,h), canvas[1], canvas[0])
+
+            #render borders
+            self.draw_border(rect, border)
         else:
             self.draw_rect(rect, canvas[1], canvas[0])
 
     def draw_text(self, text, pos):
         font = self.get_font()
         down = font.get_height()
-        pad = self.get_padding()
         color = self.theme.get_val('text-color', (0,0,0,1))
         x,y = pos
         for t in text.split('\n'):
-            font.render(t, (x+pad[0],y+pad[1]), color)
+            font.render(t, (x,y), color)
             y += down
 
     def get_text_size(self, text):
         font = self.get_font()
-        pad = self.get_padding()
         width = 0
         height = 0
         down = font.get_height()
@@ -263,7 +272,7 @@ class Widget(object):
             width = max((width, w))
             height += down
 
-        return width+pad[0]+pad[2], height+pad[1]+pad[3]
+        return width, height
 
     def get_canvas(self, name):
         bg = self.theme.get_val(name, [])
@@ -291,90 +300,89 @@ class Widget(object):
 
         return image, color
 
-    def get_border(self, name):
+    def get_border(self, name='border'):
         bg = self.theme.get_val(name, None)
-        if bg == None:
-            return None
         Li = Ri = Ti = Bi = None
         Lc = Rc = Tc = Bc = Color((1,1,1,1))
-        Ls = Rs = Ts = Bs = 1
-        i = 0
-        while i < len(bg):
-            ii = bg[i]
-            if ii == "block":
-                new, size = bg[i+1]
-                image = self.theme.get_texture(new)
-                Li = Ri = Ti = Bi = image
-                Ls = Rs = Ts = Bs = size
-                i += 1
-            elif ii == "solid":
-                Li = Ri = Ti = Bi = None
-                Ls = Rs = Ts = Bs = bg[i+1]
-                i += 1
-            elif ii == "color":
-                Lc = Rc = Tc = Bc = Color(bg[i+1])
-                i += 1
+        Ls = Rs = Ts = Bs = 0
+        if bg != None:
+            i = 0
+            while i < len(bg):
+                ii = bg[i]
+                if ii == "block":
+                    new, size = bg[i+1]
+                    image = self.theme.get_texture(new)
+                    Li = Ri = Ti = Bi = image
+                    Ls = Rs = Ts = Bs = size
+                    i += 1
+                elif ii == "solid":
+                    Li = Ri = Ti = Bi = None
+                    Ls = Rs = Ts = Bs = bg[i+1]
+                    i += 1
+                elif ii == "color":
+                    Lc = Rc = Tc = Bc = Color(bg[i+1])
+                    i += 1
 
-            #left
-            if ii == "block-left":
-                new, size = bg[i+1]
-                image = self.theme.get_texture(new)
-                Li = image
-                Ls = size
+##                #left
+##                elif ii == "block-left":
+##                    new, size = bg[i+1]
+##                    image = self.theme.get_texture(new)
+##                    Li = image
+##                    Ls = size
+##                    i += 1
+##                elif ii == "solid-left":
+##                    Li = None
+##                    Ls = bg[i+1]
+##                    i += 1
+##                elif ii == "color-left":
+##                    Lc = Color(bg[i+1])
+##                    i += 1
+##
+##                #right
+##                elif ii == "block-right":
+##                    new, size = bg[i+1]
+##                    image = self.theme.get_texture(new)
+##                    Ri = image
+##                    Rs = size
+##                    i += 1
+##                elif ii == "solid-right":
+##                    Ri = None
+##                    Rs = bg[i+1]
+##                    i += 1
+##                elif ii == "color-right":
+##                    Rc = Color(bg[i+1])
+##                    i += 1
+##
+##                #top
+##                elif ii == "block-top":
+##                    new, size = bg[i+1]
+##                    image = self.theme.get_texture(new)
+##                    Ti = image
+##                    Ts = size
+##                    i += 1
+##                elif ii == "solid-top":
+##                    Ti = None
+##                    Ts = bg[i+1]
+##                    i += 1
+##                elif ii == "color-top":
+##                    Tc = Color(bg[i+1])
+##                    i += 1
+##
+##                #bottom
+##                elif ii == "block-bottom":
+##                    new, size = bg[i+1]
+##                    image = self.theme.get_texture(new)
+##                    Bi = image
+##                    Bs = size
+##                    i += 1
+##                elif ii == "solid-bottom":
+##                    Bi = None
+##                    Bs = bg[i+1]
+##                    i += 1
+##                elif ii == "color-bottom":
+##                    Bc = Color(bg[i+1])
+##                    i += 1
                 i += 1
-            elif ii == "solid-left":
-                Li = None
-                Ls = bg[i+1]
-                i += 1
-            elif ii == "color-left":
-                Lc = Color(bg[i+1])
-                i += 1
-
-            #right
-            if ii == "block-right":
-                new, size = bg[i+1]
-                image = self.theme.get_texture(new)
-                Ri = image
-                Rs = size
-                i += 1
-            elif ii == "solid-right":
-                Ri = None
-                Rs = bg[i+1]
-                i += 1
-            elif ii == "color-right":
-                Rc = Color(bg[i+1])
-                i += 1
-
-            #top
-            if ii == "block-top":
-                new, size = bg[i+1]
-                image = self.theme.get_texture(new)
-                Ti = image
-                Ts = size
-                i += 1
-            elif ii == "solid-top":
-                Ti = None
-                Ts = bg[i+1]
-                i += 1
-            elif ii == "color-top":
-                Tc = Color(bg[i+1])
-                i += 1
-
-            #bottom
-            if ii == "block-bottom":
-                new, size = bg[i+1]
-                image = self.theme.get_texture(new)
-                Bi = image
-                Bs = size
-                i += 1
-            elif ii == "solid-bottom":
-                Bi = None
-                Bs = bg[i+1]
-                i += 1
-            elif ii == "color-bottom":
-                Bc = Color(bg[i+1])
-                i += 1
-            i += 1
 
         return ((Li, Lc, Ls), (Ri, Rc, Rs),
                 (Ti, Tc, Ts), (Bi, Bc, Bs))

@@ -69,12 +69,6 @@ class Texture(object):
         size = image.get_size()
         size2 = self._get_next_biggest(*size)
         if size != size2:
-            x1,y1 = size
-            x1 = max((size2[0], x1))
-            y1 = max((size2[1], y1))
-            if (x1,y1) != size:
-                image = pygame.transform.scale(image, (x1, y1))
-
             new = pygame.Surface(size2).convert_alpha()
             new.fill((0,0,0,0))
             new.blit(image, (0,0))

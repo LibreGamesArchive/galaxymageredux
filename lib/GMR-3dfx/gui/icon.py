@@ -11,10 +11,16 @@ class Icon(widget.Widget):
         return self.theme.get_texture(self.theme.get_val('image'))
 
     def get_size(self):
-        return self.get_image().size
+        w,h = self.get_image().size
+        pad = self.get_padding()
+        return w + pad[0] + pad[2], h + pad[1] + pad[3]
 
     def render(self):
         i = self.get_image()
+        pad = self.get_padding()
         x,y = self.pos.get_pos()
         w,h = i.size
-        self.draw_rect((x, y, w, h), (1,1,1,1), i)
+
+        self.draw_rect((x+pad[0], y+pad[1], w, h), (1,1,1,1), i)
+        self.draw_border((x,y,w+pad[0]+pad[2],h+pad[1]+pad[3]),
+                         self.get_border())

@@ -1,12 +1,24 @@
 
-/* set data directories, var can be anything (in this case dir) for multiple dirs
+/* 
+   *data_dir is a special block in the theme, it is used to set data directories,
+	var can be anything (in this case dir) for multiple dirs
    "." is the dir we are loading
    font_tex sets size of font texture - higher is better for larger font sizes
-   font_size is the default glyph size for fonts */
+   font_size is the default glyph size for fonts
+*/
+
 *data_dir {dir: . font_tex 1024 font_size 32;}
 
 
 /* set the defaults... */
+/* 
+   App is also a special block.
+   All other blocks inherit from their parent,
+   but App's in the gui are same level as other widgets,
+   even though it is really the parent of all other widgets
+	So, instead of theming as App#Label - all you need is Label
+*/
+
 App {
 	background: solid color (1,0,0,0.5); /* solid background red 50% transparent */
 	font: None 32; /* None=default 32 is size */
@@ -14,12 +26,22 @@ App {
 
 Icon.archer {
 	image: ./unit-test-archer.gif; /*load image, must use ./ first since we loaded . dir */
+	padding: (5,5,5,5);
+	border: solid 5 color (0,0,1,0.5);
+}
+
+Icon.base {
+	image: ./base.png; /*load image, must use ./ first since we loaded . dir */
+	padding: (5,5,5,5);
+	border: solid 5 color (0,0,1,0.5);
 }
 
 Label {
 	font: None 32;
-	border: solid 5 color (0,1,0,1);
-	padding: (5, 5, 5, 5);
+	/*border: solid 5 color (0,1,0,1);*/  /* solid border 5 pixels wide/high red no transparency */
+	border: block (./base.png, 7);
+	padding: (7, 7, 7, 7); /* pad the widget by 5 on each side - used in conjunction with borders */
+	background: block (./base.png, 7,7,7,7);
 }
 
 
