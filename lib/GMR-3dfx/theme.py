@@ -9,10 +9,16 @@ class ThemeElement(object):
         self.spec = spec
         self.vals = vals
 
+        if self.parent == None:
+            self.parent_element = ThemeElement(self.theme_parent,self,None,None,{})
+
         self.sub_vals = {}
 
     def update_vals(self, new):
         self.vals.update(new)
+
+    def set_val(self, name, value):
+        self.vals[name] = value
 
     def get_val(self, name, default=None):
         if name in self.vals:
@@ -22,12 +28,12 @@ class ThemeElement(object):
     def get_element(self, name, spec=None):
         if not name in self.sub_vals:
             if self.parent == None:
-                return ThemeElement(self.theme_parent,None,None,None,{})
+                return ThemeElementCopy(self.parent_element)
             else:
                 return self.parent.get_element(name, spec)
         if not spec in self.sub_vals[name]:
             spec = None
-        return self.sub_vals[name][spec]
+        return ThemeElementCopy(self.sub_vals[name][spec])
 
     def add_element(self, name, spec, vals):
         if not name in self.sub_vals:
@@ -38,6 +44,19 @@ class ThemeElement(object):
 
         self.sub_vals[name][spec].update_vals(vals)
         return self.sub_vals[name][spec]
+
+class ThemeElementCopy(ThemeElement):
+    def __init__(self, element):
+        self.parent = element.parent
+        self.theme_parent = element.theme_parent
+        self.name = str(element.name)
+        self.spec = str(element.spec)
+        self.vals = dict(element.vals)
+
+        if self.parent == None:
+            self.parent_element = element.parent_element
+
+        self.sub_vals = element.sub_vals
 
 class Theme(object):
     def __init__(self, theme):
@@ -181,3 +200,10 @@ t = Theme('gui_theme.txt')
 print_children(t.root_element)
 ##t.load_data()
 ##print t.get_root().get_element("Button", None).get_val('background')
+
+a = t.get_root().get_element("Button", "quit")
+a.set_val("font", ["None", 120])
+
+b = t.get_root().get_element("Button", "quit")
+
+print a.get_val("font"), b.get_val("font")
