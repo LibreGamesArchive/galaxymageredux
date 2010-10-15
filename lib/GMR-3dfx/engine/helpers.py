@@ -53,13 +53,20 @@ class TextureHandler(object):
     def __init__(self):
         self.textures = {}
 
+    def make_name(self, dire):
+        path = []
+        while dire:
+            dire, x = os.path.split(dire)
+            path.insert(0, x)
+        return "/".join(path)
+
     def load_dir(self, dire, replace=False):
         for i in os.listdir(dire):
-            self.load_texture(i, replace)
+            self.load_texture(os.path.join(dire, i), replace)
 
     def load_texture(self, name, replace=False):
         if name.split('.')[-1].lower() in ('png', 'bmp', 'jpg', 'gif'):
-            short = os.path.split(name)[1]
+            short = self.make_name(name)
             if replace or (not short in self.textures):
                 self.textures[short] = load_texture(name)
 
@@ -80,6 +87,13 @@ class FontHandler2D(object):
     def __init__(self):
         self.fonts = {}
 
+    def make_name(self, dire):
+        path = []
+        while dire:
+            dire, x = os.path.split(dire)
+            path.insert(0, x)
+        return "/".join(path)
+
     def load_font(self, name, tex_size=1024, def_size=32, replace=False):
         if name == None:
             if replace or (not name in self.fonts):
@@ -87,7 +101,7 @@ class FontHandler2D(object):
                                                text_size,
                                                def_size)
         elif name.split('.')[-1].lower() == 'ttf':
-            short = os.path.split(name)[1]
+            short = self.make_name(name)
             if replace or (not short in self.fonts):
                 self.fonts[short] = font.Font2D(name,
                                                 text_size,
