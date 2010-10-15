@@ -51,14 +51,32 @@ class Theme(object):
             self.theme_name = theme
             self._compile()
 
+    def build_array(self, val):
+        vals = val.split(",")
+        ret = []
+        for i in vals:
+            i = i.strip()
+            ret.append(self.to_number(i))
+        if len(ret) == 1:
+            ret = ret[0]
+        return ret
+
+    def to_number(self, val):
+        try: return int(val)
+        except:
+            try: return float(val)
+            except: return val
+
     def _compile(self):
         self.textures = TextureHandler()
         self.fonts = FontHandler2D()
         self.root_element = ThemeElement(self, None, None, None, {})
 
         text = file(self.theme_name, 'rU').read()
-        text.replace("\r", "\n")
-        text.replace("\r\n", "\n")
+        text = text.replace("\r", "\n")
+        text = text.replace("\r\n", "\n")
+        text = text.replace("(", " ( ")
+        text = text.replace(")", " ) ")
 
         #remove comments
         while text.find('/*') != -1:
@@ -104,7 +122,25 @@ class Theme(object):
                 var = var.strip()
                 vals = vals.split()
 
-                _vars[var] = vals
+                new_vals = []
+                cur_val = ""
+                arr = False
+                for i in vals:
+                    if i == "(":
+                        arr = True
+                    elif i == ")":
+                        add = False
+                        if cur_val:
+                            new_vals.append(self.build_array(cur_val))
+                    else:
+                        if arr:
+                            cur_val += " "+i
+                        else:
+                            new_vals.append(self.to_number(i))
+
+                if len(new_vals) == 1:
+                    new_vals = new_vals[0]
+                _vars[var] = new_vals
             for last in lasts:
                 last.update_vals(_vars)
 

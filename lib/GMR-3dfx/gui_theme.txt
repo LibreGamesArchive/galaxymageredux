@@ -6,16 +6,14 @@
 Button, Button.random, Button.quit,
 Container.special#Button.test {
 	font: None 32
-	background: solid color
-	background-color: 0,0,0,1
-	border: solid 1
-	border-color: 1,0,0,1
+	background: solid color (0,0,0,1)
+	border: solid 1 color (0.5,0,0,1)
 }
 
 Button.quit {
 	font: None 20
 	background: image some_image.png
-	background-color: 1,1,1
+	background-color: (1,1,1)
 	border: block 5
 }
 
@@ -25,6 +23,7 @@ Label {
 
 Container.special#Button.test{
 	font: None 45
+	text: (press this to test!)
 }
 
 
