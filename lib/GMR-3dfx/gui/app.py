@@ -35,84 +35,75 @@ class App(object):
         if not widg in self.widgets:
             self.widgets.insert(0, widg)
 
-
     def handle_mousedown(self, button, name):
         """Callback for mouse click events from the event_handler."""
-        if not self.get_visible():
-            return False
-        for i in self.widgets:
-            if i.get_visible():
-                if i.handle_mousedown(button, name):
-                    return True
+        if self.get_visible():
+            for i in self.widgets:
+                if i.get_visible():
+                    if i.handle_mousedown(button, name):
+                        return True
         return False
 
     def handle_mouseup(self, button, name):
         """Callback for mouse release events from the event_handler."""
-        if not self.get_visible():
-            return False
-        for i in self.widgets:
-            if i.get_visible():
-                if i.handle_mouseup(button, name):
-                    return True
+        if self.get_visible():
+            for i in self.widgets:
+                if i.get_visible():
+                    if i.handle_mouseup(button, name):
+                        return True
         return False
 
     def handle_mousehold(self, button, name):
         """Callback for mouse hold events from the event_handler."""
-        if not self.get_visible():
-            return False
-        for i in self.widgets:
-            if i.get_visible():
-                if i.handle_mousehold(button, name):
-                    return True
+        if self.get_visible():
+            for i in self.widgets:
+                if i.get_visible():
+                    if i.handle_mousehold(button, name):
+                        return True
         return False
 
     def handle_mousemotion(self, change):
         """Callback for mouse motion events from event_handler."""
-        if not self.get_visible():
-            return False
-        for i in self.widgets:
-            if i.get_visible():
-                if i.handle_mousemotion(change):
-                    return True
+        if self.get_visible():
+            for i in self.widgets:
+                if i.get_visible():
+                    if i.handle_mousemotion(change):
+                        return True
 
     def handle_uncaught_event(self, event):
         """Callback for uncaught_event events from event_handler."""
-        if not self.get_visible():
-            return False
-        for i in self.widgets:
-            if i.get_visible():
-                if i.handle_uncaught_event(event):
-                    return True
+        if self.get_visible():
+            for i in self.widgets:
+                if i.get_visible():
+                    if i.handle_uncaught_event(event):
+                        return True
         return False
 
     def handle_keydown(self, key, string):
         """Callback for key press events from event_handler."""
-        if not self.get_visible():
-            return False
-        for i in self.widgets:
-            if i.get_visible():
-                if i.handle_keydown(key, string):
-                    return True
+        if self.get_visible():
+            for i in self.widgets:
+                if i.get_visible():
+                    if i.handle_keydown(key, string):
+                        return True
         return False
 
     def handle_keyup(self, key, string):
         """Callback for key release events from event_handler."""
-        if not self.get_visible():
-            return False
-        for i in self.widgets:
-            if i.get_visible():
-                if i.handle_keyup(key, string):
-                    return True
+        if self.get_visible():
+            for i in self.widgets:
+                if i.get_visible():
+                    if i.handle_keyup(key, string):
+                        return True
         return False
 
     def handle_keyhold(self, key, string):
         """Callback for key hold events from event_handler."""
-        if not self.get_visible():
-            return False
-        for i in self.widgets:
-            if i.get_visible():
-                if i.handle_keyhold(key, string):
-                    return True
+        if self.get_visible():
+            for i in self.widgets:
+                if i.get_visible():
+                    if i.handle_keyhold(key, string):
+                        return True
         return False
 
     def next_widget(self):
@@ -152,14 +143,15 @@ class App(object):
         return image, color
 
     def get_visible(self):
-        self.theme.get_val('visible', True)
+        return self.theme.get_val('visible', True)
 
     def render(self):
-        image, color = self.get_canvas('background')
-        engine.draw.rect2d(pygame.Rect((0,0),  self.screen.screen_size_2d),
-                           color, image)
+        if self.get_visible():
+            image, color = self.get_canvas('background')
+            engine.draw.rect2d(pygame.Rect((0,0),  self.screen.screen_size_2d),
+                               color, image)
 
-        self.widgets.reverse()
-        for i in self.widgets:
-            if i.get_visible(): i.render()
-        self.widgets.reverse()
+            self.widgets.reverse()
+            for i in self.widgets:
+                if i.get_visible(): i.render()
+            self.widgets.reverse()

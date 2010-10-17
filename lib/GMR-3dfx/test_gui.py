@@ -21,8 +21,6 @@ def main():
     main_app = gui.App(event_handler)
     main_app.load_theme('gui_theme.txt')
 
-##    theme.print_children(main_app.theme.get_root())
-
 ##    some_cont = gui.Container(main_app, (300,100), (50,50))
 ##    some_cont.bg_color = (1,0,0,1)
 ##

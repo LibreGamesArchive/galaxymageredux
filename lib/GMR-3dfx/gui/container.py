@@ -10,11 +10,12 @@ class Container(widget.Widget, app.App):
         self.widgets = []
 
         self.dispatch = event.Dispatcher()
-        self.bg_image = None
-
-        self.font = self.parent.font
-
-        self.bg_color = (0,0,0,0)
+##        self.bg_image = None
+##
+##        self.font = self.parent.font
+##        self.font = None
+##
+##        self.bg_color = (0,0,0,0)
 
         self.dispatch.bind("unhover", self.unhover_all_widgets)
 

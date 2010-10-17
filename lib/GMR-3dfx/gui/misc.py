@@ -10,20 +10,21 @@ class RelativePos(object):
     def get_pos(self):
         if self.to:
             rel = self.to
-            relx, rely = rel.pos.get_pos()
+            relx, rely = rel.get_pos()
+            rsize = rel.get_size_with_padding()
             if self.x == "left":
                 x = relx
             elif self.x == "center":
-                x = relx + int(rel.size[0]*0.5)
+                x = relx + int(rsize[0]*0.5)
             else:
-                x = relx + rel.size[0]
+                x = relx + rsize[0]
 
             if self.y == "top":
                 y = rely
             elif self.y == "center":
-                y = rely + int(rel.size[1]*0.5)
+                y = rely + int(rsize[1]*0.5)
             else:
-                y = rely + rel.size[1]
+                y = rely + rsize[1]
 
             return x+self.padx, y+self.pady
 
@@ -33,19 +34,20 @@ class RelativePos(object):
         if self.to:
             rel = self.to
             px, py = rel.get_real_pos()
+            rsize = rel.get_size_with_padding()
             if self.x == "left":
                 x = px
             elif self.x == "center":
-                x = px + int(rel.size[0]*0.5)
+                x = px + int(rsize[0]*0.5)
             else:
-                x = px + rel.size[0]
+                x = px + rsize[0]
 
             if self.y == "top":
                 y = py
             elif self.x == "center":
-                y = py + int(rel.size[1]*0.5)
+                y = py + int(rsize[1]*0.5)
             else:
-                y = py + rel.size[1]
+                y = py + rsize[1]
 
             return x+self.padx, y+self.pady
         else:

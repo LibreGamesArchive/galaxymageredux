@@ -5,15 +5,11 @@ class Icon(widget.Widget):
     def __init__(self, parent, pos, name=None):
         widget.Widget.__init__(self, parent, pos, name)
 
-        self.size = self.get_size()
-
     def get_image(self):
         return self.theme.get_texture(self.theme.get_val('image'))
 
     def get_size(self):
-        w,h = self.get_image().size
-        pad = self.get_padding()
-        return w + pad[0] + pad[2], h + pad[1] + pad[3]
+        return self.get_image().size
 
     def render(self):
         i = self.get_image()

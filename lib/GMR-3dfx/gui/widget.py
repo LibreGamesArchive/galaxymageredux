@@ -25,7 +25,6 @@ class Widget(object):
         self.theme = self.parent.theme.get_element(self.widget_type,
                                                    self.widget_name)
 
-        self.size = 0,0
         self.dispatch = event.Dispatcher()
 
         self._mhold = False
@@ -65,17 +64,33 @@ class Widget(object):
         x = 0
         y = 0
         for i in parents:
-            ix, iy = i.pos.get_pos()
+            ix, iy = i.get_pos_with_padding()
             x += ix
             y += iy
-        sx, sy = self.pos.get_pos()
+        sx, sy = self.get_pos()
         return x+sx, y+sy
 
+    def get_pos(self):
+        return self.pos.get_pos()
+
+    def get_pos_with_padding(self):
+        x,y = self.get_pos()
+        pad = self.get_padding()
+        return (x+pad[0],y+pad[1])
+
+    def get_size(self):
+        return (0,0)
+
+    def get_size_with_padding(self):
+        w,h = self.get_size()
+        pad = self.get_padding()
+        return (w+pad[0]+pad[2], h+pad[1]+pad[3])
+
     def get_rect(self):
-        return pygame.Rect(self.pos.get_pos(), self.size)
+        return pygame.Rect(self.get_pos_with_padding(), self.get_size())
 
     def mouse_on_me(self):
-        return pygame.Rect(self.pos.get_pos(), self.size).collidepoint(self.parent.get_mouse_pos())
+        return bool(self.get_rect().collidepoint(self.parent.get_mouse_pos()))
 
     def focus(self):
         """Focus this widget so it is at the top of rendering and event calls."""
@@ -233,10 +248,10 @@ class Widget(object):
         self.draw_rect((rect.left, rect.bottom-bottom[2], rect.width, bottom[2]),
                        bottom[1], n)
 
-    def draw_canvas_border(self, rect, canvas, border):
+    def draw_canvas_border(self, rect, canvas):
         rect = pygame.Rect(rect)
         canvas = self.get_canvas(canvas)
-        border = self.get_border(border)
+        border = self.get_border()
         if border:
             left, right, top, bottom = border
             #each - texture, color, size
@@ -299,12 +314,15 @@ class Widget(object):
 
         return image, color
 
-    def get_border(self, name='border'):
-        bg = self.theme.get_val(name, None)
+    def get_background(self):
+        return self.get_canvas('background')
+
+    def get_border(self):
+        bg = self.theme.get_val('border', None)
         Li = Ri = Ti = Bi = None
         Lc = Rc = Tc = Bc = Color((1,1,1,1))
         Ls = Rs = Ts = Bs = 0
-        if bg != None:
+        if bg:
             i = 0
             while i < len(bg):
                 ii = bg[i]
@@ -389,9 +407,9 @@ class Widget(object):
     def get_visible(self):
         return self.theme.get_val('visible', True)
 
-    def get_font(self, name='font'):
-        name, size, color = self.theme.get_val(name, [None, 32, (0,0,0,2)])
+    def get_font(self):
+        name, size, color = self.theme.get_val('font', [None, 32, (0,0,0,2)])
         return (self.theme.get_font(name), size, Color(color))
 
-    def get_padding(self, name='padding'):
-        return self.theme.get_val(name, (0,0,0,0))
+    def get_padding(self):
+        return self.theme.get_val('padding', (0,0,0,0))

@@ -100,13 +100,15 @@ class Theme(object):
         ret = []
         for i in vals:
             i = i.strip()
-            ret.append(self.to_number(i))
+            ret.append(self.to_value(i))
         if len(ret) == 1:
             ret = ret[0]
         return ret
 
-    def to_number(self, val):
-        if val == "None": return None
+    def to_value(self, val):
+        if val.lower() == "none": return None
+        if val.lower() == "true": return True
+        if val.lower() == "false": return False
         try: return int(val)
         except:pass
         try: return float(val)
@@ -182,7 +184,7 @@ class Theme(object):
                         if arr:
                             cur_val += " "+i
                         else:
-                            new_vals.append(self.to_number(i))
+                            new_vals.append(self.to_value(i))
 
                 if len(new_vals) == 1:
                     new_vals = new_vals[0]
