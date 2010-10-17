@@ -10,12 +10,6 @@ class Container(widget.Widget, app.App):
         self.widgets = []
 
         self.dispatch = event.Dispatcher()
-##        self.bg_image = None
-##
-##        self.font = self.parent.font
-##        self.font = None
-##
-##        self.bg_color = (0,0,0,0)
 
         self.dispatch.bind("unhover", self.unhover_all_widgets)
 
@@ -41,10 +35,10 @@ class Container(widget.Widget, app.App):
         x = widget.Widget.handle_mousedown(self, button, name)
         if not self.mouse_on_me():
             return False
-        if not self.visible:
+        if not self.get_visible():
             return False
         for i in self.widgets:
-            if i.visible:
+            if i.get_visible():
                 if i.handle_mousedown(button, name):
                     return True
         return x
@@ -54,10 +48,10 @@ class Container(widget.Widget, app.App):
         x = widget.Widget.handle_mouseup(self, button, name)
         if not self.mouse_on_me():
             return False
-        if not self.visible:
+        if not self.get_visible():
             return False
         for i in self.widgets:
-            if i.visible:
+            if i.get_visible():
                 if i.handle_mouseup(button, name):
                     return True
         return x
@@ -101,17 +95,24 @@ class Container(widget.Widget, app.App):
         """Callback for key hold events from event_handler."""
         return app.App.handle_keyhold(self, key, string)
 
+    def get_size(self):
+        return self.size
+
     def render(self):
         self.screen.push_clip(self.get_rect())
         glPushMatrix()
-        x,y = self.pos.get_pos()
+        x,y = self.get_pos()
+        w,h = self.get_size()
+        pad = self.get_padding()
+        self.draw_canvas_border((x,y,w+pad[0]+pad[2],h+pad[1]+pad[3]),
+                                'background')
         glTranslatef(x,y,0)
-        self.draw_rect((0,0,self.size[0], self.size[1]),
-                       self.bg_color)
+##        self.draw_rect((0,0,self.size[0], self.size[1]),
+##                       self.bg_color)
 
         self.widgets.reverse()
         for i in self.widgets:
-            if i.visible: i.render()
+            if i.get_visible(): i.render()
         self.widgets.reverse()
         glPopMatrix()
         self.screen.pop_clip()

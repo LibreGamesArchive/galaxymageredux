@@ -12,6 +12,8 @@ from pygame.locals import *
 import string
 import time
 
+from engine import display
+
 printable_chars = "abcdefghijklmnopqrstuvwxyz`1234567890-=[]\\;',./ "+'ABCDEFGHIJKLMNOPQRSTUVWXYZ~!@#$%^&*()_+{}|:"<>?'
 
 class Keyboard(object):
@@ -67,8 +69,7 @@ class Mouse(object):
 
     def get_pos(self):
         """Return the mouse pos."""
-##        return view.screen.get_mouse_pos()
-        return pygame.mouse.get_pos()
+        return display.get_display().screen.get_mouse_pos2d()
 
     def get_name(self, button):
         """Return the 'name' that matches the button, ie:

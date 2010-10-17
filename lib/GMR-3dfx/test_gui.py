@@ -21,13 +21,13 @@ def main():
     main_app = gui.App(event_handler)
     main_app.load_theme('gui_theme.txt')
 
-##    some_cont = gui.Container(main_app, (300,100), (50,50))
-##    some_cont.bg_color = (1,0,0,1)
-##
+    some_cont = gui.Container(main_app, (300,200), (100,150))
+    some_cont.bg_color = (1,0,0,1)
+
 ##    gui.Icon(some_cont, (0,0), engine.helpers.load_image2D('unit-test-archer.gif'))
     gui.Icon(main_app, (0,0), 'archer')
     gui.Icon(main_app, (75,0), 'base')
-##    gui.Label(some_cont, (0, 75), "Hello Hello?")
+    gui.Label(some_cont, (0, 75), "Hello Hello?")
     gui.Label(main_app, (0, 75), "Hello Hello?")
 ##
 ##    butt = gui.Button(some_cont, (75,5), "test\nclick")
