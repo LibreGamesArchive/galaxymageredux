@@ -172,11 +172,12 @@ class Theme(object):
                     if i == "(":
                         arr = True
                     elif i == ")":
-                        add = False
+                        arr = False
                         if cur_val:
                             new_vals.append(self.build_array(cur_val))
                         else:
                             new_vals.append("")
+                        cur_val = ""
                     else:
                         if arr:
                             cur_val += " "+i

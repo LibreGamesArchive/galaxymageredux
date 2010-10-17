@@ -309,79 +309,79 @@ class Widget(object):
             i = 0
             while i < len(bg):
                 ii = bg[i]
+                #all
                 if ii == "block":
-                    new, size = bg[i+1]
+                    new, Ls, Rs, Ts, Bs = bg[i+1]
                     image = self.theme.get_texture(new)
                     Li = Ri = Ti = Bi = image
-                    Ls = Rs = Ts = Bs = size
                     i += 1
                 elif ii == "solid":
                     Li = Ri = Ti = Bi = None
-                    Ls = Rs = Ts = Bs = bg[i+1]
+                    Ls, Ts, Rs, Bs = bg[i+1]
                     i += 1
                 elif ii == "color":
                     Lc = Rc = Tc = Bc = Color(bg[i+1])
                     i += 1
 
-##                #left
-##                elif ii == "block-left":
-##                    new, size = bg[i+1]
-##                    image = self.theme.get_texture(new)
-##                    Li = image
-##                    Ls = size
-##                    i += 1
-##                elif ii == "solid-left":
-##                    Li = None
-##                    Ls = bg[i+1]
-##                    i += 1
-##                elif ii == "color-left":
-##                    Lc = Color(bg[i+1])
-##                    i += 1
-##
-##                #right
-##                elif ii == "block-right":
-##                    new, size = bg[i+1]
-##                    image = self.theme.get_texture(new)
-##                    Ri = image
-##                    Rs = size
-##                    i += 1
-##                elif ii == "solid-right":
-##                    Ri = None
-##                    Rs = bg[i+1]
-##                    i += 1
-##                elif ii == "color-right":
-##                    Rc = Color(bg[i+1])
-##                    i += 1
-##
-##                #top
-##                elif ii == "block-top":
-##                    new, size = bg[i+1]
-##                    image = self.theme.get_texture(new)
-##                    Ti = image
-##                    Ts = size
-##                    i += 1
-##                elif ii == "solid-top":
-##                    Ti = None
-##                    Ts = bg[i+1]
-##                    i += 1
-##                elif ii == "color-top":
-##                    Tc = Color(bg[i+1])
-##                    i += 1
-##
-##                #bottom
-##                elif ii == "block-bottom":
-##                    new, size = bg[i+1]
-##                    image = self.theme.get_texture(new)
-##                    Bi = image
-##                    Bs = size
-##                    i += 1
-##                elif ii == "solid-bottom":
-##                    Bi = None
-##                    Bs = bg[i+1]
-##                    i += 1
-##                elif ii == "color-bottom":
-##                    Bc = Color(bg[i+1])
-##                    i += 1
+                #left
+                elif ii == "block-left":
+                    new, size = bg[i+1]
+                    image = self.theme.get_texture(new)
+                    Li = image
+                    Ls = size
+                    i += 1
+                elif ii == "solid-left":
+                    Li = None
+                    Ls = bg[i+1]
+                    i += 1
+                elif ii == "color-left":
+                    Lc = Color(bg[i+1])
+                    i += 1
+
+                #right
+                elif ii == "block-right":
+                    new, size = bg[i+1]
+                    image = self.theme.get_texture(new)
+                    Ri = image
+                    Rs = size
+                    i += 1
+                elif ii == "solid-right":
+                    Ri = None
+                    Rs = bg[i+1]
+                    i += 1
+                elif ii == "color-right":
+                    Rc = Color(bg[i+1])
+                    i += 1
+
+                #top
+                elif ii == "block-top":
+                    new, size = bg[i+1]
+                    image = self.theme.get_texture(new)
+                    Ti = image
+                    Ts = size
+                    i += 1
+                elif ii == "solid-top":
+                    Ti = None
+                    Ts = bg[i+1]
+                    i += 1
+                elif ii == "color-top":
+                    Tc = Color(bg[i+1])
+                    i += 1
+
+                #bottom
+                elif ii == "block-bottom":
+                    new, size = bg[i+1]
+                    image = self.theme.get_texture(new)
+                    Bi = image
+                    Bs = size
+                    i += 1
+                elif ii == "solid-bottom":
+                    Bi = None
+                    Bs = bg[i+1]
+                    i += 1
+                elif ii == "color-bottom":
+                    Bc = Color(bg[i+1])
+                    i += 1
                 i += 1
 
         return ((Li, Lc, Ls), (Ri, Rc, Rs),
