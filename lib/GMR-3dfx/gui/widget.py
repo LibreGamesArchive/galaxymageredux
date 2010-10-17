@@ -254,21 +254,20 @@ class Widget(object):
             self.draw_rect(rect, canvas[1], canvas[0])
 
     def draw_text(self, text, pos):
-        font = self.get_font()
-        down = font.get_height()
-        color = self.theme.get_val('text-color', (0,0,0,1))
+        font, size, color = self.get_font()
+        down = font.get_height(size)
         x,y = pos
         for t in text.split('\n'):
-            font.render(t, (x,y), color)
+            font.render(t, (x,y), color, size)
             y += down
 
     def get_text_size(self, text):
-        font = self.get_font()
+        font, size, color = self.get_font()
         width = 0
         height = 0
-        down = font.get_height()
+        down = font.get_height(size)
         for t in text.split('\n'):
-            w,h = font.get_size(t)
+            w,h = font.get_size(t, size)
             width = max((width, w))
             height += down
 
@@ -391,8 +390,8 @@ class Widget(object):
         return self.theme.get_val('visible', True)
 
     def get_font(self, name='font'):
-        name, size = self.theme.get_val(name, [None, 32])
-        return self.theme.get_font(name).make_size(size)
+        name, size, color = self.theme.get_val(name, [None, 32, (0,0,0,2)])
+        return (self.theme.get_font(name), size, Color(color))
 
     def get_padding(self, name='padding'):
         return self.theme.get_val(name, (0,0,0,0))
