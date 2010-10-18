@@ -19,11 +19,6 @@
 	So, instead of theming as App#Label - all you need is Label
 */
 
-/* RB - note
-   <special block>
-   block{attrib: ignore-borders}
-*/
-
 App {
 	background: solid color (1,0,0,0.5); /* solid background red 50% transparent */
 }
@@ -53,6 +48,7 @@ Label {
 	padding: (7, 7, 7, 7); /* pad the widget by 5 on each side - used in conjunction with borders */
 	background: block (./base.png, 7,7,7,7);
 	border.hover: block (./base.png, 7, 7, 7, 7) color (1,0,0,1);
+	mouse-ignore-border: True;
 }
 
 Input {

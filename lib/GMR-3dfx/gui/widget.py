@@ -91,8 +91,14 @@ class Widget(object):
     def get_rect(self):
         return pygame.Rect(self.get_pos_with_padding(), self.get_size())
 
+    def get_rect_with_padding(self):
+        return pygame.Rect(self.get_pos(), self.get_size_with_padding())
+
     def mouse_on_me(self):
-        return bool(self.get_rect().collidepoint(self.parent.get_mouse_pos()))
+        if self.get_theme_val('mouse-ignore-border', False):
+            return bool(self.get_rect().collidepoint(self.parent.get_mouse_pos()))
+        else:
+            return bool(self.get_rect_with_padding().collidepoint(self.parent.get_mouse_pos()))
 
     def focus(self):
         """Focus this widget so it is at the top of rendering and event calls."""
