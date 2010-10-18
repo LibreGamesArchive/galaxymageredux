@@ -20,7 +20,7 @@
 */
 
 App {
-	background: solid color (1,0,0,0.5); /* solid background red 50% transparent */
+	background: solid color (.5,0,0,1); /* solid background 50% red */
 }
 
 Container {

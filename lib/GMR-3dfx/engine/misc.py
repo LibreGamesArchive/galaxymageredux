@@ -1,19 +1,25 @@
 class Color(object):
-    def __init__(self, val, form="rgba1"):
+    def __init__(self, val, form=None):
+        a = None
         if isinstance(val, Color):
             r, g, b, a = val.r, val.g, val.b, val.a
+            form = 'rgba1'
         elif val == None:
             r,g,b,a = 0,0,0,0
+            form = 'rgba1'
         elif len(val) == 3:
             r,g,b = val
-            if form == "rgba1":
-                a = 1
-            elif form == "rgba255":
-                a = 255
-            else:
-                raise Exception("form must be 'rgba1' or 'rgba255'")
         else:
             r,g,b,a = val
+
+        if form == None:
+            if max(val) <= 1:
+                form = 'rgba1'
+            else:
+                form = 'rgba255'
+            if a == None:
+                if form == 'rgba1': a = 1
+                else: a = 255
 
         if form == "rgba255":
             r,g,b,a = map(self.convert_255_to_1, (r,g,b,a))
