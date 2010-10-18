@@ -30,26 +30,16 @@ def main():
     gui.Label(some_cont, (5, 5), "Hello Hello?")
     gui.Label(main_app, (0, 75), "Hello Hello?")
 
-##    butt = gui.Button(some_cont, (75,5), "test\nclick")
-##    text_box = gui.MessageBox(main_app, (300,100), (50, 200))
-##    text_box.bg_color = (1,0,0,0.5)
-##    butt.dispatch.bind('click',
-##                       lambda: text_box.add_line(
-##                           'test'+str(random.randint(0,45))))
-##
+    drop = gui.DropDown(main_app, (150, 5), "press me!")
+    drop.setChild(gui.Label(main_app, (0,0), 'woah!'))
+
     inp = gui.Input(main_app, (55,155))
     inp.theme.set_val('width', 290)
 
     l = gui.List(some_cont, gui.RelativePos(x="right", y="top"), ['test1', 'test2', 'test3'])
     l.theme.get_element('Entry').set_val('font', (None, 50, (0,.5,.5,1)))
     l.update_child_theme()
-##
-##    popup = gui.PopUp(butt, text="adds text to the message box below", width=100)
-##    popup.bg_color = engine.misc.Color((255,255,255,100), 'rgba255')
-##
-##    drop = gui.DropDown(main_app, (5, 5), "press me!")
-##    drop.setChild(gui.Label(main_app, (0,0), 'woah!'))
-##
+
     menu = gui.Menu(main_app, gui.RelativePos(), ['abc', '123', ('come on now!', True)])
     menu.dispatch.bind('select', print_val)
 
@@ -59,6 +49,13 @@ def main():
                                     ['solid', 'color', [0,0,0,1]])
     menu2.update_child_theme()
 
+    butt = gui.Button(some_cont, gui.RelativePos(), "test\nclick")
+    text_box = gui.MessageBox(main_app, (300,100), (50, 375))
+    butt.dispatch.bind('click',
+                       lambda: text_box.add_line(
+                           'test'+str(random.randint(0,45))))
+
+    popup = gui.PopUp(butt, text="adds text to the message box below")
 
     while 1:
         event_handler.update()

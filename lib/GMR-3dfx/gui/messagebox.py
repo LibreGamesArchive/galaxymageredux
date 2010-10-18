@@ -1,39 +1,22 @@
-import widget, container
-
-class MessageBoxLabel(widget.Widget):
-    def __init__(self, parent, text):
-        widget.Widget.__init__(self, parent, (0,0))
-
-        self.text = text
-
-        self.size = self.get_size()
-
-    def get_size(self):
-        return self.font.get_size(self.text)
-
-    def render(self):
-        self.size = self.get_size()
-        if self.parent.entry_bg_color:
-            self.draw_rect(self.get_rect(),
-                           self.parent.entry_bg_color)
-        self.draw_text(self.text, self.pos.get_pos(), self.parent.text_color)
+import label, container, misc
 
 class MessageBox(container.Container):
-    def __init__(self, parent, size, pos, max_lines=10):
-        container.Container.__init__(self, parent, size, pos)
+    widget_type = 'MessageBox'
+    def __init__(self, parent, size, pos, name=None):
+        container.Container.__init__(self, parent, size, pos, name)
 
-        self.max_lines = max_lines
-        self.text_color = (0,0,0)
-        self.entry_bg_color = None
+    def set_top_widget(self, widget):
+        pass
 
     def add_line(self, text):
-        MessageBoxLabel(self, text)
+        label.Label(self, misc.AbsolutePos((0,0)), text)
 
-        height = self.font.get_height()
+        max_lines = self.get_theme_val('max_lines', 10)
 
-        lasty = self.size[1] - height
+        lasty = self.size[1]
         for i in self.widgets:
-            i.pos.y = lasty
-            lasty -= height
+            s = i.get_size_with_padding()
+            i.pos.y = lasty - s[1]
+            lasty -= s[1]
 
-        self.widgets = self.widgets[0:self.max_lines]
+        self.widgets = self.widgets[0:max_lines]
