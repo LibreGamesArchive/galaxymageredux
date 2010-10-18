@@ -202,7 +202,7 @@ class Theme(object):
         return self.root_element.get_element(name, spec)
 
     def load_data(self):
-        data_dir = self.root_element.get_element('*data_dir')
+        data_dir = self.root_element.get_element('<data_dir>')
         if not data_dir.vals:
             dir = '.'
             font_tex = 1024
@@ -228,24 +228,3 @@ class Theme(object):
             self.textures.load_dir(dir)
             self.fonts.load_dir(dir, font_tex, font_size)
             self.fonts.load_font(None, font_tex, font_size)
-
-
-def print_children(element, tab=""):
-    print tab+str(element.name)+'.'+str(element.spec)
-    for i in element.vals:
-        print tab,i, "=", element.vals[i]
-    for i in element.sub_vals:
-        for x in element.sub_vals[i]:
-            print_children(element.sub_vals[i][x], tab+":    ")
-
-##t = Theme('gui_theme.txt')
-##print_children(t.root_element)
-##t.load_data()
-##print t.get_root().get_element("Button", None).get_val('background')
-##
-##a = t.get_root().get_element("Button", "quit")
-##a.set_val("font", ["None", 120])
-##
-##b = t.get_root().get_element("Button", "quit")
-##
-##print a.get_val("font"), b.get_val("font")
