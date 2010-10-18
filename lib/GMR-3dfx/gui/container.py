@@ -99,16 +99,12 @@ class Container(widget.Widget, app.App):
         return self.size
 
     def render(self):
-        self.screen.push_clip(self.get_rect())
+        r = self.get_rect()
+        self.draw_canvas_border(r, 'background')
+
+        self.screen.push_clip(r)
         glPushMatrix()
-        x,y = self.get_pos()
-        w,h = self.get_size()
-        pad = self.get_padding()
-        self.draw_canvas_border((x,y,w+pad[0]+pad[2],h+pad[1]+pad[3]),
-                                'background')
-        glTranslatef(x,y,0)
-##        self.draw_rect((0,0,self.size[0], self.size[1]),
-##                       self.bg_color)
+        glTranslatef(r.left,r.top,0)
 
         self.widgets.reverse()
         for i in self.widgets:

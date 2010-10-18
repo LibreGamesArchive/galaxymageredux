@@ -7,7 +7,7 @@
    font_size is the default glyph size for fonts
 */
 
-*data_dir {dir: . font_tex 1024 font_size 32;}
+*data_dir {dir: . font_tex 512 font_size 32;}
 
 
 /* set the defaults... */
@@ -21,6 +21,13 @@
 
 App {
 	background: solid color (1,0,0,0.5); /* solid background red 50% transparent */
+}
+
+Container {
+	background: solid color (0,1,0,0.5);
+	border: solid (5,5,5,5) color (0,0,0,1);
+	padding: (5,5,5,5);
+	border.hover: solid (1,1,1,1) color (0,0,0,1);
 }
 
 Icon.archer {
@@ -41,6 +48,48 @@ Label {
 	padding: (7, 7, 7, 7); /* pad the widget by 5 on each side - used in conjunction with borders */
 	background: block (./base.png, 7,7,7,7);
 	border.hover: block (./base.png, 7, 7, 7, 7) color (1,0,0,1);
+}
+
+Input {
+	font: None 24 (0,0,0,1);
+	border: solid (2,2,2,2) color (.5,.5,.5,1);
+	padding: (2,2,2,2);
+	background: solid color (1,1,1,1);
+	background.active: solid color (1,0,0,1);
+	key-repeat-delay: 100;
+	always-active: False;
+	max-chars: 10;
+}
+
+
+List, Menu {
+	background: solid color (1,1,1,0.5);
+	border: solid (1,1,1,1) color (0,0,0,1);
+}
+List#Entry, Menu#Entry {
+	background: None;
+	border: None;
+	padding: (2,2,2,2);
+	font: None 40 (0,0,0,1);
+}
+
+Menu#Entry {
+	font.disabled: None 40 (.25,.25,.25,1);
+}
+
+DropDownMenu {
+	background: solid color(0,0,1,1);
+	border: solid (5,5,5,5) color (0,0,0,1);
+}
+
+DropDownMenu#Menu {
+	border: None;
+	background: solid color (1,1,0,1);
+}
+
+DropDownMenu#Menu#Entry {
+	font: None 32 (1,0,0,1);
+	background: None;
 }
 
 

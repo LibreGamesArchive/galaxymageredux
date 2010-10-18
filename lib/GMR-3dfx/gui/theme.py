@@ -151,7 +151,10 @@ class Theme(object):
                         spec = None
 
                     if name in last.sub_vals:
-                        last = last.get_element(widg, spec)
+                        if spec in last.sub_vals[name]:
+                            last = last.sub_vals[name][spec]
+                        else:
+                            last = last.get_element(widg, spec)
                     else:
                         last = last.add_element(widg, spec, {})
                 lasts.append(last)

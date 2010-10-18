@@ -1,13 +1,16 @@
 import button, misc
 
 class DropDown(button.Button):
-    def __init__(self, parent, pos, text, child=None):
-        button.Button.__init__(self, parent, pos, text)
+    widget_type = "DropDown"
+    def __init__(self, parent, pos, text, child=None, name=None):
+        button.Button.__init__(self, parent, pos, text, name)
 
         self.child = None
         if child:
             self.setChild(child)
         self.dispatch.bind('click', self.turn_on)
+        self.dispatch.bind('unfocus', self.turn_off_vis)
+        self.vis = False
 
     def setChild(self, child):
         self.child = child
@@ -16,8 +19,13 @@ class DropDown(button.Button):
         self.turn_off()
 
     def turn_off(self):
-        self.child.visible = False
-        self.child.destroy()
+        self.child.theme.set_val('visible', False)
+    def turn_off_vis(self):
+        self.vis = False
     def turn_on(self):
-        self.child.visible = True
-        self.parent.add_widget(self.child)
+        if self.vis:
+            self.turn_off()
+            self.vis = False
+            return
+        self.vis = True
+        self.child.theme.set_val('visible', True)

@@ -13,7 +13,7 @@ class Label(widget.Widget):
     def render(self):
         pad = self.get_padding()
         down = 0
-        x,y = self.pos.get_pos()
+        x,y = self.get_pos()
         w,h = self.get_size()
         self.draw_canvas_border((x,y,w+pad[0]+pad[2],h+pad[1]+pad[3]),
                                 'background')

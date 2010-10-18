@@ -12,7 +12,6 @@ Input = input.Input
 Label = label.Label
 List = list.List
 Menu = menu.Menu
-DisableMenu = menu.DisableMenu
 DropDownMenu = menu.DropDownMenu
 MessageBox = messagebox.MessageBox
 AbsolutePos = misc.AbsolutePos
