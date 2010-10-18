@@ -155,3 +155,6 @@ class App(object):
             for i in self.widgets:
                 if i.get_visible(): i.render()
             self.widgets.reverse()
+
+    def am_active(self):
+        return self.event_handler.gui == self

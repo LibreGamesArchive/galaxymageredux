@@ -289,7 +289,8 @@ class Widget(object):
         return width, height
 
     def get_canvas(self, name):
-        bg = self.theme.get_val(name, [])
+##        bg = self.theme.get_val(name, [])
+        bg = self.get_theme_val(name, [])
         image = None
         color = Color((1,1,1,1))
         i = 0
@@ -318,7 +319,8 @@ class Widget(object):
         return self.get_canvas('background')
 
     def get_border(self):
-        bg = self.theme.get_val('border', None)
+##        bg = self.theme.get_val('border', None)
+        bg = self.get_theme_val('border', None)
         Li = Ri = Ti = Bi = None
         Lc = Rc = Tc = Bc = Color((1,1,1,1))
         Ls = Rs = Ts = Bs = 0
@@ -405,11 +407,38 @@ class Widget(object):
                 (Ti, Tc, Ts), (Bi, Bc, Bs))
 
     def get_visible(self):
-        return self.theme.get_val('visible', True)
+##        return self.theme.get_val('visible', True)
+        return self.get_theme_val('visible', True)
 
     def get_font(self):
-        name, size, color = self.theme.get_val('font', [None, 32, (0,0,0,2)])
+##        name, size, color = self.theme.get_val('font', [None, 32, (0,0,0,1)])
+        name, size, color = self.get_theme_val('font', [None, 32, (0,0,0,1)])
         return (self.theme.get_font(name), size, Color(color))
 
     def get_padding(self):
-        return self.theme.get_val('padding', (0,0,0,0))
+##        return self.theme.get_val('padding', (0,0,0,0))
+        return self.get_theme_val('padding', (0,0,0,0))
+
+    def am_active(self):
+        return self.parent.am_active() and\
+               self.parent.widgets.index(self) == 0
+
+    def get_state(self):
+        if self._mhold:
+            return "click"
+        if self._mhover:
+            return "hover"
+        if self.am_active() or self.key_active:
+            return "active"
+
+        return None
+
+    def get_theme_val(self, name, default=None):
+        state = self.get_state()
+
+        reg = self.theme.get_val(name, default)
+
+        if not state:
+            return reg
+
+        return self.theme.get_val(name+"."+state, reg)
