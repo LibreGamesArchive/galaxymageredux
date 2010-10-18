@@ -5,9 +5,9 @@ import app, widget
 class Container(widget.Widget, app.App):
     widget_type = "Container"
     def __init__(self, parent, size, pos, name=None):
+        self.widgets = []
         widget.Widget.__init__(self, parent, pos, name)
         self.size = size
-        self.widgets = []
 
         self.dispatch = event.Dispatcher()
 
@@ -15,6 +15,14 @@ class Container(widget.Widget, app.App):
 
     def change_size(self, new):
         self.size = new
+
+    def update_theme(self):
+        widget.Widget.update_theme(self)
+        self.update_child_theme()
+
+    def update_child_theme(self):
+        for i in self.widgets:
+            i.update_theme()
 
     def unhover_all_widgets(self):
         for i in self.widgets:

@@ -10,13 +10,23 @@ class App(object):
         self.event_handler.all_guis.append(self)
         self.widgets = []
 
-        self.theme = theme.ThemeElement(None, None, None, None, {})
+        self.load_theme(None)
 
     def load_theme(self, name, texture_handler=None, font_handler=None):
         th = theme.Theme(name, texture_handler, font_handler)
         th.load_data()
 
-        self.theme = th.get_element("App")
+        self.theme = th.get_element_copy("App")
+
+    def update_theme(self, name):
+        th = self.theme.main_theme
+        th.update(name)
+        self.theme = th.get_element_copy("App")
+        self.update_child_theme()
+
+    def update_child_theme(self):
+        for i in self.widgets:
+            i.update_theme()
 
     def activate(self):
         self.event_handler.gui = self
@@ -28,7 +38,6 @@ class App(object):
         pass
 
     def get_mouse_pos(self):
-        #return pygame.mouse.get_pos()
         return self.event_handler.mouse.get_pos()
 
     def add_widget(self, widg):

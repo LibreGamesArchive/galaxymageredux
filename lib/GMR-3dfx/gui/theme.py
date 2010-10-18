@@ -34,12 +34,15 @@ class ThemeElement(object):
     def get_element(self, name, spec=None):
         if not name in self.sub_vals:
             if self.parent == None:
-                return ThemeElementCopy(self.parent_element)
+                return self.parent_element
             else:
                 return self.parent.get_element(name, spec)
         if not spec in self.sub_vals[name]:
             spec = None
-        return ThemeElementCopy(self.sub_vals[name][spec])
+        return self.sub_vals[name][spec]
+
+    def get_element_copy(self, name, spec=None):
+        return ThemeElementCopy(self.get_element(name, spec))
 
     def add_element(self, name, spec, vals):
         if not name in self.sub_vals:
@@ -93,7 +96,10 @@ class Theme(object):
                 self.fonts = FontHandler2D()
             else:
                 self.fonts = font_handler
-            self._compile()
+            self.root_element = ThemeElement(self, None, None, None, {})
+
+            if not self.theme_name == None:
+                self.update(self.theme_name)
 
     def build_array(self, val):
         vals = val.split(",")
@@ -116,10 +122,8 @@ class Theme(object):
 
         return val
 
-    def _compile(self):
-        self.root_element = ThemeElement(self, None, None, None, {})
-
-        text = file(self.theme_name, 'rU').read()
+    def update(self, filename):
+        text = file(filename, 'rU').read()
         text = text.replace("(", " ( ")
         text = text.replace(")", " ) ")
 
@@ -151,10 +155,7 @@ class Theme(object):
                         spec = None
 
                     if name in last.sub_vals:
-                        if spec in last.sub_vals[name]:
-                            last = last.sub_vals[name][spec]
-                        else:
-                            last = last.get_element(widg, spec)
+                        last = last.get_element(widg, spec)
                     else:
                         last = last.add_element(widg, spec, {})
                 lasts.append(last)
@@ -201,6 +202,9 @@ class Theme(object):
     def get_element(self, name, spec=None):
         return self.root_element.get_element(name, spec)
 
+    def get_element_copy(self, name, spec=None):
+        return ThemeElementCopy(self.get_element(name, spec))
+
     def load_data(self):
         data_dir = self.root_element.get_element('<data_dir>')
         if not data_dir.vals:
@@ -227,4 +231,4 @@ class Theme(object):
 
             self.textures.load_dir(dir)
             self.fonts.load_dir(dir, font_tex, font_size)
-            self.fonts.load_font(None, font_tex, font_size)
+        self.fonts.load_font(None, font_tex, font_size)

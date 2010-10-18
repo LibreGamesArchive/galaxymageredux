@@ -22,8 +22,7 @@ class Widget(object):
                 if len(self.parent.widgets) > 1:
                     pos.to = self.parent.widgets[1]
 
-        self.theme = self.parent.theme.get_element(self.widget_type,
-                                                   self.widget_name)
+        self.update_theme()
 
         self.dispatch = event.Dispatcher()
 
@@ -45,6 +44,10 @@ class Widget(object):
                 self.last_click = None
                 return
         self.last_click = time.time()
+
+    def update_theme(self):
+        self.theme = self.parent.theme.get_element_copy(self.widget_type,
+                                                        self.widget_name)
 
     def destroy(self):
         if self in self.parent.widgets:

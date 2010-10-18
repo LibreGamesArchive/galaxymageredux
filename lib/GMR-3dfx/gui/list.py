@@ -12,10 +12,13 @@ class ListEntry(widget.Widget):
     def get_size(self):
         return self.size
 
+    def check_size(self):
+        self.size = self.get_text_size(self.text)
+
     def render(self):
         pad = self.get_padding()
         down = 0
-        x,y = self.pos.get_pos()
+        x,y = self.get_pos()
         w,h = self.get_size()
         self.draw_canvas_border((x,y,w+pad[0]+pad[2],h+pad[1]+pad[3]),
                                 'background')
@@ -42,12 +45,24 @@ class List(container.Container):
                 pos = misc.AbsolutePos((0,0))
             new = ListEntry(self, pos, opt)
 
-            s = new.get_size_with_padding()
-            width = max(width, s[0])
-            height = new.get_pos()[1]+s[1]
+        self.check_size()
 
+    def check_size(self):
+        width = 0
+        height = 0
+        for opt in self.widgets:
+            opt.check_size()
+            s = opt.get_size_with_padding()
+            width = max((width, s[0]))
+            height += s[1]
 
         for i in self.widgets:
             i.size = width, i.size[1]
 
+        print width, height
+
         self.change_size((width, height))
+
+    def update_child_theme(self):
+        container.Container.update_child_theme(self)
+        self.check_size()
