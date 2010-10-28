@@ -107,9 +107,9 @@ class Container(widget.Widget, app.App):
         return self.size
 
     def render(self):
-        r = self.get_rect()
-        self.draw_canvas_border(r, 'background')
+        self.draw_canvas_border(self.get_rect_with_padding(), 'background')
 
+        r = self.get_rect()
         self.screen.push_clip(r)
         glPushMatrix()
         glTranslatef(r.left,r.top,0)

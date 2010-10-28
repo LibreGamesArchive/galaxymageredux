@@ -59,9 +59,10 @@ class List(container.Container):
         for i in self.widgets:
             i.size = width, i.size[1]
 
-        print width, height
+        p = self.theme.get_element("Entry").get_val('padding', (0,0,0,0))
+        print p
 
-        self.change_size((width, height))
+        self.change_size((width+p[0]+p[1], height))
 
     def update_child_theme(self):
         container.Container.update_child_theme(self)

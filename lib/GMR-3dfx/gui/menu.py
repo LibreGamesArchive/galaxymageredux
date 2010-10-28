@@ -71,6 +71,8 @@ class DropDownMenu(dropdown.DropDown):
 
     def fire_event(self, item):
         self.dispatch.fire('select', item)
+        if item.disabled:
+            return
         self.turn_off()
 
     def update_child_theme(self):

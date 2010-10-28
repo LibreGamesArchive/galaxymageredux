@@ -86,7 +86,7 @@ class Widget(object):
     def get_size_with_padding(self):
         w,h = self.get_size()
         pad = self.get_padding()
-        return (w+pad[0]+pad[2], h+pad[1]+pad[3])
+        return (w+pad[0]+pad[1], h+pad[2]+pad[3])
 
     def get_rect(self):
         return pygame.Rect(self.get_pos_with_padding(), self.get_size())
@@ -264,7 +264,8 @@ class Widget(object):
             left, right, top, bottom = border
             #each - texture, color, size
 
-            l,t,w,h = rect
+            l,t = rect.topleft
+            w,h = rect.size
             l += left[2]
             t += top[2]
             w -= left[2] + right[2]
