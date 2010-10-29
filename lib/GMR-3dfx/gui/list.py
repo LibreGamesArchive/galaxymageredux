@@ -60,7 +60,6 @@ class List(container.Container):
             i.size = width, i.size[1]
 
         p = self.theme.get_element("Entry").get_val('padding', (0,0,0,0))
-        print p
 
         self.change_size((width+p[0]+p[1], height))
 

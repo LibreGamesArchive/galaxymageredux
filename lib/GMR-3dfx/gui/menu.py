@@ -56,7 +56,7 @@ class DDMMenu(Menu):
         self.build_entries()
 
     def update_theme(self):
-        self.theme = self.drop_down.theme.get_element('Menu', None)
+        self.theme = self.drop_down.theme.get_element_copy('Menu', None)
         self.update_child_theme()
 
 class DropDownMenu(dropdown.DropDown):
