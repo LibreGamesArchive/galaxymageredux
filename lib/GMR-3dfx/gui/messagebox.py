@@ -2,8 +2,8 @@ import label, container, misc
 
 class MessageBox(container.Container):
     widget_type = 'MessageBox'
-    def __init__(self, parent, size, pos, name=None):
-        container.Container.__init__(self, parent, size, pos, name)
+    def __init__(self, parent, pos, size, name=None):
+        container.Container.__init__(self, parent, pos, size, name)
 
     def set_top_widget(self, widget):
         pass

@@ -23,7 +23,7 @@ App {
 	background: solid color (1,1,1,1); /* solid background 50% red */
 }
 
-Container, Label, Input, List, Menu,
+Container, Label, Button, Input, List, Menu,
 List#Entry, Menu#Entry, DropDownMenu,
 DropDownMenu#Menu, DropDownMenu#Menu#Entry {
 	background: solid color (.75,.75,.75,1);

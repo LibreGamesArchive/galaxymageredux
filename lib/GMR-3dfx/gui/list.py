@@ -27,7 +27,7 @@ class ListEntry(widget.Widget):
 class List(container.Container):
     widget_type = "List"
     def __init__(self, parent, pos, entries=[], name=None):
-        container.Container.__init__(self, parent, (1,1), pos, name)
+        container.Container.__init__(self, parent, pos, (1,1), name)
 
         self.entries = entries
 

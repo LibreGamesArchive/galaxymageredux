@@ -4,7 +4,7 @@ import app, widget
 
 class Container(widget.Widget, app.App):
     widget_type = "Container"
-    def __init__(self, parent, size, pos, name=None):
+    def __init__(self, parent, pos, size, name=None):
         self.widgets = []
         widget.Widget.__init__(self, parent, pos, name)
         self.size = size

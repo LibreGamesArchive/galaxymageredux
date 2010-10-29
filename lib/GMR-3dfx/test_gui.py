@@ -22,8 +22,7 @@ def main():
     main_app = gui.App(event_handler)
     main_app.load_theme('gui_theme.txt')
 
-    some_cont = gui.Container(main_app, (300,200), (100,150))
-    some_cont.bg_color = (1,0,0,1)
+    some_cont = gui.Container(main_app, (100,150), (300,200))
 
     gui.Icon(main_app, (0,0), 'archer')
     gui.Icon(main_app, (75,0), 'base')
@@ -50,7 +49,7 @@ def main():
     menu2.update_child_theme()
 
     butt = gui.Button(some_cont, gui.RelativePos(), "test\nclick")
-    text_box = gui.MessageBox(main_app, (300,100), (50, 375))
+    text_box = gui.MessageBox(main_app, (50, 375), (300,100))
     butt.dispatch.bind('click',
                        lambda: text_box.add_line(
                            'test'+str(random.randint(0,45))))
