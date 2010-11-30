@@ -1,5 +1,5 @@
 from include import *
-from engine.helpers import TextureHandler, FontHandler2D
+##from engine.helpers import TextureHandler, FontHandler2D
 
 class ThemeElement(object):
     def __init__(self, main_theme, parent, name, spec, vals):
@@ -89,11 +89,11 @@ class Theme(object):
         else:
             self.theme_name = theme
             if texture_handler == None:
-                self.textures = TextureHandler()
+                self.textures = engine.helpers.TextureHandler()
             else:
                 self.textures = texture_handler
             if font_handler == None:
-                self.fonts = FontHandler2D()
+                self.fonts = engine.helpers.FontHandler2D()
             else:
                 self.fonts = font_handler
             self.root_element = ThemeElement(self, None, None, None, {})

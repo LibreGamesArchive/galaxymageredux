@@ -1,7 +1,7 @@
 import widget
 import time
 
-import event
+from include import event
 
 class Input(widget.Widget):
     widget_type = "Input"

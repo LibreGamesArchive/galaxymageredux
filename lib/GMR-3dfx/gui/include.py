@@ -1,11 +1,14 @@
 import sys, os
 
-working_dir = os.path.split(os.path.split(__file__)[0])[0]
+working_dir = os.path.split(os.path.split(os.path.split(__file__)[0])[0])[0]
 if not working_dir in sys.path:
-    sys.path.append(working_dir)
+    sys.path.insert(0, working_dir)
 
-import engine
-from engine import *
-from engine.misc import Color
+import lib
+engine = lib.engine
+event = lib.event
 
-import event
+from lib.engine import *
+from lib.engine.misc import Color
+
+sys.path.pop(0)

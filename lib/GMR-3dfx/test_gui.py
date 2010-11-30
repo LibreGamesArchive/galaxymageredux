@@ -1,9 +1,7 @@
-import engine
-
-import event, gui
+from lib import engine, event, gui
 import random
 
-from gui import theme
+from lib.gui import theme
 
 def print_val(val):
     if not val.disabled:
@@ -14,6 +12,8 @@ def main():
     test.setup(screen_size=(640,480))
     test.build()
     test.clear()
+
+    print engine, gui.include.engine
 
     test.set_2d()
     test.set_lighting(False)
