@@ -1,6 +1,4 @@
-import engine
-
-import event, gui
+from lib import engine, event, gui
 
 class main(object):
     def __init__(self):

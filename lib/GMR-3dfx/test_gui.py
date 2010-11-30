@@ -13,8 +13,6 @@ def main():
     test.build()
     test.clear()
 
-    print engine, gui.include.engine
-
     test.set_2d()
     test.set_lighting(False)
 

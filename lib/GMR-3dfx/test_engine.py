@@ -1,5 +1,5 @@
-import engine, event
-from engine import *
+from lib import engine, event
+from lib.engine import *
 
 def main():
     test = engine.display.Display()
