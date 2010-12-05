@@ -231,4 +231,4 @@ class Theme(object):
 
             self.textures.load_dir(dir)
             self.fonts.load_dir(dir, font_tex, font_size)
-        self.fonts.load_font(None, font_tex, font_size)
+        self.fonts.load_font(None, 1024, 32)

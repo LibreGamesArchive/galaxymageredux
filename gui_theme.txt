@@ -7,7 +7,8 @@
    font_size is the default glyph size for fonts
 */
 
-<data_dir> {dir: . font_tex 512 font_size 32;}
+<data_dir> {ui?dir: data/ui font_tex 512 font_size 32;
+		img-dir: data/images font_tex 512 font_size 32;}
 
 
 /* set the defaults... */
@@ -31,23 +32,23 @@ Container {
 }
 
 Icon.archer {
-	image: ./unit-test-archer.gif; /*load image, must use ./ first since we loaded . dir */
+	image: data/images/unit-test-archer.gif; /*load image, must use ./ first since we loaded . dir */
 	padding: (5,5,5,5);
 	border: solid (5,5,5,5) color (0,0,1,0.5);
 }
 
 Icon.base {
-	image: ./base.png; /*load image, must use ./ first since we loaded . dir */
+	image: data/ui/base.png; /*load image, must use ./ first since we loaded . dir */
 	padding: (2,5,2,5);
 	border: solid (1,5,1,5) color (0,0,1,0.5);
 }
 
 Label {
 	font: None 32 (1,0,0,1);
-	border: block (./base.png, 7, 7, 7, 7); /* solid border 5 pixels wide/high red no transparency */
+	border: block (data/ui/base.png, 7, 7, 7, 7); /* solid border 5 pixels wide/high red no transparency */
 	padding: (7, 7, 7, 7); /* pad the widget by 5 on each side - used in conjunction with borders */
-	background: block (./base.png, 7,7,7,7);
-	border.hover: block (./base.png, 7, 7, 7, 7) color (1,0,0,1);
+	background: block (data/ui/base.png, 7,7,7,7);
+	border.hover: block (data/ui/base.png, 7, 7, 7, 7) color (1,0,0,1);
 	mouse-ignore-border: True;
 }
 
