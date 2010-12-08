@@ -92,7 +92,9 @@ class State(object):
             self.engine.close_app()
             return None
 
+        #change view to 2d here - will have to remember to change to 3d in game!
         self.screen.clear()
+        self.screen.set_2d(); self.screen.set_lighting(False)
         self.app.render()
         self.screen.refresh()
 
@@ -526,6 +528,7 @@ class GameEngine(object):
         #bound to self.client.event_handler
 
     def update_game(self):
+        #REMEMBER: turn on 3d rendering here or in game_obj is probably better!!!
         self.game_obj.update()
 
     def talkToServer(self, command, args):
