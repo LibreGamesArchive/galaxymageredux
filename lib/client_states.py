@@ -1,13 +1,17 @@
-import pygame
-from pygame.locals import *
+##import pygame
+##from pygame.locals import *
+import engine
+from engine import *
 import SLG, event, gui, load_mod_file, in_game
 import glob, os
 
 
 class Main(SLG.Client):
     def __init__(self):
-        pygame.init()
-        self.screen = pygame.display.set_mode((640,480))
+        self.screen = engine.display.Display()
+        self.screen.setup(screen_size=(640,480))
+        self.screen.build()
+        self.screen.clear()
 
         self.scenario_list = self.get_scenarios()
         self.clock = pygame.time.Clock()
@@ -19,7 +23,7 @@ class Main(SLG.Client):
                             SLG.main_server_port)
 
     def close_app(self):
-        pygame.quit()
+        self.screen.destroy()
         self.disconnect()
         self.close()
 
@@ -49,7 +53,7 @@ class Main(SLG.Client):
 
     def update(self):
         self.clock.tick(30)
-        pygame.display.set_caption(str(self.clock.get_fps()))
+        self.screen.set_caption(str(self.clock.get_fps()))
 
         self.cur_state.update()
 
@@ -78,7 +82,8 @@ class State(object):
         self.scenario_list = self.engine.scenario_list
         self.event_handler = event.Handler()
 
-        self.app = gui.App(self.screen, self.event_handler)
+        #App grabs the active screen - there can only be one...
+        self.app = gui.App(self.event_handler)
 
     def update(self):
         self.event_handler.update()
@@ -87,9 +92,9 @@ class State(object):
             self.engine.close_app()
             return None
 
-        self.screen.fill((0,0,0))
+        self.screen.clear()
         self.app.render()
-        pygame.display.flip()
+        self.screen.refresh()
 
     def remote_getMessage(self, player, message):
         pass
@@ -116,75 +121,40 @@ class Connect(State):
     def __init__(self, engine):
         State.__init__(self, engine)
 
-        lil_font = pygame.font.Font(None, 20)
-        small_font = pygame.font.Font(None, 25)
+        self.app.load_theme('data/ui/gui_theme_connect_screen.txt')
 
         #pre connection login/etc.
-        x=gui.Label(self.app, (5,75), 'Connect to a server!')
-        x.bg_color = (0,0,0,0)
-        x.text_color = (255,255,255)
+        x=gui.Label(self.app, (5,75), 'Connect to a server!', name="PageName")
 
-        cont = gui.Container(self.app, (300, 200), gui.RelativePos(to=x, pady=5))
-        cont.bg_color = (100,100,255,100)
-        cont.font = small_font
+        cont = gui.Container(self.app, gui.RelativePos(to=x, pady=5), (300,200))
 
-        x=gui.Label(cont, (5,5), 'Username:')
-        x.bg_color = (0,0,0,0)
-        x.text_color = (100,100,100)
+        x=gui.Label(cont, (5,5), 'Username:', name='UserName')
 
-        self.get_username = gui.Input(cont,
-                                      210, gui.RelativePos(to=x, pady=5, padx=5),
-                                      max_chars=20)
-        self.get_username.always_active=False
-        self.get_username.bg_color = (200,200,200)
-        self.get_username.text_color = (100,100,100)
+        self.get_username = gui.Input(cont, gui.RelativePos(to=x, pady=5, padx=5), name='UserName')
+        self.get_username.dispatch.bind("input-submit", self.handle_connect)
 
-        x=gui.Label(cont, gui.RelativePos(to=self.get_username, pady=5, padx=-5), "Server:")
-        x.bg_color = (0,0,0,0)
-        x.text_color = (100,100,100)
+        x=gui.Label(cont, gui.RelativePos(to=self.get_username, pady=5, padx=-5), "Server:", name='PickServer')
 
         self.connect_server_drop = gui.DropDownMenu(cont, gui.RelativePos(to=x, pady=5, padx=5),
-                                                    'main', ['main', 'local', 'other'])
-        self.connect_server_drop.bg_color=(100,100,100)
-        self.connect_server_serv = gui.Input(cont,
-                                             200,
-                                             gui.RelativePos(to=self.connect_server_drop, x='right', y='top',padx=5),
-                                             -1)
-        self.connect_server_serv.bg_color = (200,200,200)
-        self.connect_server_serv.text_color = (100,100,100)
-        self.connect_server_serv.always_active = False
-        self.connect_server_serv.visible = False
+                                                    'main', ['main', 'local', 'other'], name='PickServer')
+
+        self.connect_server_serv = gui.Input(cont, gui.RelativePos(to=self.connect_server_drop, x='right', y='top',padx=5), name='PickServer')
         self.connect_server_serv.text = str(SLG.main_server_host)
         self.connect_server_drop.dispatch.bind('select', self.handle_server_sel)
 
-        x=gui.Label(cont, gui.RelativePos(to=self.connect_server_drop, pady=5, padx=-5), "Port:")
-        x.bg_color = (0,0,0,0)
-        x.text_color = (100,100,100)
+        x=gui.Label(cont, gui.RelativePos(to=self.connect_server_drop, pady=5, padx=-5), "Port:", name="PickPort")
 
         self.connect_port_drop = gui.DropDownMenu(cont, gui.RelativePos(to=x, pady=5, padx=5),
-                                                  'default', ['default', 'other'])
-        self.connect_port_drop.bg_color = (100,100,100)
-        self.connect_port_serv = gui.Input(cont,
-                                             200,
-                                             gui.RelativePos(to=self.connect_port_drop, x='right', y='top',padx=5),
-                                             -1)
-        self.connect_port_serv.bg_color = (200,200,200)
-        self.connect_port_serv.text_color = (100,100,100)
-        self.connect_port_serv.always_active = False
-        self.connect_port_serv.visible = False
+                                                  'default', ['default', 'other'], name="PickPort")
+
+        self.connect_port_serv = gui.Input(cont, gui.RelativePos(to=self.connect_port_drop, x='right', y='top',padx=5), name="PickPort")
         self.connect_port_serv.text=str(SLG.main_server_port)
         self.connect_port_drop.dispatch.bind('select', self.handle_port_sel)
 
         self.connect_button = gui.Button(cont, gui.RelativePos(to=self.connect_port_drop, pady=5, padx=-5), 'Connect')
-        self.connect_button.font = self.app.font
-        self.connect_button.bg_color = (255,0,0)
-        self.connect_button.text_hover_color = (100,100,100)
-        self.connect_button.text_click_color = (200,200,200)
-
-        self.get_username.dispatch.bind("input-submit", self.handle_connect)
         self.connect_button.dispatch.bind("click", self.handle_connect)
+
         popup = gui.PopUp(self.connect_button, text='Username must be between 4 and 20 characters long!')
-        popup.bg_color = (255,255,255,100)
         #end pre conn
 
     def handle_connect(self, *args, **kwargs):
@@ -199,25 +169,27 @@ class Connect(State):
     def set_default_input(self, widg, inp):
         widg.text = inp
         widg.cursor_pos = len(inp)
+
     def handle_server_sel(self, value):
         if value == 'main':
             self.connect_server_serv.text = SLG.main_server_host
-            self.connect_server_serv.visible = False
+            self.connect_server_serv.theme.set_val('visible', False)
         elif value == 'local':
             self.connect_server_serv.text = 'localhost'
-            self.connect_server_serv.visible = False
+            self.connect_server_serv.theme.set_val('visible', False)
         elif value == 'other':
             self.connect_server_serv.text = SLG.main_server_host
-            self.connect_server_serv.visible = True
+            self.connect_server_serv.theme.set_val('visible', True)
             self.connect_server_serv.cursor_pos = len(SLG.main_server_host)
         self.connect_server_drop.text = value
+
     def handle_port_sel(self, value):
         if value == 'default':
             self.connect_port_serv.text = str(SLG.main_server_port)
-            self.connect_port_serv.visible = False
+            self.connect_port_serv.theme.set_val('visible', False)
         elif value == 'other':
             self.connect_port_serv.text = str(SLG.main_server_port)
-            self.connect_port_serv.visible = True
+            self.connect_port_serv.theme.set_val('visible', True)
             self.connect_port_serv.cursor_pos = len(SLG.main_server_host)
         self.connect_port_drop.text = value
 

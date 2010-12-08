@@ -1,0 +1,95 @@
+
+/* 
+   <data_dir> is a special block in the theme, it is used to set data directories,
+	var can be anything (in this case dir) for multiple dirs (so, dir1, dir2, etc.)
+   "." is the dir we are loading
+   font_tex sets size of font texture - higher is better for larger font sizes
+   font_size is the default glyph size for fonts
+*/
+
+<data_dir> {ui?dir: data/ui font_tex 512 font_size 32;
+		img-dir: data/images font_tex 512 font_size 32;}
+
+
+/* set the defaults... */
+/* 
+   App is another special block.
+   All other blocks inherit from their parent,
+   but App's in the gui are same level as other widgets,
+   even though it is really the parent of all other widgets
+	So, instead of theming as App#Label - all you need is Label
+*/
+
+App {
+	background: solid color (.5,0,0,1); /* solid background 50% red */
+}
+
+Container {
+	background: solid color (0,1,0,0.5);
+	border: solid (5,5,5,5) color (0,0,0,1);
+	padding: (5,5,5,5);
+	border.hover: solid (1,1,1,1) color (0,0,0,1);
+}
+
+Icon.archer {
+	image: data/images/unit-test-archer.gif; /*load image, must use ./ first since we loaded . dir */
+	padding: (5,5,5,5);
+	border: solid (5,5,5,5) color (0,0,1,0.5);
+}
+
+Icon.base {
+	image: data/ui/base.png; /*load image, must use ./ first since we loaded . dir */
+	padding: (2,5,2,5);
+	border: solid (1,5,1,5) color (0,0,1,0.5);
+}
+
+Label {
+	font: None 32 (1,0,0,1);
+	border: block (data/ui/base.png, 7, 7, 7, 7); /* solid border 5 pixels wide/high red no transparency */
+	padding: (7, 7, 7, 7); /* pad the widget by 5 on each side - used in conjunction with borders */
+	background: block (data/ui/base.png, 7,7,7,7);
+	border.hover: block (data/ui/base.png, 7, 7, 7, 7) color (1,0,0,1);
+	mouse-ignore-border: True;
+}
+
+Input {
+	font: None 24 (0,0,0,1);
+	border: solid (2,2,2,2) color (.5,.5,.5,1);
+	padding: (2,2,2,2);
+	background: solid color (1,1,1,1);
+	background.active: solid color (1,0,0,1);
+	key-repeat-delay: 100;
+	always-active: False;
+	max-chars: 10;
+}
+
+
+List, Menu {
+	background: solid color (1,1,1,0.5);
+	border: solid (1,1,1,1) color (0,0,0,1);
+}
+List#Entry, Menu#Entry {
+	background: None;
+	border: None;
+	padding: (2,2,2,2);
+	font: None 40 (0,0,0,1);
+}
+
+Menu#Entry {
+	font.disabled: None 40 (.25,.25,.25,1);
+}
+
+DropDownMenu {
+	background: solid color(0,0,1,1);
+	border: solid (5,5,5,5) color (0,0,0,1);
+}
+
+DropDownMenu#Menu {
+	border: None;
+	background: solid color (1,1,0,1);
+}
+
+DropDownMenu#Menu#Entry {
+	font: None 32 (1,0,0,1);
+	background: None;
+}

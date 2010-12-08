@@ -1,0 +1,53 @@
+
+Label.PageName {
+	font: None 32 (1,1,1,1);
+	background: None;
+}
+
+Container {
+	background: solid color (.3,.3,1,.3);
+}
+
+Label.UserName {
+	background: None;
+	font: None 25 (.3,.3,.3,1);
+}
+
+Input.UserName {
+	font: None 25 (.3, .3, .3,1);
+	max-chars: 20;
+	width: 200;
+	always-active: False;
+	background: solid color (.75, .75, .75, 1);
+}
+
+Label.PickServer, Label.PickPort {
+	font: None 25 (.3,.3,.3,1);
+	background: None
+}
+
+DropDownMenu.PickServer, DropDownMenu.PickPort {
+	background: solid color (.3,.3,.3,1);
+	font: None 25 (0,0,0,1);
+}
+
+Input.PickServer, Input.PickPort {
+	font: None 25 (.3,.3,.3,1);
+	max-chars: -1;
+	width: 200;
+	always-active: False;
+	background: solid color (.75,.75,.75,1);
+	visible: False;
+}
+
+Button {
+	font: None 32 (1,1,1,1);
+	font.hover: None 32 (.3,.3,.3,1);
+	font.click: None 32 (.75,.75,.75,1);
+	background: solid color (1,0,0,1);
+}
+
+PopUp {
+	background: solid color (1,1,1,.3);
+	font: None 25 (1,0,0,1);
+}

@@ -20,8 +20,6 @@ def main():
     main_app = gui.App(event_handler)
     main_app.load_theme('gui_theme.txt')
 
-    print main_app.theme.main_theme.textures.textures
-
     some_cont = gui.Container(main_app, (100,150), (300,200))
 
     gui.Icon(main_app, (0,0), 'archer')
