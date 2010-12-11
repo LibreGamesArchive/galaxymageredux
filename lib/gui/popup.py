@@ -22,6 +22,7 @@ class PopUp(widget.Widget):
     def turn_on(self):
         self.theme.set_val('visible', True)
         self.parent.add_widget(self)
+        self.focus()
     def turn_off(self):
         self.theme.set_val('visible', False)
         self.destroy()

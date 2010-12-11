@@ -2,7 +2,7 @@
 		img-dir: data/images font_tex 512 font_size 32;}
 
 App {
-	background: solid color (.5,0,0,1); /* solid background 50% red */
+	background: solid color (0,0,0,1); /* solid background 50% red */
 }
 
 Label.PageName {

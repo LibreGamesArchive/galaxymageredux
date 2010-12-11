@@ -29,3 +29,4 @@ class DropDown(button.Button):
             return
         self.vis = True
         self.child.theme.set_val('visible', True)
+        self.child.focus()
