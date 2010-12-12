@@ -12,15 +12,17 @@ class Widget(object):
 
         self.screen = self.parent.screen
 
-        if type(pos) is type([]) or type(pos) is type((1,2)):
+        if isinstance(pos, (tuple, list)):
             self.pos = misc.AbsolutePos(pos)
-        else:
-            self.pos = pos
-
-        if isinstance(pos, misc.RelativePos):
+        elif isinstance(pos, misc.RelativePos):
             if pos.to == None:
                 if len(self.parent.widgets) > 1:
                     pos.to = self.parent.widgets[1]
+            self.pos = pos
+        elif isinstance(pos, misc.AbsolutePos):
+            self.pos = pos
+        else:
+            print "BadPos:", pos, "in named widget:", name, dir(self)
 
         self.update_theme()
 
