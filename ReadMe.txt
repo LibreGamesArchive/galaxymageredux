@@ -1,6 +1,7 @@
 Requirements:
 Python 2.5 +
 Pygame 1.8.1 +
+Pyopengl
 Twisted Networking Library
 PIL
 
