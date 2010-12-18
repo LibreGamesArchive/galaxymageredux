@@ -118,7 +118,7 @@ class Game(object):
         self.ui_whos_turn.text_color = (0,0,0)
 
 
-        self.select_action = gui.DisableMenu(self.app, (0,0), padding=(2,2))
+        self.select_action = gui.Menu(self.app, (0,0))
         self.select_action.entry_bg_color = (200,75,75)
         self.select_action.font = lil_font
         self.select_action.dispatch.bind('select', self.handle_action_sel)
@@ -217,7 +217,7 @@ class Game(object):
                 if self.engine.whos_turn == self.engine.my_team:
                     self.select_action.visible = True
                     self.select_action.options = [(i.desc, not i.test_available()) for i in unit.actions]
-                    self.select_action.build_options()
+                    self.select_action.build_entries()
 
                     self.select_action.pos = gui.AbsolutePos((350, 200))
                     self.select_action.focus()
