@@ -206,9 +206,9 @@ class ServerLobby(State):
         x = gui.Label(self.app, (5,75), 'Games:', name="PageName")
         
         desc = gui.Label(self.app, gui.RelativePos(to=x), 'name <scenario> [master] (players / max) CAN JOIN',
-            name="ListHeading")
-        self.game_list_cont = gui.Container(self.app, gui.RelativePos(to=desc,pady=5), (440, (32 + 2)*10)) #Magic Number needs help being replaced
-        self.game_list_select = gui.Menu(self.app, (0,0), name="ServerSelect")
+            name="GamesHeading")
+        self.game_list_cont = gui.Container(self.app, gui.RelativePos(to=desc,pady=5), (440, (16)*10)) #Magic Number
+        self.game_list_select = gui.Menu(self.game_list_cont, (0,0), name="ServerSelect")
         self.game_list_select.dispatch.bind('select', self.handle_game_list_select)
         self.game_list_list = {}
         self.game_list_page = 0
@@ -236,7 +236,7 @@ class ServerLobby(State):
         self.popup_bads_cont.dispatch.bind('unfocus', lambda:self.turn_off_widget(self.popup_bads_cont))
         self.popup_bads_cont.dispatch.bind('click', lambda:self.turn_off_widget(self.popup_bads_cont))
 
-        self.server_lobby_messages = gui.MessageBox(self.app, gui.RelativePos(to=x, pady=30, padx=-5), (440, 100))
+        self.server_lobby_messages = gui.MessageBox(self.app, gui.RelativePos(to=game_list_ppage, pady=30, padx=-5), (440, 100))
         self.server_lobby_input = gui.Input(self.app, gui.RelativePos(to=self.server_lobby_messages, pady=5))
         self.server_lobby_binput = gui.Button(self.app,
                                               gui.RelativePos(to=self.server_lobby_input, padx=5,x='right',y='top'),

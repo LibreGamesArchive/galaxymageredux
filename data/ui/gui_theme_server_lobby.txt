@@ -1,0 +1,87 @@
+<data_dir> {ui-dir: data/ui font_tex 512 font_size 25;
+		img-dir: data/images font_tex 512 font_size 32;}
+
+App {
+	background: solid color (0,0,0,0);
+}
+
+Label.PageName {
+	font: None 32 (.75, .75, .75, 1);
+	background: None;
+}
+
+Container {
+	background: solid color (.3,.3,1,.3);
+}
+
+Container.Games {
+    background: solid color (.75,.3,.3,1);
+}
+
+Container.Bads {
+    visible: False;
+}
+
+Label.GamesHeading {
+    background: None;
+    font: None 20 (.75, .75, .75, 1);
+}
+
+Menu.GamesSelect {
+    background: solid color (.75,.3,.3,1);
+}
+
+Label.PageNumber {
+    background: None;
+    font: None 32 (.4, .4, .4, 1);
+}
+   
+Label.UserName {
+	background: None;
+}
+
+PopUp {
+    background: (1,1,1,0.7);
+}
+
+Label.Error {
+    background: (0,0,0,0);
+}
+
+MessageBox {
+    background: solid color (.75, .3, .3, 1);
+    font: None 20 (1,1,1,1);
+}
+
+Input {
+    background: solid color (.75, .3, .3, 1);
+    width: 300;
+}
+
+Button.Message {
+    background: solid color (.7, .7, .7, 1);
+}
+
+Container.UsersContainer {
+    background: solid color (.15, .15, .39, 1);
+}
+
+Label.UsersHeading {
+    background: None;
+    font: None 32 (.39, .39, .39, 1);
+}
+
+List.Users {
+    background: None;
+    font: None 20 (1, 1, 1, 1);
+}
+
+Button {
+	font.hover: None 32 (.3,.3,.3,1);
+	font.click: None 32 (.75,.75,.75,1);
+	background: solid color (1,0,0,1);
+}
+
+PopUp {
+	background: solid color (1,1,1,.3);
+}
