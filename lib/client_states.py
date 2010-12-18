@@ -205,33 +205,28 @@ class ServerLobby(State):
         #server lobby view
         x = gui.Label(self.app, (5,75), 'Games:', name="PageName")
         
-        self.cont = gui.Container(self.app, gui.RelativePos(to=x, pady=5), (300,200))
-        
-        desc = gui.Label(self.cont, gui.RelativePos(to=self.cont), 'name <scenario> [master] (players / max) CAN JOIN',
+        desc = gui.Label(self.app, gui.RelativePos(to=x), 'name <scenario> [master] (players / max) CAN JOIN',
             name="ListHeading")
-
-        self.game_list_cont = gui.Container(self.cont, gui.RelativePos(to=desc,pady=5), (440, (32 + 2)*10)) #Magic Number needs help being replaced
-
-        self.game_list_select = gui.Menu(self.cont, (0,0), name="ServerSelect")
+        self.game_list_cont = gui.Container(self.app, gui.RelativePos(to=desc,pady=5), (440, (32 + 2)*10)) #Magic Number needs help being replaced
+        self.game_list_select = gui.Menu(self.app, (0,0), name="ServerSelect")
         self.game_list_select.dispatch.bind('select', self.handle_game_list_select)
-
         self.game_list_list = {}
         self.game_list_page = 0
         self.game_list_id = {}
 
-        game_list_ppage = gui.Button(self.cont, gui.RelativePos(to=self.game_list_cont, pady=10, padx=5), 'Last')
+        game_list_ppage = gui.Button(self.app, gui.RelativePos(to=self.game_list_cont, pady=10, padx=5), 'Last')
         game_list_ppage.dispatch.bind('click', lambda: self.view_game_page(self.game_list_page-1))
 
-        self.game_list_lpage = gui.Label(self.cont, gui.RelativePos(to=game_list_ppage, x='right', y='top', padx=5), 'Page: 0', name="PageNumber")
-
-        game_list_npage = gui.Button(self.cont, gui.RelativePos(to=self.game_list_lpage, x='right', y='top', padx=5), 'Next')
+        self.game_list_lpage = gui.Label(self.app, gui.RelativePos(to=game_list_ppage, x='right', y='top', padx=5), 'Page: 0', name="PageNumber")
+        
+        game_list_npage = gui.Button(self.app, gui.RelativePos(to=self.game_list_lpage, x='right', y='top', padx=5), 'Next')
         game_list_npage.dispatch.bind('click', lambda: self.view_game_page(self.game_list_page+1))
 
-        game_list_ngame = gui.Button(self.cont, gui.RelativePos(to=game_list_npage, x='right', y='top', padx=5), 'Create Game')
+        game_list_ngame = gui.Button(self.app, gui.RelativePos(to=game_list_npage, x='right', y='top', padx=5), 'Create Game')
         game_list_ngame.dispatch.bind('click', self.handle_lobby_create_game_room)
 
         
-        self.popup_bads_cont = gui.Container(self.cont, (5,5), (0,0), name="Bads")
+        self.popup_bads_cont = gui.Container(self.app, (5,5), (0,0), name="Bads")
         self.popup_bads = {'ingame': "You cannot join this game room because it is already in progress",
                            'full': "You cannot join this game room because it is full",
                            'scen': "You cannot join this game room because you don't have the required scenario"}
@@ -241,20 +236,17 @@ class ServerLobby(State):
         self.popup_bads_cont.dispatch.bind('unfocus', lambda:self.turn_off_widget(self.popup_bads_cont))
         self.popup_bads_cont.dispatch.bind('click', lambda:self.turn_off_widget(self.popup_bads_cont))
 
-        self.server_lobby_messages = gui.MessageBox(self.app, gui.RelativePos(to=game_list_ppage, pady=30, padx=-5), (440, 100))
-        
+        self.server_lobby_messages = gui.MessageBox(self.app, gui.RelativePos(to=x, pady=30, padx=-5), (440, 100))
         self.server_lobby_input = gui.Input(self.app, gui.RelativePos(to=self.server_lobby_messages, pady=5))
-        
         self.server_lobby_binput = gui.Button(self.app,
                                               gui.RelativePos(to=self.server_lobby_input, padx=5,x='right',y='top'),
                                               'Submit')
+
         self.server_lobby_input.dispatch.bind('input-submit', self.lobby_submit_message)
         self.server_lobby_binput.dispatch.bind('click', self.lobby_submit_message)
 
-        c = gui.Container(self.cont, (450, 5), (185, 470), name="UsersContainer")
-
+        c = gui.Container(self.app, (450, 5), (185, 470), name="UsersContainer")
         l = gui.Label(c, (5, 5), 'Users in Lobby:', name="UsersHeading")
-
         self.server_lobby_users = gui.List(c, gui.RelativePos(to=l, pady=5), name="Users")
         #end server lobby view
 
