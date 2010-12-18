@@ -339,40 +339,26 @@ class ServerLobby(State):
 class MakeGameRoom(State):
     def __init__(self, engine):
         State.__init__(self, engine)
-
-        lil_font = pygame.font.Font(None, 20)
-        small_font = pygame.font.Font(None, 25)
+        
+        self.app.load_theme('data/ui/gui_theme_connect_screen.txt')
 
         #make game room view
-        x=gui.Label(self.app, (5,75), 'Make a Game')
-        x.bg_color = (0,0,0,0)
-        x.text_color = (255,255,255)
+        x=gui.Label(self.app, (5,75), 'Make a Game', name="PageName")
 
         cont = gui.Container(self.app, gui.RelativePos(to=x, pady=5), (300, 200))
-        cont.bg_color = (100,100,255,100)
-        cont.font = small_font
 
-        x=gui.Label(cont, (5,5), 'Game name:')
-        x.bg_color = (0,0,0,0)
-        x.text_color = (255,255,255)
+        x=gui.Label(cont, (5,5), 'Game name:', name='UserName')
 
-        self.game_room_make_name = gui.Input(cont, gui.RelativePos(to=x, padx=5, pady=5))
-        self.game_room_make_name.always_active=False
-        self.game_room_make_name.bg_color = (200,200,200)
-        self.game_room_make_name.text_color = (100,100,100)
+        self.game_room_make_name = gui.Input(cont, gui.RelativePos(to=x, padx=5, pady=5), name='UserName')
         self.game_room_make_name.dispatch.bind('input-submit', self.handle_game_make_room)
 
-        x=gui.Label(cont, gui.RelativePos(to=self.game_room_make_name, padx=-5, pady=5), 'Pick Scenario:')
-        x.bg_color = (0,0,0,0)
-        x.text_color = (255,255,255)
+        x=gui.Label(cont, gui.RelativePos(to=self.game_room_make_name, padx=-5, pady=5), 'Pick Scenario:', name='PickServer')
 
         self.game_room_make_scen = gui.DropDownMenu(cont, gui.RelativePos(to=x, pady=5, padx=5), self.scenario_list[0],
-                                                    self.scenario_list)
-        self.game_room_make_scen.bg_color = (100,100,100)
+                                                    self.scenario_list, name='PickServer')
         self.game_room_make_scen.dispatch.bind('select', self.handle_game_scen_sel)
 
-        self.game_room_make_butt = gui.Button(cont, (5,160),
-                                              "Make Game")
+        self.game_room_make_butt = gui.Button(cont, (5,160),"Make Game")
         self.game_room_make_butt.dispatch.bind('click', self.handle_game_make_room)
         #end make game room view
 
