@@ -371,6 +371,46 @@ class MakeGameRoom(State):
         scen = self.game_room_make_scen.text
         self.engine.avatar.callRemote('makeGame', name, scen, self.scenario_list)
 
+
+class GameRoomLobbyPlayers(gui.Container):
+    def __init__(self, parent, pos, size):
+        gui.Container.__init__(self, parent, pos, size)
+
+    def set_players(self, game, players, free_teams):
+        self.widgets = []
+        last = None
+        for player in players:
+            name, team = player
+
+            if last:
+                pos = gui.RelativePos(to=last, pady=5)
+            else:
+                pos = (5,5)
+            #new = Container(self, (self.size[0]-10, 24), pos)
+            x = gui.Label(self, pos, name)
+            x.bg_color = (0,0,0)
+            x.text_color = (100,100,100)
+            last = x
+            x = gui.Label(self, gui.RelativePos(to=x, padx=20, x='right',y='top'), 'Team:')
+            x.bg_color = (0,0,0)
+            x.text_color = (100,100,100)
+            if game.player_name == name:
+                self.pt = x = gui.DropDownMenu(self, gui.RelativePos(to=x, padx=5, x='right',y='top'),
+                                     team, [team]+free_teams)
+                self.pt.dispatch.bind('select', self.swap_team_widg)
+            else:
+                x = gui.Label(self, gui.RelativePos(to=x, padx=5, x='right',y='top'), team)
+                x.bg_color = (0,0,0)
+                x.text_color = (100,100,100)
+            
+            if game.am_master and not game.player_name==name:
+                x = gui.Button(self, gui.RelativePos(to=x, padx=20, x='right',y='top'), 'Kick')
+                x.dispatch.bind('click', lambda name=name: self.dispatch.fire('kick', name))
+
+    def swap_team_widg(self, value):
+##        self.pt.text = value
+        self.dispatch.fire('change-team', value)
+
 class GameRoomLobby(State):
     def __init__(self, engine, name, scenario, team):
         State.__init__(self, engine)
@@ -381,62 +421,61 @@ class GameRoomLobby(State):
         self.cur_game.am_master = False
         self.cur_game.game_name = name
 
-        lil_font = pygame.font.Font(None, 20)
-        small_font = pygame.font.Font(None, 25)
+        self.app.load_theme('data/ui/gui_theme_game_lobby.txt')
 
         #game room lobby view
         self.game_room_lobby_game_name = gui.Label(self.app,
             (5,5), 'game name: <game name>')
-        self.game_room_lobby_game_name.bg_color = (0,0,0,0)
-        self.game_room_lobby_game_name.text_color = (100,100,100)
+        #self.game_room_lobby_game_name.bg_color = (0,0,0,0)
+        #self.game_room_lobby_game_name.text_color = (100,100,100)
 
         self.game_room_lobby_scenario = gui.Label(self.app,
             gui.RelativePos(to=self.game_room_lobby_game_name,pady=5),
             'scenario: <scenario>')
-        self.game_room_lobby_scenario.bg_color = (0,0,0,0)
-        self.game_room_lobby_scenario.text_color = (100,100,100)
+        #self.game_room_lobby_scenario.bg_color = (0,0,0,0)
+        #self.game_room_lobby_scenario.text_color = (100,100,100)
 
         self.game_room_lobby_sel_scenario = gui.DropDownMenu(self.app,
             gui.RelativePos(to=self.game_room_lobby_scenario,
                             x='right', y='top', padx=5),
             'change scenario', self.scenario_list)
-        self.game_room_lobby_sel_scenario.visible = False
+        #self.game_room_lobby_sel_scenario.visible = False
 
         self.game_room_lobby_num_players = gui.Label(self.app,
             gui.RelativePos(to=self.game_room_lobby_scenario,pady=5),
             'players (0/0)')
-        self.game_room_lobby_num_players.bg_color = (0,0,0,0)
-        self.game_room_lobby_num_players.text_color = (100,100,100)
+        #self.game_room_lobby_num_players.bg_color = (0,0,0,0)
+        #self.game_room_lobby_num_players.text_color = (100,100,100)
 
-        self.game_room_lobby_players = gui.GameRoomLobbyPlayers(
-            self.app, (400, 250),
-            gui.RelativePos(to=self.game_room_lobby_num_players, pady=5))
-        self.game_room_lobby_players.bg_color = (210,100,100)
+        self.game_room_lobby_players = GameRoomLobbyPlayers(self.app, 
+            gui.RelativePos(to=self.game_room_lobby_num_players, pady=5),
+            (400, 250))
+        #self.game_room_lobby_players.bg_color = (210,100,100)
         self.game_room_lobby_players.dispatch.bind('kick', self.game_room_lobby_kick)
         self.game_room_lobby_players.dispatch.bind('change-team', self.game_room_lobby_change_team)
-        self.game_room_lobby_players.font = lil_font
+        #self.game_room_lobby_players.font = lil_font
 
         self.game_room_lobby_messages = gui.MessageBox(
             self.app, gui.RelativePos(to=self.game_room_lobby_players, pady=5), (400, 100))
-        self.game_room_lobby_messages.bg_color = (200,75,75)
-        self.game_room_lobby_messages.font = lil_font
+        #self.game_room_lobby_messages.bg_color = (200,75,75)
+        #self.game_room_lobby_messages.font = lil_font
 
         self.game_room_lobby_input = gui.Input(
             self.app, gui.RelativePos(to=self.game_room_lobby_messages, pady=5))
-        self.game_room_lobby_input.bg_color = (200,75,75)
-        self.game_room_lobby_input.text_color = (0,0,0)
-        self.game_room_lobby_input.font = lil_font
+        #self.game_room_lobby_input.bg_color = (200,75,75)
+        #self.game_room_lobby_input.text_color = (0,0,0)
+        #self.game_room_lobby_input.font = lil_font
 
         self.game_room_lobby_binput = gui.Button(
             self.app, gui.RelativePos(to=self.game_room_lobby_input, x='right',y='top',padx=5),
             'Submit')
-        self.game_room_lobby_binput.bg_color=(200,200,200)
+        #self.game_room_lobby_binput.bg_color=(200,200,200)
         self.game_room_lobby_input.dispatch.bind('input-submit', self.game_room_submit_message)
         self.game_room_lobby_binput.dispatch.bind('click', self.game_room_submit_message)
 
         self.game_room_lobby_start = gui.Button(
             self.app, (475, 400), 'Start Game')
-        self.game_room_lobby_start.visible = False
+        #self.game_room_lobby_start.visible = False
         self.game_room_lobby_start.dispatch.bind('click', lambda self=self: self.cur_game.masterStartGame())
 
         self.leave_game_lobby = gui.Button(self.app, gui.RelativePos(to=self.game_room_lobby_start, pady=5), 'Leave Game')
