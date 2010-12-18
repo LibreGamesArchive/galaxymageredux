@@ -200,82 +200,62 @@ class ServerLobby(State):
     def __init__(self, engine):
         State.__init__(self, engine)
 
-        lil_font = pygame.font.Font(None, 20)
-        small_font = pygame.font.Font(None, 25)
-
+        self.app.load_theme('data/ui/gui_theme_server_lobby.txt')
+        
         #server lobby view
-        gamel = gui.Label(self.app, (5,75), 'Games:')
-        gamel.text_color = (200,200,200)
-        gamel.bg_color = (0,0,0,0)
-        desc = gui.Label(self.app, gui.RelativePos(to=gamel), 'name <scenario> [master] (players / max) CAN JOIN')
-        desc.text_color = (200,200,200)
-        desc.bg_color = (0,0,0,0)
-        desc.font = lil_font
+        x = gui.Label(self.app, (5,75), 'Games:', name="PageName")
+        
+        self.cont = gui.Container(self.app, gui.RelativePos(to=x, pady=5), (300,200))
+        
+        desc = gui.Label(self.cont, gui.RelativePos(to=self.cont), 'name <scenario> [master] (players / max) CAN JOIN',
+            name="ListHeading")
 
-        self.game_list_cont = gui.Container(self.app, (440, (lil_font.get_height()+2)*10), gui.RelativePos(to=desc,pady=5))
-        self.game_list_cont.font = lil_font
-        self.game_list_cont.bg_color = (200,100,100)
+        self.game_list_cont = gui.Container(self.cont, gui.RelativePos(to=desc,pady=5), (440, (32 + 2)*10)) #Magic Number needs help being replaced
 
-        self.game_list_select = gui.DisableMenu(self.game_list_cont, (0,0), padding=(2,2))
-        self.game_list_select.entry_bg_color = (200,75,75)
+        self.game_list_select = gui.Menu(self.cont, (0,0), name="ServerSelect")
         self.game_list_select.dispatch.bind('select', self.handle_game_list_select)
 
         self.game_list_list = {}
         self.game_list_page = 0
         self.game_list_id = {}
 
-        game_list_ppage = gui.Button(self.app, gui.RelativePos(to=self.game_list_cont, pady=10, padx=5), 'Last')
+        game_list_ppage = gui.Button(self.cont, gui.RelativePos(to=self.game_list_cont, pady=10, padx=5), 'Last')
         game_list_ppage.dispatch.bind('click', lambda: self.view_game_page(self.game_list_page-1))
 
-        self.game_list_lpage = gui.Label(self.app, gui.RelativePos(to=game_list_ppage, x='right', y='top', padx=5), 'Page: 0')
-        self.game_list_lpage.bg_color = (0,0,0,0)
-        self.game_list_lpage.text_color = (100,100,100)
+        self.game_list_lpage = gui.Label(self.cont, gui.RelativePos(to=game_list_ppage, x='right', y='top', padx=5), 'Page: 0', name="PageNumber")
 
-        game_list_npage = gui.Button(self.app, gui.RelativePos(to=self.game_list_lpage, x='right', y='top', padx=5), 'Next')
+        game_list_npage = gui.Button(self.cont, gui.RelativePos(to=self.game_list_lpage, x='right', y='top', padx=5), 'Next')
         game_list_npage.dispatch.bind('click', lambda: self.view_game_page(self.game_list_page+1))
 
-        game_list_ngame = gui.Button(self.app, gui.RelativePos(to=game_list_npage, x='right', y='top', padx=5), 'Create Game')
+        game_list_ngame = gui.Button(self.cont, gui.RelativePos(to=game_list_npage, x='right', y='top', padx=5), 'Create Game')
         game_list_ngame.dispatch.bind('click', self.handle_lobby_create_game_room)
 
-        self.popup_bads_cont = gui.Container(self.app, (5,5), (0,0))
-        self.popup_bads_cont.visible = False
-        self.popup_bads_cont.bg_color = (255,255,255,175)
+        
+        self.popup_bads_cont = gui.Container(self.cont, (5,5), (0,0), name="Bads")
         self.popup_bads = {'ingame': "You cannot join this game room because it is already in progress",
                            'full': "You cannot join this game room because it is full",
                            'scen': "You cannot join this game room because you don't have the required scenario"}
-        self.popup_bads_label = gui.Label(self.popup_bads_cont, (5,15), self.popup_bads['scen'])
-        self.popup_bads_label.bg_color=(0,0,0,0)
-        self.popup_bads_label.font = lil_font
+        self.popup_bads_label = gui.Label(self.popup_bads_cont, (5,15), self.popup_bads['scen'], name="Error")
         w,h = self.popup_bads_label.get_size()
         self.popup_bads_cont.change_size((w+10, h+30))
         self.popup_bads_cont.dispatch.bind('unfocus', lambda:self.turn_off_widget(self.popup_bads_cont))
         self.popup_bads_cont.dispatch.bind('click', lambda:self.turn_off_widget(self.popup_bads_cont))
 
-        self.server_lobby_messages = gui.MessageBox(self.app, (440, 100),
-                                                    gui.RelativePos(to=game_list_ppage, pady=30, padx=-5))
-        self.server_lobby_messages.bg_color = (200,75,75)
-        self.server_lobby_messages.font = lil_font
-        self.server_lobby_input = gui.Input(self.app, 350, gui.RelativePos(to=self.server_lobby_messages, pady=5),
-                                            max_chars=30)
-        self.server_lobby_input.bg_color = (200,75,75)
-        self.server_lobby_input.text_color = (0,0,0)
-        self.server_lobby_input.font = lil_font
+        self.server_lobby_messages = gui.MessageBox(self.app, gui.RelativePos(to=game_list_ppage, pady=30, padx=-5), (440, 100))
+        
+        self.server_lobby_input = gui.Input(self.app, gui.RelativePos(to=self.server_lobby_messages, pady=5))
+        
         self.server_lobby_binput = gui.Button(self.app,
                                               gui.RelativePos(to=self.server_lobby_input, padx=5,x='right',y='top'),
                                               'Submit')
-        self.server_lobby_binput.bg_color=(200,200,200)
         self.server_lobby_input.dispatch.bind('input-submit', self.lobby_submit_message)
         self.server_lobby_binput.dispatch.bind('click', self.lobby_submit_message)
 
-        cont = gui.Container(self.app, (185, 470), (450, 5))
-        cont.bg_color = (100,100,255,100)
-        l = gui.Label(cont, (5, 5), 'Users in Lobby:')
-        l.bg_color=(0,0,0,0)
-        l.text_color=(100,100,100)
+        c = gui.Container(self.cont, (450, 5), (185, 470), name="UsersContainer")
 
-        self.server_lobby_users = gui.List(cont, gui.RelativePos(to=l, pady=5))
-        self.server_lobby_users.font = lil_font
-        self.server_lobby_users.entry_bg_color = (0,0,0,0)
+        l = gui.Label(c, (5, 5), 'Users in Lobby:', name="UsersHeading")
+
+        self.server_lobby_users = gui.List(c, gui.RelativePos(to=l, pady=5), name="Users")
         #end server lobby view
 
         self.engine.avatar.callRemote('getGameList')
@@ -331,7 +311,7 @@ class ServerLobby(State):
             opts.append((l, dis))
 
         self.game_list_select.options = opts
-        self.game_list_select.build_options()
+        self.game_list_select.build_entries()
         self.game_list_lpage.text = 'Page: %s'%num
 
     def remote_sendGameList(self, games):
@@ -376,7 +356,7 @@ class MakeGameRoom(State):
         x.bg_color = (0,0,0,0)
         x.text_color = (255,255,255)
 
-        cont = gui.Container(self.app, (300, 200), gui.RelativePos(to=x, pady=5))
+        cont = gui.Container(self.app, gui.RelativePos(to=x, pady=5), (300, 200))
         cont.bg_color = (100,100,255,100)
         cont.font = small_font
 
@@ -384,7 +364,7 @@ class MakeGameRoom(State):
         x.bg_color = (0,0,0,0)
         x.text_color = (255,255,255)
 
-        self.game_room_make_name = gui.Input(cont, 210, gui.RelativePos(to=x, padx=5, pady=5), max_chars=20)
+        self.game_room_make_name = gui.Input(cont, gui.RelativePos(to=x, padx=5, pady=5))
         self.game_room_make_name.always_active=False
         self.game_room_make_name.bg_color = (200,200,200)
         self.game_room_make_name.text_color = (100,100,100)
@@ -459,12 +439,12 @@ class GameRoomLobby(State):
         self.game_room_lobby_players.font = lil_font
 
         self.game_room_lobby_messages = gui.MessageBox(
-            self.app, (400, 100), gui.RelativePos(to=self.game_room_lobby_players, pady=5))
+            self.app, gui.RelativePos(to=self.game_room_lobby_players, pady=5), (400, 100))
         self.game_room_lobby_messages.bg_color = (200,75,75)
         self.game_room_lobby_messages.font = lil_font
 
         self.game_room_lobby_input = gui.Input(
-            self.app, 350, gui.RelativePos(to=self.game_room_lobby_messages, pady=5))
+            self.app, gui.RelativePos(to=self.game_room_lobby_messages, pady=5))
         self.game_room_lobby_input.bg_color = (200,75,75)
         self.game_room_lobby_input.text_color = (0,0,0)
         self.game_room_lobby_input.font = lil_font
@@ -677,7 +657,7 @@ class MidGameLeave(State):
 
         self.message = message
 
-        self.leave_game = gui.Container(self.app, (640,480), (0,0))
+        self.leave_game = gui.Container(self.app, (0,0), (640,480))
         self.leave_game.bg_color = (255,255,255,100)
 
         self.leave_game_question = gui.Label(self.leave_game, (100, 200), message)
