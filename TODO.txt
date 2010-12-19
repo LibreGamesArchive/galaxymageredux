@@ -1,13 +1,4 @@
+Make a camera class with a real position (we may want to do some stuff with that later) that looks at a tile we are on.
+Camera should be able to interpolate to a position cleanly/quickly.
 
-Make Textures/image loaders helper functions - DONE
-Fonts!!! DONE
-Draw functions (rect, line for now) DONE
-
-TextureRegion - binds parent texture, but coords to it's bounds
-			can be used anywhere a texture is - DONE
-
-draw_rect(pos, size, color, texture) DONE
-draw_lines([(start, end)...], color, width) DONE
-
-Areas - basically just clip screen to their dimensions...
-	To replace the screens/surfs of pygame/gui UNNECESSARY
+Set up 3d engine to hold a flat map with various tiles (tilemap) - can only have one tile map (so everything can go in a Buffer)
