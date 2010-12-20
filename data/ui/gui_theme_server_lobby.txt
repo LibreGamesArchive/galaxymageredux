@@ -27,8 +27,10 @@ Label.GamesHeading {
     font: None 20 (.75, .75, .75, 1);
 }
 
-Menu.GamesSelect {
-    background: solid color (.75,.3,.3,1);
+Menu.GamesSelect#Entry {
+	background: solid color (.75,.3,.3,1);
+	font: None 22 (1,1,1,1);
+	font.disabled: None 22 (.5,.5,.5,1);
 }
 
 Label.PageNumber {

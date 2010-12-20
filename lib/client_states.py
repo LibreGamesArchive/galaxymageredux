@@ -210,7 +210,7 @@ class ServerLobby(State):
 
         #widgets for displaying games running/setting up...
         self.game_list_cont = gui.Container(self.app, gui.RelativePos(to=desc,pady=5), (440, (16)*10)) #Magic Number
-        self.game_list_select = gui.Menu(self.game_list_cont, (0,0), name="ServerSelect")
+        self.game_list_select = gui.Menu(self.game_list_cont, (0,0), name="GamesSelect")
         self.game_list_select.dispatch.bind('select', self.handle_game_list_select)
         self.game_list_list = {}
         self.game_list_page = 0
