@@ -207,12 +207,15 @@ class ServerLobby(State):
         
         desc = gui.Label(self.app, gui.RelativePos(to=x), 'name <scenario> [master] (players / max) CAN JOIN',
             name="GamesHeading")
+
+        #widgets for displaying games running/setting up...
         self.game_list_cont = gui.Container(self.app, gui.RelativePos(to=desc,pady=5), (440, (16)*10)) #Magic Number
         self.game_list_select = gui.Menu(self.game_list_cont, (0,0), name="ServerSelect")
         self.game_list_select.dispatch.bind('select', self.handle_game_list_select)
         self.game_list_list = {}
         self.game_list_page = 0
         self.game_list_id = {}
+        #end
 
         game_list_ppage = gui.Button(self.app, gui.RelativePos(to=self.game_list_cont, pady=10, padx=5), 'Last')
         game_list_ppage.dispatch.bind('click', lambda: self.view_game_page(self.game_list_page-1))
@@ -263,7 +266,9 @@ class ServerLobby(State):
     def turn_on_widget(self, widg):
         widg.visible = True
 
-    def handle_game_list_select(self, value, disabled):
+    def handle_game_list_select(self, widget):
+        value = widget.text
+        disabled = widget.disabled
         game = self.game_list_list[value]
         game_id, name, scenario, master, players, max_players, in_game = game
 
@@ -302,7 +307,7 @@ class ServerLobby(State):
                 dis = False
             opts.append((l, dis))
 
-        self.game_list_select.options = opts
+        self.game_list_select.entries = opts
         self.game_list_select.build_entries()
         self.game_list_lpage.text = 'Page: %s'%num
 
