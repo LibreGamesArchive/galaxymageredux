@@ -2,3 +2,40 @@ Make a camera class with a real position (we may want to do some stuff with that
 Camera should be able to interpolate to a position cleanly/quickly.
 
 Set up 3d engine to hold a flat map with various tiles (tilemap) - can only have one tile map (so everything can go in a Buffer)
+
+Camera should have min/max values, don't zoom too close/far, go under map etc.
+
+
+
+
+Stuff to be converted...
+
+gfx_engine.py:
+
+Convert map engine to flat 2d (not isometric)
+Add Entity class - which can contain a renderable object and attributes.
+Inside Entity will be color (for flags), position etc.
+Define map contant objects - Tile, Entity, etc.
+Contant objects are all that can be added to map by mod
+Make sure entities can be defined with images that have no path, ie
+	images should be stored as name only, no path!
+
+
+
+client_states.py:
+
+MidGameLeave and GameEngine states need to be update
+
+
+Remove GIFImage.py from lib  (engine has it's own)
+
+
+in_game.py:
+
+Update GUI
+
+
+
+Scenario - CaughtByTheEnemy
+
+map.py: update camera to be 3d
