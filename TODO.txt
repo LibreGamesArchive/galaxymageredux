@@ -5,6 +5,10 @@ Set up 3d engine to hold a flat map with various tiles (tilemap) - can only have
 
 Camera should have min/max values, don't zoom too close/far, go under map etc.
 
+engine.Entities - like PointSprite.
+Entities should contain data and methods to render it,
+but no attributes of their own (like pos and stuff)
+
 
 
 
@@ -13,6 +17,8 @@ Stuff to be converted...
 gfx_engine.py:
 
 Convert map engine to flat 2d (not isometric)
+Map/Tile are going to need to be specific classes to be extended later
+	to say add smooth ramps and stuff as map progresses...
 Add Entity class - which can contain a renderable object and attributes.
 Inside Entity will be color (for flags), position etc.
 Define map contant objects - Tile, Entity, etc.
@@ -39,3 +45,4 @@ Update GUI
 Scenario - CaughtByTheEnemy
 
 map.py: update camera to be 3d
+scenario's need to set team colors themselves - flags will use these
