@@ -1,5 +1,6 @@
 Make a camera class with a real position (we may want to do some stuff with that later) that looks at a tile we are on.
 Camera should be able to interpolate to a position cleanly/quickly.
+Perhaps do a simple camera that just points at something and moves away - no math needed just works easily, we can do fancier stuff at a later point!
 
 Set up 3d engine to hold a flat map with various tiles (tilemap) - can only have one tile map (so everything can go in a Buffer)
 
