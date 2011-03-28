@@ -4,57 +4,57 @@ unittest and interactive tests.
 '''
 
 import sys
-sys.path.insert('..')
+sys.path.insert(0, '..')
 
 import unittest
 from lib.engine.camera import Camera
 
-class CameraTest(unittest.TestCase):
+class TestCamera(unittest.TestCase):
     '''This tests the mechanics and mathematics of the 3D camera.'''
-    def TestMatrixPush(self):
+    def test_matrix_push(self):
         '''Tests pushing the matrix'''
-        self.assertFail()
-    def TestMatrixPop(self):
+        self.fail()
+    def test_matrix_pop(self):
         '''Tests popping the matrix'''
-        self.assertFail()
-    def TestViewRotate(self):
+        self.fail()
+    def test_view_rotate(self):
         '''Tests rotating the camera'''
-        self.assertFail()
-    def TestViewOffset(self):
+        self.fail()
+    def test_view_offset(self):
         '''Tests translating the offset'''
-        self.assertFail()
-    def TestPushFacingMatrix(self):
+        self.fail()
+    def test_push_facing_matrix(self):
         '''Tests forcing the object in view to face the camera.'''
-        self.assertFail()
+        self.fail()
 
-def CameraTestInteractive(unittest.TestCase):
+class TestCameraInteractive(unittest.TestCase):
     '''Creates an opengl context and takes user feedback to ensure that the 
     camera methods act correctly'''
-    def TestRotateRight(self):
+    def test_rotate_right(self):
         '''Rotates the camera to the right and/or the object to the left.'''
-        self.assertFail()
-    def TestRotateLeft(self):
+        self.fail()
+    def test_rotate_left(self):
         '''Rotates the camera to the left and/or the object to the right.'''
-        self.assertFail()
-    def TestOffsetOut(self):
+        self.fail()
+    def test_offset_out(self):
         '''Zooms away from the focus.'''
-        self.assertFail()
-    def TestOffsetIn(self):
+        self.fail()
+    def test_offset_in(self):
         '''Zooms in to the focus point.'''
-        self.assertFail()
-    def TestOffsetRight(self):
+        self.fail()
+    def test_offset_right(self):
         '''Pans to the right.'''
-        self.assertFail()
-    def TestOffsetLeft(self):
+        self.fail()
+    def test_offset_left(self):
         '''Pans to the left.'''
-        self.assertFail()
-    def TestOffsetNorth(self):
+        self.fail()
+    def test_offset_north(self):
         '''Pans up the map.'''
-        self.assertFail()
-    def TestOffsetSouth(self):
+        self.fail()
+    def test_offset_south(self):
         '''Pans down the map.'''
-        self.assertFail()
+        self.fail()
 
-if __name__ = '__main__':
-    unittest.run()
+if __name__ == '__main__':
+    unittest.main()
 
