@@ -6,14 +6,27 @@ unittest and interactive tests.
 import sys
 sys.path.insert(0, '..')
 
-import unittest
 from lib.engine.camera import Camera
+import pygame
+from pygame.locals import *
+
+from lib import gfx_engine, event, mod_base
+
+import OpenGL
+import unittest
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
 class TestCamera(unittest.TestCase):
     '''This tests the mechanics and mathematics of the 3D camera.'''
     def test_matrix_push(self):
         '''Tests pushing the matrix'''
-        self.fail()
+        cam = Camera()
+        depth = glGetInteger(GL_MODELVIEW_STACK_DEPTH)
+        cam.push()
+        glTranslate(1,1,1)
+        self.assertEqual(depth + 1, glGetInteger(GL_MODELVIEW_STACK_DEPTH))
+        self.assertGreater(0, glGetInteger(GL_MODELVIEW_STACK_DEPTH))
     def test_matrix_pop(self):
         '''Tests popping the matrix'''
         self.fail()
@@ -56,5 +69,7 @@ class TestCameraInteractive(unittest.TestCase):
         self.fail()
 
 if __name__ == '__main__':
+    pygame.init()
+    screen = pygame.display.set_mode((640,480))
     unittest.main()
 
